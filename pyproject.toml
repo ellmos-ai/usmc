@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "usmc"
+version = "0.1.0"
+description = "United Shared Memory Client - Cross-Agent Memory Sharing"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+    { name = "Lukas Geiger", email = "lukas@lukisch.dev" }
+]
+keywords = ["llm", "agents", "memory", "shared-memory", "sqlite"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+]
+
+[project.urls]
+Homepage = "https://github.com/lukisch/usmc"
+Repository = "https://github.com/lukisch/usmc"
+
+[project.scripts]
+usmc = "usmc.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["usmc*"]

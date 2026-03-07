@@ -165,6 +165,22 @@ sonnet.add_fact("project", "status", "completed", confidence=0.95)
 Developed from the SharedMemoryClient research prototype.
 Part of the BACH ecosystem but fully standalone.
 
+## See Also: OpenClaw
+
+USMC gives any LLM a hippocampus -- structured long-term memory with facts, lessons, and cross-agent sharing. How does it compare to [OpenClaw](https://github.com/openclaw/openclaw) (274K+ stars)?
+
+| | **USMC** | **OpenClaw** |
+|---|---|---|
+| **Focus** | Persistent structured memory for LLM agents | Full AI assistant with messaging gateway |
+| **Memory model** | 4 tables: Facts (confidence-scored), Lessons (severity), Working Memory, Sessions | Session-based chat history with `/compact` summarization |
+| **Multi-agent** | Shared SQLite DB with conflict resolution (highest confidence wins) | Multi-session with per-session isolation |
+| **Knowledge retention** | Permanent -- facts and lessons persist across sessions and agents | Ephemeral -- session history compacted or lost |
+| **Dependencies** | Zero -- pure Python stdlib | Node.js 22+, numerous npm packages |
+| **Use case** | Drop-in memory layer for any LLM project | Complete assistant platform |
+| **License** | MIT | MIT |
+
+**In short:** OpenClaw manages conversations. USMC manages knowledge. They are complementary -- USMC can serve as the memory backend for any agent framework, including OpenClaw-style systems.
+
 ## License
 
 MIT License -- Copyright (c) 2026 Lukas Geiger

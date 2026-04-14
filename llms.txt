@@ -1,0 +1,22 @@
+# USMC - United Shared Memory Client
+
+> USMC is the foundation of the ellmos family (Extra Large Language Model Operating Systems): a standalone cross-agent memory layer built on SQLite with zero external dependencies. Treats shared memory as a first-class system primitive so multiple LLM agents can exchange facts, lessons, working notes, and session context without a central broker.
+
+USMC is Tier 1 of the ellmos water metaphor ("the spring"): just memory, nothing else. Upstream projects (Rinnsal, BACH) build on top of it. Use USMC directly if you only need cross-agent memory -- no orchestration, no tool framework, no agent logic. Python 3.10+, MIT.
+
+Core concepts: Facts (persistent structured knowledge with confidence scores), Lessons (problem/solution patterns with severity), Working memory (session-scoped notes), Sessions (handoff-ready task blocks), Context generation (compact LLM-prompt summaries), Poll-based change sync.
+
+## Docs
+
+- [README](https://github.com/ellmos-ai/usmc/blob/main/README.md): Overview, install, quick start, full API
+- [LICENSE](https://github.com/ellmos-ai/usmc/blob/main/LICENSE): MIT license text
+
+## ellmos family (related projects)
+
+- [USMC](https://github.com/ellmos-ai/usmc): Tier 1 -- this project, shared memory primitive
+- [Rinnsal](https://github.com/ellmos-ai/rinnsal): Tier 2 -- the trickle, USMC + llmauto orchestration, still compact
+- [BACH](https://github.com/ellmos-ai/bach): Tier 3 -- full text-based OS (109+ handlers, 932+ skills, agents, GUI, bridges)
+
+## Optional
+
+- [GitHub Issues](https://github.com/ellmos-ai/usmc/issues): Bug reports and feature requests

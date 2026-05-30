@@ -5,29 +5,41 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "usmc"
 version = "0.1.0"
-description = "United Shared Memory Client - Cross-Agent Memory Sharing"
+description = "United Shared Memory Client - local SQLite memory for LLM agents"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [
     { name = "Lukas Geiger", email = "lukas@lukisch.dev" }
 ]
-keywords = ["llm", "agents", "memory", "shared-memory", "sqlite"]
+keywords = [
+    "llm",
+    "ai-agents",
+    "agent-memory",
+    "shared-memory",
+    "cross-agent",
+    "sqlite",
+    "local-first",
+    "prompt-context",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Database",
 ]
 
 [project.urls]
-Homepage = "https://github.com/lukisch/usmc"
-Repository = "https://github.com/lukisch/usmc"
+Homepage = "https://github.com/ellmos-ai/usmc"
+Repository = "https://github.com/ellmos-ai/usmc"
+Issues = "https://github.com/ellmos-ai/usmc/issues"
+Documentation = "https://github.com/ellmos-ai/usmc#readme"
 
 [project.scripts]
 usmc = "usmc.cli:main"

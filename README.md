@@ -1,203 +1,156 @@
 <p align="center">
-  <img src="assets/ellmos-logo.jpg" alt="USMC logo" width="300">
+  <img src="assets/ellmos-logo.jpg" alt="ellmos USMC logo" width="260">
 </p>
 
-# USMC -- United Shared Memory Client
+# USMC - United Shared Memory Client
 
-**🇩🇪 [Deutsche Version](README_de.md)**
+[![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
 
-*The spring -- shared memory by [ellmos-ai](https://github.com/ellmos-ai).*
+**Deutsch:** [README_de.md](README_de.md)
 
-**Status: Alpha (v0.1.0)**
+USMC is a zero-dependency Python memory layer for LLM agents. It gives multiple local agents one shared SQLite-backed memory for facts, lessons, working notes, sessions, and compact prompt context.
 
-Cross-agent memory sharing via standalone SQLite. No external dependencies.
+This repository is the ellmos project `ellmos-ai/usmc`, also described as **ellmos USMC** or **United Shared Memory Client** in search text. It is not related to the United States Marine Corps.
+
+## Why It Exists
+
+LLM agent projects often lose context between runs or duplicate notes across tools. USMC keeps the memory part small and reusable:
+
+- Store persistent facts with confidence scores.
+- Record lessons as problem/solution patterns.
+- Keep session-scoped working notes.
+- Track agent sessions and handoff notes.
+- Generate compact context blocks for prompts.
+- Share one local SQLite database across different agents.
+
+USMC is Tier 1 of the ellmos family. Rinnsal and BACH build larger orchestration layers on top, but USMC stays focused on memory only.
 
 ## Install
 
+From GitHub:
+
 ```bash
-pip install usmc
+pip install git+https://github.com/ellmos-ai/usmc.git
 ```
 
-## Quick Start
+From a local checkout:
 
-### Client API
+```bash
+pip install -e .
+```
+
+The PyPI package name `usmc` is reserved for this project but not yet published. Until the first PyPI release, use the GitHub install form above.
+
+## Quick Start
 
 ```python
 from usmc import USMCClient
 
-# Initialize (creates usmc_memory.db)
-client = USMCClient(agent_id="my-agent")
+client = USMCClient(agent_id="codex")
 
-# Facts (persistent knowledge)
 client.add_fact("project", "framework", "FastAPI", confidence=0.9)
-client.add_fact("system", "os", "Windows 11")
-facts = client.get_facts(min_confidence=0.8)
-
-# Lessons (learned patterns)
 client.add_lesson(
-    title="Encoding Bug",
-    problem="cp1252 statt UTF-8",
-    solution="PYTHONIOENCODING=utf-8 setzen",
-    severity="high"
+    title="Windows encoding",
+    problem="Python subprocess output used cp1252",
+    solution="Run with PYTHONIOENCODING=utf-8",
+    severity="high",
 )
-lessons = client.get_lessons(severity="high")
+client.add_working("Currently preparing a release checklist")
 
-# Working memory (session-scoped notes)
-client.add_working("Currently refactoring auth module")
-working = client.get_working()
-
-# Sessions
-session = client.start_session(task="Feature X")
-# ... work ...
-client.end_session(session['id'], handoff_notes="Refactored auth")
-
-# Context generation (for LLM prompts)
-context = client.generate_context()
-
-# Sync (poll-based)
-changes = client.get_changes_since("2026-02-28T00:00:00")
+print(client.generate_context())
 ```
 
-### High-Level API
-
-For quick, stateless access without managing client instances:
+High-level API:
 
 ```python
 from usmc import api
 
-# Initialize once
-api.init(agent_id="opus")
+api.init(agent_id="claude")
+api.remember("repo", "ellmos-ai/usmc")
+api.note("Audit README and package metadata")
+api.lesson("Marketing check", "No search visibility", "Use ellmos-usmc wording")
 
-# Facts
-api.fact("system", "os", "Windows 11")
-api.remember("framework", "FastAPI")  # shortcut with confidence=0.95
-facts = api.facts(category="system")
-
-# Working memory
-api.note("Aktueller Task: Feature X")
-api.scratch("Temporaere Notiz")
-api.loop("Iteration 1 von 5")
-notes = api.working()
-api.clear()  # deactivate all notes
-
-# Lessons
-api.lesson("Bug-Title", "Problem", "Solution", severity="high")
-lessons = api.lessons()
-
-# Sessions
-session = api.start(task="Testing")
-api.end(session['id'], notes="Done")
-
-# Context & Status
-print(api.context())
 print(api.status())
+print(api.context())
 ```
 
-### CLI
+CLI:
 
 ```bash
-# Status
 usmc status
-
-# Facts
-usmc fact system os "Windows 11"
 usmc fact project framework FastAPI --confidence 0.9
-usmc facts
-usmc facts --category system --json
-
-# Working memory
-usmc note "Aktueller Task: Feature implementieren"
-usmc note "High priority" --priority 5 --tags "important,urgent"
-usmc working
-usmc clear
-
-# Lessons
-usmc lesson "Encoding Bug" "cp1252 Problem" "PYTHONIOENCODING=utf-8" --severity high
-usmc lessons
-usmc lessons --severity critical
-
-# Context
+usmc note "Current task: release polish"
+usmc lesson "Encoding bug" "cp1252 output" "Set PYTHONIOENCODING=utf-8" --severity high
 usmc context
-
-# Sessions
-usmc start --task "Feature X"
-usmc end 1 --notes "Done"
-
-# Sync
 usmc changes "2026-02-28T00:00:00" --json
-
-# Options
-usmc --db custom.db --agent my-agent status
 ```
 
-## Multi-Agent
+## Core Concepts
 
-Multiple agents can share the same DB:
+| Concept | What it stores | Typical use |
+|---|---|---|
+| Facts | Persistent key/value knowledge with confidence | Project facts, system facts, user preferences |
+| Lessons | Reusable problem/solution records with severity | Bugs, operational rules, workflow fixes |
+| Working memory | Temporary active notes | Current task state and scratchpad context |
+| Sessions | Start/end records with handoff notes | Cross-agent continuity |
+| Changes | Pollable update stream | Lightweight sync between agents |
+
+## Multi-Agent Example
 
 ```python
-opus = USMCClient(db_path="shared.db", agent_id="opus")
-sonnet = USMCClient(db_path="shared.db", agent_id="sonnet")
+from usmc import USMCClient
 
-opus.add_fact("project", "status", "in-progress", confidence=0.8)
-sonnet.add_fact("project", "status", "completed", confidence=0.95)
-# Confidence merge: sonnet's higher confidence wins
+codex = USMCClient(db_path="shared.db", agent_id="codex")
+claude = USMCClient(db_path="shared.db", agent_id="claude")
+
+codex.add_fact("repo", "status", "needs docs", confidence=0.7)
+claude.add_fact("repo", "status", "docs ready", confidence=0.95)
+
+print(codex.get_facts(category="repo"))
 ```
 
-## Features
-
-- Standalone SQLite database (no external dependencies)
-- Confidence-based conflict resolution
-- Multi-agent support with agent_id tracking
-- Session management with handoff notes
-- Context generation for LLM prompts
-- Change tracking via `get_changes_since()`
-- High-level API for quick access
-- Full CLI for terminal use
-- Zero external dependencies (stdlib only)
+When two agents write the same fact, the higher-confidence value wins.
 
 ## Database Schema
 
-- `usmc_facts` - Persistent facts with confidence scores
-- `usmc_working` - Temporary notes, context, scratchpad
-- `usmc_lessons` - Lessons learned with severity
-- `usmc_sessions` - Agent session tracking
+- `usmc_facts` - persistent facts with confidence scores
+- `usmc_lessons` - lessons learned with severity
+- `usmc_working` - temporary notes, context, scratchpad
+- `usmc_sessions` - agent session tracking
 
-## Origin
+The database is plain SQLite. There is no daemon, broker, cloud service, or external runtime dependency.
 
-Developed from the SharedMemoryClient research prototype.
-Part of the BACH ecosystem but fully standalone.
+## Positioning
 
-## See Also: OpenClaw
+USMC is deliberately smaller than full agent platforms:
 
-USMC gives any LLM a hippocampus -- structured long-term memory with facts, lessons, and cross-agent sharing. How does it compare to [OpenClaw](https://github.com/openclaw/openclaw) (274K+ stars)?
-
-| | **USMC** | **OpenClaw** |
+| Project type | Scope | USMC role |
 |---|---|---|
-| **Focus** | Persistent structured memory for LLM agents | Full AI assistant with messaging gateway |
-| **Memory model** | 4 tables: Facts (confidence-scored), Lessons (severity), Working Memory, Sessions | Session-based chat history with `/compact` summarization |
-| **Multi-agent** | Shared SQLite DB with conflict resolution (highest confidence wins) | Multi-session with per-session isolation |
-| **Knowledge retention** | Permanent -- facts and lessons persist across sessions and agents | Ephemeral -- session history compacted or lost |
-| **Dependencies** | Zero -- pure Python stdlib | Node.js 22+, numerous npm packages |
-| **Use case** | Drop-in memory layer for any LLM project | Complete assistant platform |
-| **License** | MIT | MIT |
+| Agent frameworks | Tools, planning, orchestration, execution | Add shared memory underneath |
+| Chat assistants | Conversation loop and UI | Store durable knowledge outside chat history |
+| MCP servers | Tool exposure over protocol | Use USMC as local memory backend |
+| BACH / Rinnsal | ellmos orchestration layers | USMC is the reusable memory primitive |
 
-**In short:** OpenClaw manages conversations. USMC manages knowledge. They are complementary -- USMC can serve as the memory backend for any agent framework, including OpenClaw-style systems.
+## Development
+
+```bash
+python -m pytest -q
+python -m compileall -q usmc tests
+python -m build
+```
+
+## Related Projects
+
+- [Rinnsal](https://github.com/ellmos-ai/rinnsal) - compact ellmos orchestration layer
+- [BACH](https://github.com/ellmos-ai/bach) - full text-based LLM operating system
+- [ellmos-stack](https://github.com/ellmos-ai/ellmos-stack) - deployment and ecosystem context
 
 ## License
 
-MIT License -- Copyright (c) 2026 Lukas Geiger
+MIT License - Copyright (c) 2026 Lukas Geiger
 
-## Author
+## Liability
 
-Lukas Geiger (github.com/lukisch)
-
----
-
-## Haftung / Liability
-
-Dieses Projekt ist eine **unentgeltliche Open-Source-Schenkung** im Sinne der §§ 516 ff. BGB. Die Haftung des Urhebers ist gemäß **§ 521 BGB** auf **Vorsatz und grobe Fahrlässigkeit** beschränkt. Ergänzend gelten die Haftungsausschlüsse aus GPL-3.0 / MIT / Apache-2.0 §§ 15–16 (je nach gewählter Lizenz).
-
-Nutzung auf eigenes Risiko. Keine Wartungszusage, keine Verfügbarkeitsgarantie, keine Gewähr für Fehlerfreiheit oder Eignung für einen bestimmten Zweck.
-
-This project is an unpaid open-source donation. Liability is limited to intent and gross negligence (§ 521 German Civil Code). Use at your own risk. No warranty, no maintenance guarantee, no fitness-for-purpose assumed.
-
+This project is an unpaid open-source donation. Liability is limited to intent and gross negligence under Section 521 German Civil Code. Use at your own risk. No warranty, no maintenance guarantee, and no fitness-for-purpose promise are provided.

@@ -1,22 +1,40 @@
 # USMC - United Shared Memory Client
 
-> USMC is the foundation of the ellmos family (Extra Large Language Model Operating Systems): a standalone cross-agent memory layer built on SQLite with zero external dependencies. Treats shared memory as a first-class system primitive so multiple LLM agents can exchange facts, lessons, working notes, and session context without a central broker.
+USMC is the ellmos shared-memory primitive: a zero-dependency Python library and CLI that lets multiple LLM agents share local SQLite-backed memory. Use it when an agent framework needs persistent facts, lessons learned, working notes, session handoff records, and compact prompt context without a daemon or cloud service.
 
-USMC is Tier 1 of the ellmos water metaphor ("the spring"): just memory, nothing else. Upstream projects (Rinnsal, BACH) build on top of it. Use USMC directly if you only need cross-agent memory -- no orchestration, no tool framework, no agent logic. Python 3.10+, MIT.
+Canonical repository: https://github.com/ellmos-ai/usmc
+Canonical search names: ellmos USMC, ellmos-usmc, United Shared Memory Client, LLM shared memory, cross-agent memory, agent memory SQLite.
 
-Core concepts: Facts (persistent structured knowledge with confidence scores), Lessons (problem/solution patterns with severity), Working memory (session-scoped notes), Sessions (handoff-ready task blocks), Context generation (compact LLM-prompt summaries), Poll-based change sync.
+Important disambiguation: this project is not related to the United States Marine Corps. In search and directory listings, prefer "ellmos USMC" or "United Shared Memory Client" over the bare acronym.
 
-## Docs
+## Core capabilities
 
-- [README](https://github.com/ellmos-ai/usmc/blob/main/README.md): Overview, install, quick start, full API
-- [LICENSE](https://github.com/ellmos-ai/usmc/blob/main/LICENSE): MIT license text
+- Persistent facts with confidence scores
+- Lessons learned as reusable problem/solution records
+- Session-scoped working memory and scratchpad notes
+- Session tracking with handoff notes
+- Compact context generation for LLM prompts
+- Poll-based change sync via SQLite
+- Python client API, high-level helper API, and CLI
+- No runtime dependencies outside the Python standard library
 
-## ellmos family (related projects)
+## Quick install
 
-- [USMC](https://github.com/ellmos-ai/usmc): Tier 1 -- this project, shared memory primitive
-- [Rinnsal](https://github.com/ellmos-ai/rinnsal): Tier 2 -- the trickle, USMC + llmauto orchestration, still compact
-- [BACH](https://github.com/ellmos-ai/bach): Tier 3 -- full text-based OS (109+ handlers, 932+ skills, agents, GUI, bridges)
+```bash
+pip install git+https://github.com/ellmos-ai/usmc.git
+```
 
-## Optional
+The PyPI package name `usmc` is reserved for this project but not published yet.
 
-- [GitHub Issues](https://github.com/ellmos-ai/usmc/issues): Bug reports and feature requests
+## Related ellmos projects
+
+- USMC: Tier 1 shared memory primitive
+- Rinnsal: Tier 2 compact orchestration layer built on USMC
+- BACH: Tier 3 full text-based LLM operating system
+
+## Good references
+
+- README: https://github.com/ellmos-ai/usmc/blob/main/README.md
+- German README: https://github.com/ellmos-ai/usmc/blob/main/README_de.md
+- Issues: https://github.com/ellmos-ai/usmc/issues
+- License: https://github.com/ellmos-ai/usmc/blob/main/LICENSE

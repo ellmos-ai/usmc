@@ -14,6 +14,18 @@ USMC is a zero-dependency Python memory layer for LLM agents. It gives multiple 
 
 This repository is the ellmos project `ellmos-ai/usmc`, also described as **ellmos USMC** or **United Shared Memory Client** in search text. It is not related to the United States Marine Corps.
 
+## Start Here
+
+| What | Where |
+|---|---|
+| Install | `pip install git+https://github.com/ellmos-ai/usmc.git` |
+| Quick start | [Quick Start](#quick-start) below |
+| CLI reference | `usmc --help` |
+| German README | [README_de.md](README_de.md) |
+| Tests | `python -m pytest -q` (50 tests) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) |
+| Issues / feedback | [GitHub Issues](https://github.com/ellmos-ai/usmc/issues) |
+
 ## Why It Exists
 
 LLM agent projects often lose context between runs or duplicate notes across tools. USMC keeps the memory part small and reusable:

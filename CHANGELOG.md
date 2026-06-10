@@ -2,6 +2,11 @@
 
 All notable changes to USMC are documented here.
 
+## 2026-06-10
+
+- Add "Start Here" quick-reference table to README for faster onboarding.
+- Add `last-checked` date to `llms.txt` for LLM crawler freshness signalling.
+
 ## 2026-06-05
 
 - Keep runtime artifacts out of Git with explicit `*.pyc` and `data/` ignore rules.

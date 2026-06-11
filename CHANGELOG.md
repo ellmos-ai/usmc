@@ -2,6 +2,11 @@
 
 All notable changes to USMC are documented here.
 
+## 2026-06-11
+
+- Add `## Audience` and `## Search Phrases` sections to `llms.txt` for LLM-crawler standard compliance.
+- Move `Last-checked` inline marker to proper `## Last-checked:` header at top of `llms.txt`.
+
 ## 2026-06-10
 
 - Add "Start Here" quick-reference table to README for faster onboarding.

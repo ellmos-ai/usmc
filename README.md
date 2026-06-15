@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="assets/ellmos-logo.jpg" alt="ellmos USMC logo" width="260">
-</p>
+<img src="assets/banner.svg" width="100%" alt="USMC Banner">
 
 # USMC - United Shared Memory Client
 

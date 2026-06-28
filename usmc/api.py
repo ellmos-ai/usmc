@@ -28,7 +28,8 @@ from .client import USMCClient
 
 # Globale Client-Instanz
 _client: Optional[USMCClient] = None
-_default_db = "usmc_memory.db"
+from .cli import default_db_path as _ddp
+_default_db = _ddp()
 
 
 def init(

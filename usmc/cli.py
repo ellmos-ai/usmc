@@ -29,10 +29,21 @@ from typing import Optional
 from .client import USMCClient
 
 
+def default_db_path() -> str:
+    """Per-System lokale DB (NICHT in OneDrive/cwd). Override via Env USMC_DB."""
+    import os
+    env = os.environ.get("USMC_DB")
+    if env:
+        return env
+    d = Path.home() / ".usmc"
+    d.mkdir(parents=True, exist_ok=True)
+    return str(d / "usmc_memory.db")
+
+
 def get_client(args) -> USMCClient:
     """Erstellt Client basierend auf CLI-Args."""
     return USMCClient(
-        db_path=args.db or "usmc_memory.db",
+        db_path=args.db or default_db_path(),
         agent_id=args.agent or "cli"
     )
 

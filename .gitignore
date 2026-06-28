@@ -33,3 +33,7 @@ venv/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# SQLite sidecar (lokale DB liegt in ~/.usmc, nie in OneDrive)
+*.db-wal
+*.db-shm

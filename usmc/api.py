@@ -28,8 +28,6 @@ from .client import USMCClient
 
 # Globale Client-Instanz
 _client: Optional[USMCClient] = None
-from .cli import default_db_path as _ddp
-_default_db = _ddp()
 
 
 def init(
@@ -40,17 +38,15 @@ def init(
     Initialisiert die globale USMC-Instanz.
 
     Args:
-        db_path: Pfad zur DB (default: usmc_memory.db im aktuellen Verzeichnis)
+        db_path: Pfad zur DB (default: ``~/.usmc/usmc_memory.db``,
+            Override via Env ``USMC_DB`` — siehe ``client.default_db_path``)
         agent_id: Agent-Kennung
 
     Returns:
         Die initialisierte Client-Instanz
     """
     global _client
-    _client = USMCClient(
-        db_path=db_path or _default_db,
-        agent_id=agent_id
-    )
+    _client = USMCClient(db_path=db_path, agent_id=agent_id)
     return _client
 
 
@@ -58,7 +54,7 @@ def get_client() -> USMCClient:
     """Gibt die globale Client-Instanz zurueck (lazy init)."""
     global _client
     if _client is None:
-        _client = USMCClient(db_path=_default_db, agent_id="default")
+        _client = USMCClient(agent_id="default")
     return _client
 
 
@@ -235,15 +231,4 @@ def forget(key: str, category: str = 'project') -> bool:
     Returns:
         True wenn geloescht, False wenn nicht gefunden
     """
-    import sqlite3
-    client = get_client()
-    conn = client._get_conn()
-    try:
-        cursor = conn.execute(
-            "DELETE FROM usmc_facts WHERE agent_id = ? AND category = ? AND key = ?",
-            (client.agent_id, category, key)
-        )
-        conn.commit()
-        return cursor.rowcount > 0
-    finally:
-        client._close_conn(conn)
+    return get_client().delete_fact(key, category=category)

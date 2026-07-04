@@ -20,7 +20,7 @@ This repository is the ellmos project `ellmos-ai/usmc`, also described as **ellm
 | Quick start | [Quick Start](#quick-start) below |
 | CLI reference | `usmc --help` |
 | German README | [README_de.md](README_de.md) |
-| Tests | `python -m pytest -q` (50 tests) |
+| Tests | `python -m pytest -q` |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |
 | Issues / feedback | [GitHub Issues](https://github.com/ellmos-ai/usmc/issues) |
 
@@ -115,13 +115,23 @@ from usmc import USMCClient
 codex = USMCClient(db_path="shared.db", agent_id="codex")
 claude = USMCClient(db_path="shared.db", agent_id="claude")
 
-codex.add_fact("repo", "status", "needs docs", confidence=0.7)
-claude.add_fact("repo", "status", "docs ready", confidence=0.95)
+codex.add_fact("project", "status", "needs docs", confidence=0.7)
+claude.add_fact("project", "status", "docs ready", confidence=0.95)
 
-print(codex.get_facts(category="repo"))
+print(codex.get_facts(category="project"))
 ```
 
-When two agents write the same fact, the higher-confidence value wins.
+Confidence merging applies per agent: when the same agent rewrites a fact, the
+higher-confidence value wins. Different agents keep separate rows for the same
+key; `get_facts()` returns all of them sorted by confidence (highest first).
+
+## Default Database Location
+
+Without an explicit `db_path`, USMC stores its database per system under
+`~/.usmc/usmc_memory.db` (created on first use). Override the location with
+the `USMC_DB` environment variable or an explicit `db_path=` / `--db` argument.
+This keeps the database out of your project folder and out of cloud-synced
+working directories.
 
 ## Database Schema
 
@@ -129,6 +139,7 @@ When two agents write the same fact, the higher-confidence value wins.
 - `usmc_lessons` - lessons learned with severity
 - `usmc_working` - temporary notes, context, scratchpad
 - `usmc_sessions` - agent session tracking
+- `usmc_meta` - internal schema version
 
 The database is plain SQLite. There is no daemon, broker, cloud service, or external runtime dependency.
 

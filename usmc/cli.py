@@ -23,27 +23,16 @@ License: MIT
 import argparse
 import json
 import sys
-from pathlib import Path
 from typing import Optional
 
-from .client import USMCClient
-
-
-def default_db_path() -> str:
-    """Per-System lokale DB (NICHT in OneDrive/cwd). Override via Env USMC_DB."""
-    import os
-    env = os.environ.get("USMC_DB")
-    if env:
-        return env
-    d = Path.home() / ".usmc"
-    d.mkdir(parents=True, exist_ok=True)
-    return str(d / "usmc_memory.db")
+from . import __version__
+from .client import USMCClient, default_db_path  # noqa: F401 (Re-Export)
 
 
 def get_client(args) -> USMCClient:
     """Erstellt Client basierend auf CLI-Args."""
     return USMCClient(
-        db_path=args.db or default_db_path(),
+        db_path=args.db,  # None -> default_db_path() im Client
         agent_id=args.agent or "cli"
     )
 
@@ -232,9 +221,9 @@ def main(argv: Optional[list] = None) -> int:
         prog='usmc',
         description='USMC - United Shared Memory Client CLI'
     )
-    parser.add_argument('--db', '-d', help='Pfad zur Datenbank (default: usmc_memory.db)')
+    parser.add_argument('--db', '-d', help='Pfad zur Datenbank (default: ~/.usmc/usmc_memory.db, Env USMC_DB)')
     parser.add_argument('--agent', '-a', help='Agent-ID (default: cli)')
-    parser.add_argument('--version', '-V', action='version', version='usmc 0.1.0')
+    parser.add_argument('--version', '-V', action='version', version=f'usmc {__version__}')
 
     subparsers = parser.add_subparsers(dest='command', help='Verfuegbare Befehle')
 

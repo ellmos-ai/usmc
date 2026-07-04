@@ -15,6 +15,7 @@ Author: Lukas Geiger
 License: MIT
 """
 
+import os
 import sqlite3
 import json
 from pathlib import Path
@@ -24,12 +25,25 @@ from datetime import datetime
 from . import schema
 
 
+def default_db_path() -> str:
+    """Per-System lokaler Default-DB-Pfad (NICHT cwd/OneDrive).
+
+    Default: ``~/.usmc/usmc_memory.db``; Override via Env ``USMC_DB``.
+    Legt selbst NICHTS an — das Verzeichnis wird erst beim tatsaechlichen
+    Verbinden durch USMCClient erstellt (kein Import-Seiteneffekt).
+    """
+    env = os.environ.get("USMC_DB")
+    if env:
+        return env
+    return str(Path.home() / ".usmc" / "usmc_memory.db")
+
+
 class USMCClient:
     """
     Cross-Agent Memory Client mit eigener SQLite-DB.
 
     Verwendung:
-        client = USMCClient()  # usmc_memory.db im aktuellen Verzeichnis
+        client = USMCClient()  # ~/.usmc/usmc_memory.db (Override: Env USMC_DB)
         client.add_fact("system", "os", "Windows 11", confidence=0.95)
         client.add_working("Aktueller Task: USMC implementieren")
         facts = client.get_facts()
@@ -48,20 +62,27 @@ class USMCClient:
 
     def __init__(
         self,
-        db_path: str | Path = "usmc_memory.db",
+        db_path: str | Path | None = None,
         agent_id: str = "default"
     ):
         """
         Initialisiert den USMC Client.
 
         Args:
-            db_path: Pfad zur USMC-Datenbank (wird erstellt falls nicht vorhanden)
+            db_path: Pfad zur USMC-Datenbank (wird erstellt falls nicht
+                vorhanden). Default: ``default_db_path()`` — per-System
+                lokal unter ``~/.usmc/usmc_memory.db``, Override via
+                Env ``USMC_DB``.
             agent_id: Agent-Kennung fuer Multi-Agent-Tracking
         """
+        if db_path is None:
+            db_path = default_db_path()
         self._is_memory = str(db_path) == ':memory:'
         self.db_path = db_path if self._is_memory else Path(db_path)
         self.agent_id = agent_id
         self._shared_conn = None  # Fuer :memory: DBs
+        if not self._is_memory:
+            self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._ensure_db()
 
     def _ensure_db(self) -> None:
@@ -80,8 +101,9 @@ class USMCClient:
                 self._shared_conn = sqlite3.connect(':memory:')
                 self._shared_conn.execute("PRAGMA foreign_keys=ON")
             return self._shared_conn
-        conn = sqlite3.connect(str(self.db_path))
+        conn = sqlite3.connect(str(self.db_path), timeout=5.0)
         conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA busy_timeout=5000")
         conn.execute("PRAGMA foreign_keys=ON")
         return conn
 
@@ -211,6 +233,29 @@ class USMCClient:
                 }
                 for r in rows
             ]
+        finally:
+            self._close_conn(conn)
+
+    def delete_fact(self, key: str, category: str = "project") -> bool:
+        """
+        Loescht einen Fakt dieses Agents.
+
+        Args:
+            key: Fakt-Schluessel
+            category: Kategorie (default: project)
+
+        Returns:
+            True wenn geloescht, False wenn nicht gefunden
+        """
+        conn = self._get_conn()
+        try:
+            cursor = conn.execute(
+                "DELETE FROM usmc_facts "
+                "WHERE agent_id = ? AND category = ? AND key = ?",
+                (self.agent_id, category, key)
+            )
+            conn.commit()
+            return cursor.rowcount > 0
         finally:
             self._close_conn(conn)
 

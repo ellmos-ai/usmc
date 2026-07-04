@@ -2,6 +2,32 @@
 
 All notable changes to USMC are documented here.
 
+## 2026-07-04
+
+- **Changed (breaking): default database location is now per-system local.**
+  Without an explicit `db_path`, `USMCClient`, the high-level `api` and the
+  `usmc` CLI all resolve to `~/.usmc/usmc_memory.db` (override via the
+  `USMC_DB` environment variable). Previously `USMCClient()` created
+  `usmc_memory.db` in the current working directory. Introduced for the CLI
+  in the 2026-06-28 local-first change; now unified in a single source of
+  truth (`usmc.client.default_db_path`) used by client, api and CLI.
+- Fixed: importing `usmc` no longer creates `~/.usmc` as a side effect —
+  the directory is created lazily when a client actually connects.
+- Fixed: SQLite connections now use a 5 s busy timeout (`timeout=5.0` +
+  `PRAGMA busy_timeout`), reducing `database is locked` errors when several
+  agents write in parallel.
+- Added: public `USMCClient.delete_fact()`; `api.forget()` now delegates to
+  it instead of touching private client internals.
+- Fixed: `usmc --version` reads `usmc.__version__`; package version is now
+  single-sourced via `[tool.setuptools.dynamic]` in `pyproject.toml`.
+- Fixed: build requirement raised to `setuptools>=77` (needed for the SPDX
+  `license = "MIT"` expression, PEP 639); dropped the obsolete `wheel`
+  build requirement.
+- Docs: corrected the multi-agent README example (category `"repo"` is not
+  a valid category and raised `ValueError`; confidence merging is per agent,
+  not cross-agent) and documented the default database location in both
+  READMEs.
+
 ## 2026-06-11
 
 - Add `## Audience` and `## Search Phrases` sections to `llms.txt` for LLM-crawler standard compliance.

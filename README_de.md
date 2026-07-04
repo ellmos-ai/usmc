@@ -103,13 +103,24 @@ from usmc import USMCClient
 codex = USMCClient(db_path="shared.db", agent_id="codex")
 claude = USMCClient(db_path="shared.db", agent_id="claude")
 
-codex.add_fact("repo", "status", "needs docs", confidence=0.7)
-claude.add_fact("repo", "status", "docs ready", confidence=0.95)
+codex.add_fact("project", "status", "needs docs", confidence=0.7)
+claude.add_fact("project", "status", "docs ready", confidence=0.95)
 
-print(codex.get_facts(category="repo"))
+print(codex.get_facts(category="project"))
 ```
 
-Wenn zwei Agenten denselben Fakt schreiben, gewinnt der Wert mit höherer Confidence.
+Der Confidence-Merge gilt pro Agent: Überschreibt derselbe Agent einen Fakt,
+gewinnt der Wert mit höherer Confidence. Verschiedene Agenten behalten für
+denselben Schlüssel getrennte Einträge; `get_facts()` liefert alle, sortiert
+nach Confidence (höchste zuerst).
+
+## Standard-Speicherort der Datenbank
+
+Ohne explizites `db_path` speichert USMC die Datenbank pro System unter
+`~/.usmc/usmc_memory.db` (wird bei erster Nutzung angelegt). Der Ort lässt
+sich über die Umgebungsvariable `USMC_DB` oder explizit per `db_path=` /
+`--db` übersteuern. So bleibt die Datenbank aus dem Projektordner und aus
+cloud-synchronisierten Arbeitsverzeichnissen heraus.
 
 ## Datenbankschema
 
@@ -117,6 +128,7 @@ Wenn zwei Agenten denselben Fakt schreiben, gewinnt der Wert mit höherer Confid
 - `usmc_lessons` - gelernte Lektionen mit Schweregrad
 - `usmc_working` - temporäre Notizen, Kontext, Scratchpad
 - `usmc_sessions` - Agenten-Sitzungsverlauf
+- `usmc_meta` - interne Schema-Version
 
 Die Datenbank ist reines SQLite. Es gibt keinen Daemon, Broker, Cloud-Dienst oder externe Laufzeitabhängigkeit.
 

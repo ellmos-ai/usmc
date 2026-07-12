@@ -62,6 +62,30 @@ check whether `.MODULES/USMC` or a future `.OS` location is the source of truth.
 
 ---
 
+## Security Audit 2026-07-12
+
+**Auditor:** Codex automation `ai-security-and-dependency-audit`
+**Scope:** Repository hygiene, local secret artifacts, runtime database files,
+OneDrive conflict copies, dependency surface and packaging defaults.
+
+### Fixes
+
+- [x] **(mittel)** `.gitignore` schützt jetzt neben `.env` auch `.env.*`,
+      lokale Token-/Credential-Dateien, Recovery-Code-Dateien, private
+      Schlüssel/Zertifikate, SQLite-Varianten und OneDrive-Konfliktkopien wie
+      `README-Mac Studio.md`.
+- [x] **(niedrig)** `tests/test_repository_hygiene.py` hält die Ignore-Regeln
+      per `git check-ignore` fest und prüft, dass `.env.example` und
+      `.env.sample` weiter trackbar bleiben.
+
+### Status
+
+- Keine realen Secrets oder getrackten lokalen DB-/Key-/Credential-Dateien im
+  Scope gefunden.
+- Direkte Runtime-Dependencies bleiben leer; kein riskantes Upgrade nötig.
+
+---
+
 *Based on `MODULES/_templates/TODO_TEMPLATE.md`; scoped for the 2026-06-04 automation check.*
 
 ---

@@ -2,6 +2,15 @@
 
 All notable changes to USMC are documented here.
 
+## 2026-07-12
+
+- Security hygiene: expanded `.gitignore` for local env variants, token and
+  credential files, recovery-code files, private keys/certificates, SQLite
+  variants and OneDrive conflict copies.
+- Added a repository hygiene regression test that checks sensitive local
+  artifacts stay ignored while `.env.example` and `.env.sample` remain
+  trackable.
+
 ## 2026-07-04
 
 - **Changed (breaking): default database location is now per-system local.**
@@ -51,4 +60,3 @@ All notable changes to USMC are documented here.
 - Sharpen README, README_de, package metadata and `llms.txt` for ellmos USMC discoverability.
 - Add the `USMC tests` GitHub Actions workflow for Python 3.10 through 3.13.
 - Clarify that USMC is the United Shared Memory Client and not related to the United States Marine Corps.
-

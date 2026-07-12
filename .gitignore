@@ -13,6 +13,8 @@ __pycache__/
 dist/
 build/
 *.db
+*.sqlite
+*.sqlite3
 data/
 
 # Virtual Environment
@@ -21,6 +23,29 @@ venv/
 
 # Environment Variables
 .env
+.env.*
+!.env.example
+!.env.sample
+
+# Local secrets / credentials
+.npmrc
+.pypirc
+credentials.json
+secrets.json
+token.json
+tokens.json
+*.token
+*.secret
+*recovery*code*
+*recovery*codes*
+
+# Private keys / certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
 
 # IDE
 .vscode/
@@ -34,9 +59,14 @@ venv/
 Thumbs.db
 desktop.ini
 
+# OneDrive conflict copies
+*-Mac Studio.*
+
 # SQLite sidecar (lokale DB liegt in ~/.usmc, nie in OneDrive)
 *.db-wal
 *.db-shm
+*.sqlite-wal
+*.sqlite-shm
 
 # Multi-Agent Lock-System (lokal, nie committen)
 LOCK*.txt

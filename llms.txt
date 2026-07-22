@@ -1,6 +1,6 @@
 # USMC - United Shared Memory Client
 
-## Last-checked: 2026-06-11
+## Last-checked: 2026-07-22
 
 USMC is the ellmos shared-memory primitive: a zero-dependency Python library and CLI that lets multiple LLM agents share local SQLite-backed memory. Use it when an agent framework needs persistent facts, lessons learned, working notes, session handoff records, and compact prompt context without a daemon or cloud service.
 

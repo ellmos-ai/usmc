@@ -5,6 +5,8 @@
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+[![Tests](https://img.shields.io/badge/Tests-61%20bestanden-brightgreen.svg)](tests)
+[![llms.txt](https://img.shields.io/badge/llms.txt-gepr%C3%BCft-blue.svg)](llms.txt)
 
 **English:** [README.md](README.md)
 
@@ -24,6 +26,38 @@ LLM-Agenten verlieren zwischen Läufen oft Kontext oder verteilen Notizen über 
 - Eine lokale SQLite-Datenbank zwischen Agenten teilen.
 
 USMC ist Tier 1 der ellmos-Familie. Rinnsal und BACH bauen größere Orchestrierungsschichten darauf auf, während USMC bewusst nur Speicher bereitstellt.
+
+### Architektur & Datenfluss
+
+```mermaid
+graph TD
+    subgraph Agenten ["Lokale LLM-Agenten"]
+        A1["Agent A (z. B. Codex)"]
+        A2["Agent B (z. B. Claude)"]
+        A3["Agent C (z. B. Gemini)"]
+    end
+
+    subgraph USMC ["USMC (United Shared Memory Client)"]
+        API["USMC Client API / CLI"]
+        FM["Faktenspeicher (Key/Value + Confidence)"]
+        LM["Gelernte Lektionen (Bugs & Fixes + Schweregrad)"]
+        WM["Arbeitsnotizen & Übergabekontext"]
+    end
+
+    DB[("SQLite-Datenbank (~/.usmc/usmc_memory.db)")]
+
+    A1 -->|add_fact / add_lesson| API
+    A2 -->|add_working / context| API
+    A3 -->|query changes / facts| API
+
+    API --> FM
+    API --> LM
+    API --> WM
+
+    FM --> DB
+    LM --> DB
+    WM --> DB
+```
 
 ## Installation
 

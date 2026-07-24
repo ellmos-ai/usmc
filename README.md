@@ -5,6 +5,8 @@
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+[![Tests](https://img.shields.io/badge/Tests-61%20passed-brightgreen.svg)](tests)
+[![llms.txt](https://img.shields.io/badge/llms.txt-verified-blue.svg)](llms.txt)
 
 **Deutsch:** [README_de.md](README_de.md)
 
@@ -36,6 +38,38 @@ LLM agent projects often lose context between runs or duplicate notes across too
 - Share one local SQLite database across different agents.
 
 USMC is Tier 1 of the ellmos family. Rinnsal and BACH build larger orchestration layers on top, but USMC stays focused on memory only.
+
+### Architecture & Data Flow
+
+```mermaid
+graph TD
+    subgraph Agents ["Local LLM Agents"]
+        A1["Agent A (e.g. Codex)"]
+        A2["Agent B (e.g. Claude)"]
+        A3["Agent C (e.g. Gemini)"]
+    end
+
+    subgraph USMC ["USMC (United Shared Memory Client)"]
+        API["USMC Client API / CLI"]
+        FM["Facts Memory (Key/Value + Confidence)"]
+        LM["Lessons Learned (Bugs & Fixes + Severity)"]
+        WM["Working Notes & Handoff Context"]
+    end
+
+    DB[("SQLite Database (~/.usmc/usmc_memory.db)")]
+
+    A1 -->|add_fact / add_lesson| API
+    A2 -->|add_working / context| API
+    A3 -->|query changes / facts| API
+
+    API --> FM
+    API --> LM
+    API --> WM
+
+    FM --> DB
+    LM --> DB
+    WM --> DB
+```
 
 ## Install
 

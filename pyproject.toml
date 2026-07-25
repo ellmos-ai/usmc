@@ -49,3 +49,8 @@ include = ["usmc*"]
 
 [tool.setuptools.dynamic]
 version = { attr = "usmc.__version__" }
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = ["tests"]
+

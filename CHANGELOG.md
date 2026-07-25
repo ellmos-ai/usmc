@@ -2,6 +2,12 @@
 
 All notable changes to USMC are documented here.
 
+## 2026-07-25
+
+- Technical hygiene & maintenance check: added `[tool.pytest.ini_options]` in `pyproject.toml`
+  with `pythonpath = "."`, verified test suite (61/61 passed), module `compileall`,
+  and repository hygiene.
+
 ## 2026-07-22
 
 - Technical hygiene & documentation maintenance: updated `llms.txt` `Last-checked`

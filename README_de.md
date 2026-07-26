@@ -14,6 +14,9 @@ USMC ist eine Python-Speicherschicht ohne externe Abhängigkeiten für LLM-Agent
 
 Dieses Repository ist das ellmos-Projekt `ellmos-ai/usmc`, in Suchtexten auch **ellmos USMC** oder **United Shared Memory Client**. Es steht in keiner Beziehung zum United States Marine Corps.
 
+> [!NOTE]
+> **ellmos USMC (United Shared Memory Client)** ist die Tier-1-Speicherbasis für lokale LLM-Agenten im [ellmos AI Ökosystem](https://github.com/ellmos-ai). Es bietet eine SQLite-basierte Persistenz ohne externe Laufzeit-Abhängigkeiten für Fakten, gelernten Lektionen, Arbeitsnotizen und Prompt-Kontext ohne Hintergrund-Daemon oder Cloud-Zwang.
+
 ## Zweck
 
 LLM-Agenten verlieren zwischen Läufen oft Kontext oder verteilen Notizen über mehrere Werkzeuge. USMC hält nur den Speicherteil klein und wiederverwendbar:

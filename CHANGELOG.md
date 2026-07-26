@@ -2,6 +2,10 @@
 
 All notable changes to USMC are documented here.
 
+## 2026-07-26
+
+- Discoverability & SEO check (Path B): added GFM LLM note callouts (`> [!NOTE]`) to `README.md` and `README_de.md` clarifying the role of USMC as Tier 1 shared memory primitive in the ellmos AI ecosystem, updated `llms.txt` verification timestamp to 2026-07-26, verified test suite (61/61 passed), and updated marketing log.
+
 ## 2026-07-25
 
 - Technical hygiene & maintenance check: added `[tool.pytest.ini_options]` in `pyproject.toml`

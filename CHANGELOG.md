@@ -2,6 +2,11 @@
 
 All notable changes to USMC are documented here.
 
+## Unreleased
+
+- Technical hygiene: test the zero-dependency package on Python 3.14 in CI and
+  advertise that supported target in the package classifiers.
+
 ## 2026-07-27
 
 - Technical hygiene & maintenance check: updated `llms.txt` verification timestamp to 2026-07-27, cleaned up untracked local OneDrive conflict files, and verified full test suite (61/61 passed).

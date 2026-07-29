@@ -109,7 +109,7 @@ OneDrive conflict copies, dependency surface and packaging defaults.
 ### Upgrades
 
 - [x] **(mittel, erledigt 2026-07-04: `setuptools>=77`, `wheel` entfernt; per pip-Metadaten-Build + Install verifiziert)** `pyproject.toml:2` Build-Anforderung anheben: Der SPDX-Lizenzausdruck `license = "MIT"` (Zeile 10, PEP 639) erfordert setuptools >= 77; deklariert ist nur `setuptools>=68.0` — mit altem setuptools schlägt der Build fehl. Auf `setuptools>=77` anheben; `"wheel"` aus `requires` entfernen (wird von modernem setuptools nicht mehr benötigt).
-- [ ] **(niedrig) CI-Matrix erweitern:** `.github/workflows/ci.yml` testet Python 3.10-3.13; Python 3.14 ergänzen (und Classifier in `pyproject.toml` nachziehen).
+- [x] **(niedrig, erledigt 2026-07-29: CI-Matrix und Classifier um Python 3.14 erweitert)** `.github/workflows/ci.yml` testet Python 3.10-3.14; der `pyproject.toml`-Classifier ist entsprechend nachgezogen.
 - [ ] **(niedrig) Lint-Step in CI:** Kein Linter/Formatter konfiguriert. `ruff check` als zusätzlicher CI-Step wäre bei Zero-Dependency-Anspruch ein günstiger Qualitätsgewinn.
 - [ ] **(niedrig) `tests/test_client.py:13` (analog `test_api.py`/`test_cli.py`):** `sys.path.insert`-Hack entfernen — CI installiert ohnehin per `pip install -e .`.
 - [ ] **(niedrig) Optionales `[project.optional-dependencies]` dev/test-Extra** (pytest), damit `pip install -e .[test]` reproduzierbar ist statt Ad-hoc-Installation in CI.

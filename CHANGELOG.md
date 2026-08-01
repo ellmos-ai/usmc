@@ -4,6 +4,8 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- Synchronized the maintained German README with the canonical English
+  onboarding structure and restored byte-identical code and Mermaid examples.
 - Technical hygiene: test the zero-dependency package on Python 3.14 in CI and
   advertise that supported target in the package classifiers.
 

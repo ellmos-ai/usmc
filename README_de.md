@@ -1,4 +1,4 @@
-<img src="assets/banner.svg" width="100%" alt="USMC Banner">
+<img src="assets/banner.png" width="100%" alt="USMC Banner">
 
 # USMC - United Shared Memory Client
 
@@ -15,9 +15,21 @@ USMC ist eine Python-Speicherschicht ohne externe Abhängigkeiten für LLM-Agent
 Dieses Repository ist das ellmos-Projekt `ellmos-ai/usmc`, in Suchtexten auch **ellmos USMC** oder **United Shared Memory Client**. Es steht in keiner Beziehung zum United States Marine Corps.
 
 > [!NOTE]
-> **ellmos USMC (United Shared Memory Client)** ist die Tier-1-Speicherbasis für lokale LLM-Agenten im [ellmos AI Ökosystem](https://github.com/ellmos-ai). Es bietet eine SQLite-basierte Persistenz ohne externe Laufzeit-Abhängigkeiten für Fakten, gelernten Lektionen, Arbeitsnotizen und Prompt-Kontext ohne Hintergrund-Daemon oder Cloud-Zwang.
+> **ellmos USMC (United Shared Memory Client)** ist die Tier-1-Speicherbasis für lokale LLM-Agenten im [ellmos AI Ökosystem](https://github.com/ellmos-ai). Es bietet ohne externe Laufzeitabhängigkeiten eine SQLite-basierte Persistenz für Fakten, gelernte Lektionen, Arbeitsnotizen und Prompt-Kontext — ohne Hintergrund-Daemon oder Cloud-Zwang.
 
-## Zweck
+## Hier beginnen
+
+| Was | Wo |
+|---|---|
+| Installation | `pip install git+https://github.com/ellmos-ai/usmc.git` |
+| Schnellstart | [Schnellstart](#schnellstart) weiter unten |
+| CLI-Referenz | `usmc --help` |
+| Englische README | [README.md](README.md) |
+| Tests | `python -m pytest -q` |
+| Änderungsprotokoll | [CHANGELOG.md](CHANGELOG.md) |
+| Issues / Feedback | [GitHub Issues](https://github.com/ellmos-ai/usmc/issues) |
+
+## Warum es USMC gibt
 
 LLM-Agenten verlieren zwischen Läufen oft Kontext oder verteilen Notizen über mehrere Werkzeuge. USMC hält nur den Speicherteil klein und wiederverwendbar:
 
@@ -34,20 +46,20 @@ USMC ist Tier 1 der ellmos-Familie. Rinnsal und BACH bauen größere Orchestrier
 
 ```mermaid
 graph TD
-    subgraph Agenten ["Lokale LLM-Agenten"]
-        A1["Agent A (z. B. Codex)"]
-        A2["Agent B (z. B. Claude)"]
-        A3["Agent C (z. B. Gemini)"]
+    subgraph Agents ["Local LLM Agents"]
+        A1["Agent A (e.g. Codex)"]
+        A2["Agent B (e.g. Claude)"]
+        A3["Agent C (e.g. Gemini)"]
     end
 
     subgraph USMC ["USMC (United Shared Memory Client)"]
         API["USMC Client API / CLI"]
-        FM["Faktenspeicher (Key/Value + Confidence)"]
-        LM["Gelernte Lektionen (Bugs & Fixes + Schweregrad)"]
-        WM["Arbeitsnotizen & Übergabekontext"]
+        FM["Facts Memory (Key/Value + Confidence)"]
+        LM["Lessons Learned (Bugs & Fixes + Severity)"]
+        WM["Working Notes & Handoff Context"]
     end
 
-    DB[("SQLite-Datenbank (~/.usmc/usmc_memory.db)")]
+    DB[("SQLite Database (~/.usmc/usmc_memory.db)")]
 
     A1 -->|add_fact / add_lesson| API
     A2 -->|add_working / context| API
@@ -87,12 +99,12 @@ client = USMCClient(agent_id="codex")
 
 client.add_fact("project", "framework", "FastAPI", confidence=0.9)
 client.add_lesson(
-    title="Windows-Encoding",
-    problem="Python-Subprocess-Ausgabe nutzte cp1252",
-    solution="Mit PYTHONIOENCODING=utf-8 ausführen",
+    title="Windows encoding",
+    problem="Python subprocess output used cp1252",
+    solution="Run with PYTHONIOENCODING=utf-8",
     severity="high",
 )
-client.add_working("Aktuell wird eine Release-Checkliste vorbereitet")
+client.add_working("Currently preparing a release checklist")
 
 print(client.generate_context())
 ```
@@ -104,8 +116,8 @@ from usmc import api
 
 api.init(agent_id="claude")
 api.remember("repo", "ellmos-ai/usmc")
-api.note("README und Paketmetadaten prüfen")
-api.lesson("Marketing-Check", "Keine Suchsichtbarkeit", "ellmos-usmc-Wording nutzen")
+api.note("Audit README and package metadata")
+api.lesson("Marketing check", "No search visibility", "Use ellmos-usmc wording")
 
 print(api.status())
 print(api.context())
@@ -116,8 +128,8 @@ CLI:
 ```bash
 usmc status
 usmc fact project framework FastAPI --confidence 0.9
-usmc note "Aktuelle Aufgabe: Release-Polish"
-usmc lesson "Encoding-Bug" "cp1252-Ausgabe" "PYTHONIOENCODING=utf-8 setzen" --severity high
+usmc note "Current task: release polish"
+usmc lesson "Encoding bug" "cp1252 output" "Set PYTHONIOENCODING=utf-8" --severity high
 usmc context
 usmc changes "2026-02-28T00:00:00" --json
 ```

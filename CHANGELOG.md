@@ -4,6 +4,9 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- Technical hygiene & documentation verification (2026-08-04): refreshed the
+  `llms.txt` verification date; verified 61 tests, 15 subtests, `compileall`,
+  and the installed `usmc --version` / `usmc --help` console entry points.
 - Synchronized the maintained German README with the canonical English
   onboarding structure and restored byte-identical code and Mermaid examples.
 - Technical hygiene: test the zero-dependency package on Python 3.14 in CI and

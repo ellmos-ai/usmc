@@ -88,7 +88,10 @@ From a local checkout:
 pip install -e .
 ```
 
-The PyPI package name `usmc` is reserved for this project but not yet published. Until the first PyPI release, use the GitHub install form above.
+There is no PyPI release yet, and the name `usmc` is currently unclaimed on PyPI
+(no project of that name exists there as of 2026-08-08). Until a first release is
+published, use the GitHub install form above and do not assume that a `pip install usmc`
+from PyPI would install this project.
 
 ## Quick Start
 
@@ -133,6 +136,13 @@ usmc lesson "Encoding bug" "cp1252 output" "Set PYTHONIOENCODING=utf-8" --severi
 usmc context
 usmc changes "2026-02-28T00:00:00" --json
 ```
+
+> [!NOTE]
+> **Command names and options are English, but the CLI messages, `--help` texts and the
+> headings produced by `generate_context()` are currently German.** The library API itself is
+> language-neutral; only the user-facing output is not. Switching the runtime output to English
+> is still an open decision, because it changes behaviour for existing users and touches the
+> test suite. Until then, expect German output strings.
 
 ## Core Concepts
 

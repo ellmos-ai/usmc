@@ -88,7 +88,10 @@ Aus einem lokalen Checkout:
 pip install -e .
 ```
 
-Der PyPI-Paketname `usmc` ist für dieses Projekt vorgesehen, aber noch nicht veröffentlicht. Bis zum ersten PyPI-Release bitte die GitHub-Installation verwenden.
+Es gibt noch kein PyPI-Release, und der Name `usmc` ist auf PyPI derzeit nicht vergeben
+(Stand 2026-08-08 existiert dort kein Projekt dieses Namens). Bis zum ersten Release bitte
+die GitHub-Installation oben verwenden und nicht davon ausgehen, dass ein `pip install usmc`
+von PyPI dieses Projekt installiert.
 
 ## Schnellstart
 
@@ -133,6 +136,13 @@ usmc lesson "Encoding bug" "cp1252 output" "Set PYTHONIOENCODING=utf-8" --severi
 usmc context
 usmc changes "2026-02-28T00:00:00" --json
 ```
+
+> [!NOTE]
+> **Befehlsnamen und Optionen sind englisch, die CLI-Meldungen, `--help`-Texte und die von
+> `generate_context()` erzeugten Überschriften sind derzeit deutsch.** Die Bibliotheks-API ist
+> sprachneutral, die Ausgabe an den Nutzer nicht. Die Umstellung der Laufzeitausgabe auf Englisch
+> ist eine noch offene Entscheidung, weil sie das Verhalten bestehender Nutzer ändert und die
+> Testsuite berührt. Bis dahin sind deutsche Ausgabetexte zu erwarten.
 
 ## Kernkonzepte
 

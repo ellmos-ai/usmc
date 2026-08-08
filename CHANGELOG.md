@@ -4,6 +4,17 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`
+  is **not** reserved for this project. As of 2026-08-08 no project of that name exists on
+  PyPI, so a PyPI package called `usmc` is not necessarily this one. Install from GitHub.
+- Documented that the CLI messages, `--help` texts and `generate_context()` headings are
+  currently German while the rest of the project is English, so the gap is visible instead
+  of surprising users.
+- Removed the internal pre-release audit file `TODO.md` from version control and added it to
+  `.gitignore`; it is planning material, not repository content.
+- Added `.gitattributes` (`* text=auto eol=lf`) and renormalized line endings, which were
+  previously mixed CRLF/LF within the same files.
+- Rewrote the remaining German `.gitignore` comments in neutral English.
 - Synchronized the maintained German README with the canonical English
   onboarding structure and restored byte-identical code and Mermaid examples.
 - Technical hygiene: test the zero-dependency package on Python 3.14 in CI and

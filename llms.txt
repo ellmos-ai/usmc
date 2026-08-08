@@ -1,6 +1,6 @@
 # USMC - United Shared Memory Client
 
-## Last-checked: 2026-07-27
+## Last-checked: 2026-08-08
 
 USMC is the ellmos shared-memory primitive: a zero-dependency Python library and CLI that lets multiple LLM agents share local SQLite-backed memory. Use it when an agent framework needs persistent facts, lessons learned, working notes, session handoff records, and compact prompt context without a daemon or cloud service.
 
@@ -46,7 +46,7 @@ agent context generation SQLite
 pip install git+https://github.com/ellmos-ai/usmc.git
 ```
 
-The PyPI package name `usmc` is reserved for this project but not published yet.
+There is no PyPI release yet. The name `usmc` is unclaimed on PyPI as of 2026-08-08, so a PyPI package called `usmc` is not necessarily this project. Install from GitHub.
 
 ## Related ellmos projects
 

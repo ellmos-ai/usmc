@@ -12,8 +12,8 @@ All notable changes to USMC are documented here.
   of surprising users.
 - Removed the internal pre-release audit file `TODO.md` from version control and added it to
   `.gitignore`; it is planning material, not repository content.
-- Added `.gitattributes` (`* text=auto eol=lf`) and renormalized line endings, which were
-  previously mixed CRLF/LF within the same files.
+- Added `.gitattributes` (`* text=auto eol=lf`, binary assets excluded). The committed files
+  were already LF, but nothing pinned that, so working copies drifted into mixed CRLF/LF.
 - Rewrote the remaining German `.gitignore` comments in neutral English.
 - Synchronized the maintained German README with the canonical English
   onboarding structure and restored byte-identical code and Mermaid examples.

@@ -1,5 +1,6 @@
-# Internal planning files
+# Internal planning files (audit notes, task lists, handovers)
 PLAN.txt
+TODO.md
 
 # Private / Archive
 _archive/
@@ -59,14 +60,14 @@ tokens.json
 Thumbs.db
 desktop.ini
 
-# OneDrive conflict copies
+# Cloud-sync conflict copies (OneDrive/Dropbox append the device name)
 *-Mac Studio.*
 
-# SQLite sidecar (lokale DB liegt in ~/.usmc, nie in OneDrive)
+# SQLite sidecar files (the runtime database lives in ~/.usmc, never in the repo)
 *.db-wal
 *.db-shm
 *.sqlite-wal
 *.sqlite-shm
 
-# Multi-Agent Lock-System (lokal, nie committen)
+# Multi-agent lock system (local only, never committed)
 LOCK*.txt

@@ -4,6 +4,12 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- Maintainer-Verifikation am 2026-08-10: 61 Tests und 15 Subtests, Ruff,
+  `compileall`, `usmc --version`, `usmc --help` und `python -m build
+  --no-isolation` (sdist + Wheel) lokal erfolgreich.
+- Fünf bestehende Ruff-Hygienebefunde (ungenutzte Imports, unnötige `f`-Präfixe,
+  ambiger Schleifenname) ohne Verhaltensänderung behoben; die vorhandene
+  `TODO.md`-Änderung blieb unangetastet.
 - Technical hygiene & documentation verification (2026-08-04): refreshed the
   `llms.txt` verification date; verified 61 tests, 15 subtests, `compileall`,
   and the installed `usmc --version` / `usmc --help` console entry points.

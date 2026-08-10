@@ -42,8 +42,8 @@ def cmd_status(args) -> int:
     client = get_client(args)
     status = client.get_status()
 
-    print(f"USMC Memory Status")
-    print(f"==================")
+    print("USMC Memory Status")
+    print("==================")
     print(f"DB:              {status['db_path']}")
     print(f"Agent:           {status['agent_id']}")
     print(f"Facts:           {status['facts_count']} ({status['confident_facts']} mit confidence >= 0.8)")
@@ -162,11 +162,11 @@ def cmd_lessons(args) -> int:
     if args.json:
         print(json.dumps(lessons, indent=2, ensure_ascii=False))
     else:
-        for l in lessons:
+        for lesson in lessons:
             sev = {'critical': '!!!', 'high': '!! ', 'medium': '!  ', 'low': '   '}
-            print(f"[{l['id']}] {sev.get(l['severity'], '   ')} {l['title']}")
-            print(f"     Problem:  {l['problem'][:50]}")
-            print(f"     Solution: {l['solution'][:50]}")
+            print(f"[{lesson['id']}] {sev.get(lesson['severity'], '   ')} {lesson['title']}")
+            print(f"     Problem:  {lesson['problem'][:50]}")
+            print(f"     Solution: {lesson['solution'][:50]}")
             print()
     return 0
 

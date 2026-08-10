@@ -144,6 +144,17 @@ usmc changes "2026-02-28T00:00:00" --json
 | Sitzungen | Start/Ende-Einträge mit Übergabenotizen | Kontinuität zwischen Agenten |
 | Änderungen | Abfragbarer Änderungsstrom | Leichtgewichtige Synchronisierung |
 
+## Laufzeit-Sprachvertrag
+
+Die öffentliche Laufzeitsprache ist aus Kompatibilitätsgründen bewusst Deutsch
+(`de`). `USMCClient.generate_context()` und die CLI geben menschenlesbare
+Prosa und Hilfe auf Deutsch aus. Befehlsnamen, Kategorie-Werte, JSON-Schlüssel,
+Produktnamen und andere technische Bezeichner bleiben stabile englische
+Protokoll-Tokens; es gibt keine automatische Locale-Erkennung und keinen
+stillen Sprachwechsel. Der Vertrag ist als `usmc.RUNTIME_LANGUAGE == "de"`
+sichtbar und durch die Tests abgesichert. Eine englische Laufzeit wäre eine
+ausdrückliche, versionierte Maintainerentscheidung.
+
 ## Multi-Agent-Beispiel
 
 ```python

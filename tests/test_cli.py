@@ -176,6 +176,10 @@ class TestUSMCCli(unittest.TestCase):
     def test_no_command(self):
         code, out, err = self.run_cli([])
         self.assertEqual(code, 1)
+        # Human-readable help stays German; command names and technical
+        # identifiers remain stable English protocol tokens.
+        self.assertIn('Verfuegbare Befehle', out)
+        self.assertIn('Speichert einen Fakt', out)
 
 
 if __name__ == '__main__':

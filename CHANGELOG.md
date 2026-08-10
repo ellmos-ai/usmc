@@ -4,6 +4,15 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- Runtime language contract (2026-08-10): human-readable API/CLI prose and
+  help remain intentionally German (`de`) for compatibility; command names,
+  category values and JSON keys remain stable English protocol tokens. The
+  contract is exposed as `usmc.RUNTIME_LANGUAGE` and covered by tests.
+- Audit/release readback (2026-08-10): source version `0.1.0`, classifiers
+  Python 3.10–3.14, manifest `ellmos.module.v2` active/public-candidate, and
+  `llms.txt` checked on 2026-08-10. No Git tag or public release exists;
+  status remains `Unreleased`. The existing uncommitted `TODO.md` TASKWRITER
+  section is foreign state and was intentionally left untouched.
 - Maintainer-Verifikation am 2026-08-10: 61 Tests und 15 Subtests, Ruff,
   `compileall`, `usmc --version`, `usmc --help` und `python -m build
   --no-isolation` (sdist + Wheel) lokal erfolgreich.

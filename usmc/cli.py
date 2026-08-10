@@ -3,7 +3,9 @@
 USMC Command-Line Interface
 ============================
 
-CLI fuer USMC Memory-Operationen.
+CLI fuer USMC Memory-Operationen. Die menschenlesbare Laufzeitprosa ist
+bewusst Deutsch (``RUNTIME_LANGUAGE = "de"``); Befehlsnamen, Kategorie-
+werte und JSON-Schluessel bleiben stabile englische Protokoll-Tokens.
 
 Verwendung:
     usmc status

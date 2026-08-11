@@ -8,6 +8,11 @@
 [![Tests](https://img.shields.io/badge/Tests-61%20bestanden-brightgreen.svg)](tests)
 [![llms.txt](https://img.shields.io/badge/llms.txt-gepr%C3%BCft-blue.svg)](llms.txt)
 
+> Verifikationsstand (2026-08-11): Lokal bestehen 61 Tests und 15 Subtests;
+> Ruff, `compileall`, die CLI-Prüfungen sowie sdist-/Wheel-Build sind grün.
+> Es gibt keinen Git-Tag und kein öffentliches Release; das Paket bleibt
+> `Unreleased`.
+
 **English:** [README.md](README.md)
 
 USMC ist eine Python-Speicherschicht ohne externe Abhängigkeiten für LLM-Agenten. Mehrere lokale Agenten teilen sich damit eine SQLite-basierte Erinnerung für Fakten, Lektionen, Arbeitsnotizen, Sitzungen und kompakten Prompt-Kontext.

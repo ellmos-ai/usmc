@@ -8,6 +8,10 @@
 [![Tests](https://img.shields.io/badge/Tests-61%20passed-brightgreen.svg)](tests)
 [![llms.txt](https://img.shields.io/badge/llms.txt-verified-blue.svg)](llms.txt)
 
+> Verification snapshot (2026-08-11): 61 tests and 15 subtests pass locally;
+> Ruff, `compileall`, the CLI checks, and the sdist/wheel build pass. No Git
+> tag or public release exists; the package remains `Unreleased`.
+
 **Deutsch:** [README_de.md](README_de.md)
 
 USMC is a zero-dependency Python memory layer for LLM agents. It gives multiple local agents one shared SQLite-backed memory for facts, lessons, working notes, sessions, and compact prompt context.

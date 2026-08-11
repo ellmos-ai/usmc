@@ -1,6 +1,6 @@
 # USMC - United Shared Memory Client
 
-## Last-checked: 2026-08-10
+## Last-checked: 2026-08-11
 
 USMC is the ellmos shared-memory primitive: a zero-dependency Python library and CLI that lets multiple LLM agents share local SQLite-backed memory. Use it when an agent framework needs persistent facts, lessons learned, working notes, session handoff records, and compact prompt context without a daemon or cloud service.
 
@@ -45,7 +45,7 @@ agent context generation SQLite
 - Human-readable API/CLI prose and help remain intentionally German (`de`) for
   compatibility; command names, category values and JSON keys are stable
   English protocol tokens. The package exposes `usmc.RUNTIME_LANGUAGE == "de"`.
-- Verified on 2026-08-10: 61 tests and 15 subtests passed, Ruff and compileall
+- Verified on 2026-08-11: 61 tests and 15 subtests passed, Ruff and compileall
   passed, and a local sdist/wheel build completed successfully.
 - Source version is `0.1.0`; the release remains `Unreleased` with no Git tag
   and no public release performed. `ellmos-module.v2.json` remains active and

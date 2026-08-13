@@ -32,7 +32,7 @@ All notable changes to USMC are documented here.
 - Documented in `README.md` and `README_de.md`, including the search convention: USMC carries
   process state, subject-matter status lives in the canonical registers, and the first tag of a
   note names its pipeline.
-- Test suite grew from 61 to 96 tests.
+- Test suite grew from 61 to 97 tests.
 
 Reported as ticket T-20260813-90: a model searching for store entries found nothing because
 `usmc working` offered no filter beyond `--limit` and the list was dominated by research notes.

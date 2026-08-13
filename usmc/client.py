@@ -25,6 +25,27 @@ from datetime import datetime
 from . import schema
 
 
+def _like_escape(value: str) -> str:
+    """Maskiert LIKE-Platzhalter, damit ein Suchbegriff woertlich gilt.
+
+    Ohne Maskierung waeren '%' und '_' im Suchbegriff Wildcards -- '_' wuerde
+    also jedes beliebige Zeichen treffen. Passend dazu setzen alle Abfragen
+    ``ESCAPE '\\'``.
+    """
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
+def _split_tags(tags) -> List[str]:
+    """Normalisiert eine Tag-Angabe zu einer Liste.
+
+    Akzeptiert 'a,b', 'a, b' oder ['a', 'b']; leere Teile fallen weg.
+    """
+    if tags is None:
+        return []
+    raw = tags.split(",") if isinstance(tags, str) else list(tags)
+    return [str(t).strip() for t in raw if str(t).strip()]
+
+
 def default_db_path() -> str:
     """Per-System lokaler Default-DB-Pfad (NICHT cwd/OneDrive).
 
@@ -117,6 +138,52 @@ class USMCClient:
         return f"agent:{self.agent_id}"
 
     # ═══════════════════════════════════════════════════════════════
+    # Filter-Bausteine (nur lesend, kein Schema-Eingriff)
+    # ═══════════════════════════════════════════════════════════════
+
+    @staticmethod
+    def _tag_filter(tags, match_all: bool = False):
+        """Baut eine begrenzer-verankerte Bedingung fuer die tags-Spalte.
+
+        Ein nacktes ``tags LIKE '%rh%'`` traefe auch 'research' oder
+        'rhythm'. Deshalb wird die Spalte beidseitig mit Kommas umschlossen
+        und der Tag inklusive seiner Kommas gesucht -- ein Tag matcht damit
+        nur als ganzer Listeneintrag. Leerzeichen in der Spalte werden vorher
+        entfernt, damit 'a, b' und 'a,b' gleich behandelt werden.
+
+        Args:
+            tags: Tag-Angabe ('a,b' oder Liste)
+            match_all: True = alle Tags muessen vorkommen (UND),
+                False = mindestens einer (ODER, default)
+
+        Returns:
+            (sql_fragment, params) oder (None, []) wenn nichts zu filtern ist.
+            NULL-Tags matchen nie (Konkatenation mit NULL ergibt NULL).
+        """
+        terms = _split_tags(tags)
+        if not terms:
+            return None, []
+        expr = "(',' || REPLACE(tags, ' ', '') || ',') LIKE ('%,' || ? || ',%') ESCAPE '\\'"
+        joiner = " AND " if match_all else " OR "
+        return "(" + joiner.join([expr] * len(terms)) + ")", [_like_escape(t) for t in terms]
+
+    @staticmethod
+    def _grep_filter(grep: Optional[str], columns):
+        """Baut eine LIKE-Bedingung ueber mehrere Spalten (ODER-verknuepft).
+
+        Gross-/Kleinschreibung wird von SQLites LIKE fuer ASCII ignoriert;
+        Umlaute werden unterschieden (SQLite kennt ohne ICU kein Unicode-Casefolding).
+
+        Returns:
+            (sql_fragment, params) oder (None, []) wenn nichts zu filtern ist.
+        """
+        if not grep or not grep.strip():
+            return None, []
+        like = f"%{_like_escape(grep.strip())}%"
+        expr = " OR ".join(f"{c} LIKE ? ESCAPE '\\'" for c in columns)
+        return f"({expr})", [like] * len(columns)
+
+    # ═══════════════════════════════════════════════════════════════
     # Facts
     # ═══════════════════════════════════════════════════════════════
 
@@ -192,7 +259,8 @@ class USMCClient:
         self,
         category: Optional[str] = None,
         min_confidence: float = 0.0,
-        agent_id: Optional[str] = None
+        agent_id: Optional[str] = None,
+        grep: Optional[str] = None
     ) -> List[Dict]:
         """
         Holt Facts aus der DB.
@@ -201,6 +269,7 @@ class USMCClient:
             category: Filter nach Kategorie (optional)
             min_confidence: Minimale Konfidenz (0.0-1.0)
             agent_id: Filter nach Agent (optional, default: alle Agents)
+            grep: Volltext-Teilstring ueber key und value (optional)
 
         Returns:
             Liste von Fakt-Dicts
@@ -216,6 +285,11 @@ class USMCClient:
             if agent_id:
                 conditions.append("agent_id = ?")
                 params.append(agent_id)
+
+            grep_sql, grep_params = self._grep_filter(grep, ["key", "value"])
+            if grep_sql:
+                conditions.append(grep_sql)
+                params.extend(grep_params)
 
             where = " AND ".join(conditions)
             rows = conn.execute(f"""
@@ -311,14 +385,24 @@ class USMCClient:
     def get_working(
         self,
         limit: int = 10,
-        agent_id: Optional[str] = None
+        agent_id: Optional[str] = None,
+        tags=None,
+        tags_all: bool = False,
+        grep: Optional[str] = None
     ) -> List[Dict]:
         """
         Holt aktive Working-Memory-Notizen.
 
+        Alle Filter wirken in der WHERE-Klausel, also VOR dem Limit: bei
+        ``limit=10`` werden die 10 besten Treffer *des Filters* geliefert,
+        nicht der Filter auf die letzten 10 Notizen angewendet.
+
         Args:
-            limit: Maximale Anzahl (neueste zuerst)
+            limit: Maximale Anzahl (hoechste Prioritaet, dann neueste zuerst)
             agent_id: Filter nach Agent (optional, default: alle)
+            tags: Tag-Filter ('a,b' oder Liste); default ODER-verknuepft
+            tags_all: True = alle angegebenen Tags muessen vorkommen (UND)
+            grep: Volltext-Teilstring ueber content (optional)
 
         Returns:
             Liste von Notiz-Dicts
@@ -331,6 +415,16 @@ class USMCClient:
             if agent_id:
                 conditions.append("agent_id = ?")
                 params.append(agent_id)
+
+            tag_sql, tag_params = self._tag_filter(tags, match_all=tags_all)
+            if tag_sql:
+                conditions.append(tag_sql)
+                params.extend(tag_params)
+
+            grep_sql, grep_params = self._grep_filter(grep, ["content"])
+            if grep_sql:
+                conditions.append(grep_sql)
+                params.extend(grep_params)
 
             where = " AND ".join(conditions)
             params.append(limit)
@@ -440,7 +534,8 @@ class USMCClient:
         self,
         limit: int = 10,
         severity: Optional[str] = None,
-        agent_id: Optional[str] = None
+        agent_id: Optional[str] = None,
+        grep: Optional[str] = None
     ) -> List[Dict]:
         """
         Holt Lessons Learned.
@@ -449,6 +544,7 @@ class USMCClient:
             limit: Maximale Anzahl
             severity: Filter nach Severity (optional)
             agent_id: Filter nach Agent (optional, default: alle)
+            grep: Volltext-Teilstring ueber title, problem und solution (optional)
 
         Returns:
             Liste von Lesson-Dicts
@@ -464,6 +560,13 @@ class USMCClient:
             if agent_id:
                 conditions.append("agent_id = ?")
                 params.append(agent_id)
+
+            grep_sql, grep_params = self._grep_filter(
+                grep, ["title", "problem", "solution"]
+            )
+            if grep_sql:
+                conditions.append(grep_sql)
+                params.extend(grep_params)
 
             where = " AND ".join(conditions)
             params.append(limit)

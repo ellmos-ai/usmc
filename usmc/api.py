@@ -91,10 +91,22 @@ def fact(
 
 def facts(
     category: Optional[str] = None,
-    min_confidence: float = 0.0
+    min_confidence: float = 0.0,
+    agent_id: Optional[str] = None,
+    grep: Optional[str] = None
 ) -> List[Dict]:
-    """Holt alle Fakten (optional gefiltert)."""
-    return get_client().get_facts(category=category, min_confidence=min_confidence)
+    """Holt Fakten (optional gefiltert).
+
+    Args:
+        category: user, project, system oder domain
+        min_confidence: Minimale Konfidenz
+        agent_id: Nur Fakten dieses Agents
+        grep: Teilstring in key oder value
+    """
+    return get_client().get_facts(
+        category=category, min_confidence=min_confidence,
+        agent_id=agent_id, grep=grep
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -130,9 +142,28 @@ def loop(content: str) -> Dict:
     return get_client().add_working(content, type='loop', priority=0)
 
 
-def working(limit: int = 10) -> List[Dict]:
-    """Holt aktive Working-Memory-Eintraege."""
-    return get_client().get_working(limit=limit)
+def working(
+    limit: int = 10,
+    agent_id: Optional[str] = None,
+    tags=None,
+    tags_all: bool = False,
+    grep: Optional[str] = None
+) -> List[Dict]:
+    """Holt aktive Working-Memory-Eintraege (optional gefiltert).
+
+    Args:
+        limit: Maximale Anzahl
+        agent_id: Nur Notizen dieses Agents
+        tags: Tag-Filter ('a,b' oder Liste), ODER-verknuepft
+        tags_all: True = alle Tags muessen vorkommen (UND)
+        grep: Teilstring im Inhalt
+
+    Die Filter wirken in der Datenbankabfrage, also vor ``limit``.
+    """
+    return get_client().get_working(
+        limit=limit, agent_id=agent_id,
+        tags=tags, tags_all=tags_all, grep=grep
+    )
 
 
 def clear() -> int:
@@ -172,10 +203,21 @@ def lesson(
 
 def lessons(
     severity: Optional[str] = None,
-    limit: int = 10
+    limit: int = 10,
+    agent_id: Optional[str] = None,
+    grep: Optional[str] = None
 ) -> List[Dict]:
-    """Holt Lessons Learned."""
-    return get_client().get_lessons(limit=limit, severity=severity)
+    """Holt Lessons Learned (optional gefiltert).
+
+    Args:
+        severity: critical, high, medium oder low
+        limit: Maximale Anzahl
+        agent_id: Nur Lessons dieses Agents
+        grep: Teilstring in title, problem oder solution
+    """
+    return get_client().get_lessons(
+        limit=limit, severity=severity, agent_id=agent_id, grep=grep
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════

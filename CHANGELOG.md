@@ -2,6 +2,39 @@
 
 All notable changes to USMC are documented here.
 
+## 0.2.0 - 2026-08-13
+
+`working`, `facts` and `lessons` can be searched instead of only scrolled.
+
+- **New filters.** `working` gained `--tags`, `--tags-all`, `--agent` and `--grep`;
+  `facts` and `lessons` gained `--agent` and `--grep`. The same arguments exist on
+  `USMCClient.get_working/get_facts/get_lessons` and on the high-level `api.working/facts/lessons`,
+  appended to the existing signatures so positional callers are unaffected. Read-only: no schema
+  change, no new index, no change to output formats or JSON keys.
+  - `--grep` covers `content` for working notes, `key` and `value` for facts, and
+    `title`, `problem` and `solution` for lessons.
+  - `--tags` exists on `working` only; it is the sole table with a tags column.
+- **Filters are applied in the WHERE clause, before `LIMIT`.** This is the point of the change:
+  filtering after the fetch would reproduce the reported bug, where the ten most recent notes are
+  all from one busy loop and a search for anything else comes back empty.
+- **Tag matching is delimiter-anchored.** The column is compared as `,a,b,` against `,<tag>,`, so
+  `--tags rh` no longer matches `research` or `rhythm`. Spacing is normalized, so `a,b` and `a, b`
+  behave identically, and rows without tags never match a tag filter.
+- **`%` and `_` in a `--grep` term are escaped** and therefore literal, not LIKE wildcards.
+- **The subcommand `--agent` is a filter, not an identity.** It uses its own destination, so
+  `usmc --agent writer working --agent other` keeps `writer` as the writing identity and filters
+  for `other`. A regression test asserts exactly this, because argparse would otherwise silently
+  overwrite the global option with the subparser default.
+- Empty result messages now name the active filters, so a filter typo is visible instead of
+  looking like an empty database.
+- Documented in `README.md` and `README_de.md`, including the search convention: USMC carries
+  process state, subject-matter status lives in the canonical registers, and the first tag of a
+  note names its pipeline.
+- Test suite grew from 61 to 96 tests.
+
+Reported as ticket T-20260813-90: a model searching for store entries found nothing because
+`usmc working` offered no filter beyond `--limit` and the list was dominated by research notes.
+
 ## Unreleased
 
 - Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`

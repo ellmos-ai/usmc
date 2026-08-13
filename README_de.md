@@ -144,6 +144,56 @@ usmc changes "2026-02-28T00:00:00" --json
 > ist eine noch offene Entscheidung, weil sie das Verhalten bestehender Nutzer ändert und die
 > Testsuite berührt. Bis dahin sind deutsche Ausgabetexte zu erwarten.
 
+## Wiederfinden
+
+Sobald mehrere Agenten in dieselbe Datenbank schreiben, hilft eine chronologische Liste nicht
+mehr: Ein aktiver Loop erzeugt am Tag hunderte Notizen, und jeder andere Leser muss daran
+vorbeiscrollen. `working`, `facts` und `lessons` nehmen deshalb Filter entgegen.
+
+```bash
+usmc working --tags store                  # ein Tag
+usmc working --tags store,release          # Komma = ODER
+usmc working --tags store,release --tags-all   # ... --tags-all macht daraus UND
+usmc working --agent codex-cli             # nur Notizen dieses Agenten
+usmc working --grep "Partner Center"       # Teilstring im Inhalt
+
+usmc facts   --grep store                  # Teilstring in key oder value
+usmc facts   --agent codex-cli
+usmc lessons --grep cp1252                 # Teilstring in title, problem oder solution
+usmc lessons --agent codex-cli --severity high
+```
+
+Dieselben Filter über Bibliothek und High-Level-API:
+
+```python
+client.get_working(tags="store,release", tags_all=True, agent_id="codex-cli", grep="welle")
+api.working(tags="store")
+api.facts(grep="store")
+api.lessons(grep="cp1252")
+```
+
+Vier Eigenschaften entscheiden darüber, ob eine Suche etwas findet:
+
+- **Die Filter laufen in der SQL-Abfrage, also vor `--limit`.** `--tags store -l 10` liefert die
+  zehn besten *Store*-Notizen, nicht die Store-Notizen unter den zehn neuesten.
+- **Ein Tag matcht nur als ganzer Listeneintrag.** `--tags rh` trifft nicht `research`; die Spalte
+  wird begrenzer-verankert verglichen. Leerzeichen sind egal, `a,b` und `a, b` verhalten sich gleich.
+- **Filter werden mit UND verknüpft.** `--tags store --agent codex-cli` heißt: beides muss zutreffen.
+- **Groß-/Kleinschreibung wird nur für ASCII ignoriert.** SQLite kennt ohne ICU kein
+  Unicode-Casefolding, `Store` und `store` matchen also, `Größe` und `GRÖSSE` nicht. `%` und `_`
+  in einem `--grep`-Begriff gelten wörtlich, nicht als Platzhalter.
+
+`--tags` gibt es nur bei `working` — nur diese Tabelle hat eine Tags-Spalte. Notizen ohne Tags
+matchen nie einen Tag-Filter.
+
+> [!TIP]
+> **USMC trägt Prozess-Zustand, nicht den Fachstand.** Was ein Projekt gerade *ist*, steht in
+> seinem kanonischen Register (für die Store-Pipeline etwa `releases.json` oder `APP-REGISTER.md`);
+> USMC hält fest, wo ein Lauf stehengeblieben ist und was der nächste Schritt wäre. Wer hier sucht
+> und nichts findet, schaut ins Register, bevor er schließt, dass es die Information nicht gibt.
+> Konvention: Der **erste Tag einer Notiz benennt die Pipeline** — genau das macht
+> `--tags store` zu einem verlässlichen Einstieg.
+
 ## Kernkonzepte
 
 | Konzept | Gespeicherter Inhalt | Typische Nutzung |

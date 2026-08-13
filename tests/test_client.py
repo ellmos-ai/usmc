@@ -236,5 +236,210 @@ class TestUSMCClient(unittest.TestCase):
                 pass
 
 
+class TestUSMCFilters(unittest.TestCase):
+    """Tests fuer die Suchfilter (tags, agent, grep) auf working/facts/lessons."""
+
+    def setUp(self):
+        self.tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        self.tmp.close()
+        self.db_path = self.tmp.name
+        self.client = USMCClient(db_path=self.db_path, agent_id="test_agent")
+
+    def tearDown(self):
+        try:
+            os.unlink(self.db_path)
+        except OSError:
+            pass
+
+    def _other_agent(self, agent_id: str) -> USMCClient:
+        return USMCClient(db_path=self.db_path, agent_id=agent_id)
+
+    # ── Working: Tags ──────────────────────────────────────────
+
+    def test_working_tags_single(self):
+        self.client.add_working("Store-Welle 3", tags="store,welle")
+        self.client.add_working("RH-Beweisschritt", tags="rh,paper")
+
+        hits = self.client.get_working(tags="store")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['content'], 'Store-Welle 3')
+
+    def test_working_tags_multiple_is_or(self):
+        self.client.add_working("A", tags="store")
+        self.client.add_working("B", tags="rh")
+        self.client.add_working("C", tags="sonstiges")
+
+        hits = self.client.get_working(tags="store,rh")
+        self.assertEqual({h['content'] for h in hits}, {'A', 'B'})
+
+    def test_working_tags_all_is_and(self):
+        self.client.add_working("Beide", tags="store,welle")
+        self.client.add_working("Nur einer", tags="store")
+
+        hits = self.client.get_working(tags="store,welle", tags_all=True)
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['content'], 'Beide')
+
+    def test_working_tags_accepts_list(self):
+        self.client.add_working("A", tags="store")
+        hits = self.client.get_working(tags=["store"])
+        self.assertEqual(len(hits), 1)
+
+    def test_working_tags_match_whole_entry_only(self):
+        """'rh' darf 'research' nicht treffen -- sonst bleibt die Flut."""
+        self.client.add_working("Forschung", tags="research,paper")
+        self.client.add_working("Riemann", tags="rh")
+
+        hits = self.client.get_working(tags="rh")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['content'], 'Riemann')
+
+    def test_working_tags_tolerate_spaces_in_column(self):
+        self.client.add_working("Mit Luecken", tags="store, welle")
+        self.assertEqual(len(self.client.get_working(tags="welle")), 1)
+
+    def test_working_tags_tolerate_spaces_in_query(self):
+        self.client.add_working("A", tags="store,welle")
+        self.assertEqual(len(self.client.get_working(tags="store, welle", tags_all=True)), 1)
+
+    def test_working_tags_ignore_ascii_case(self):
+        self.client.add_working("A", tags="Store")
+        self.assertEqual(len(self.client.get_working(tags="store")), 1)
+
+    def test_working_untagged_never_matches_tag_filter(self):
+        self.client.add_working("Ohne Tags")
+        self.assertEqual(self.client.get_working(tags="store"), [])
+
+    def test_working_empty_tags_disables_filter(self):
+        self.client.add_working("A", tags="store")
+        self.client.add_working("B")
+        self.assertEqual(len(self.client.get_working(tags="")), 2)
+        self.assertEqual(len(self.client.get_working(tags=None)), 2)
+
+    def test_working_tag_filter_applies_before_limit(self):
+        """Der eigentliche Fehlerfall: Filter in WHERE, nicht nach dem Fetch."""
+        for i in range(20):
+            self.client.add_working(f"Rauschen {i}", tags="rh")
+        self.client.add_working("Store-Treffer", tags="store")
+
+        hits = self.client.get_working(limit=5, tags="store")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['content'], 'Store-Treffer')
+
+    # ── Working: Agent & Grep ──────────────────────────────────
+
+    def test_working_agent_filter(self):
+        self.client.add_working("Von test_agent")
+        self._other_agent("codex").add_working("Von codex")
+
+        hits = self.client.get_working(agent_id="codex")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['agent_id'], 'codex')
+
+    def test_working_grep_content(self):
+        self.client.add_working("Partner Center Submission")
+        self.client.add_working("Irgendwas anderes")
+
+        hits = self.client.get_working(grep="partner center")
+        self.assertEqual(len(hits), 1)
+
+    def test_working_grep_escapes_like_wildcards(self):
+        """'_' und '%' sind LIKE-Wildcards und muessen woertlich gelten."""
+        self.client.add_working("exakt a_b")
+        self.client.add_working("nicht axb")
+
+        hits = self.client.get_working(grep="a_b")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['content'], 'exakt a_b')
+
+        self.client.add_working("100% fertig")
+        self.assertEqual(len(self.client.get_working(grep="100%")), 1)
+
+    def test_working_filters_combine_as_and(self):
+        self.client.add_working("Store A", tags="store")
+        self.client.add_working("Store B", tags="store")
+        self._other_agent("codex").add_working("Store C", tags="store")
+
+        hits = self.client.get_working(tags="store", grep="Store A")
+        self.assertEqual(len(hits), 1)
+
+        hits = self.client.get_working(tags="store", agent_id="codex")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['content'], 'Store C')
+
+    def test_working_without_filters_unchanged(self):
+        self.client.add_working("A", tags="store")
+        self.client.add_working("B")
+        self.assertEqual(len(self.client.get_working()), 2)
+
+    # ── Facts ──────────────────────────────────────────────────
+
+    def test_facts_grep_matches_key_and_value(self):
+        self.client.add_fact("system", "store_pfad", "C:/apps")
+        self.client.add_fact("system", "editor", "Store-Version")
+        self.client.add_fact("system", "os", "Windows 11")
+
+        self.assertEqual(len(self.client.get_facts(grep="store")), 2)
+        self.assertEqual(len(self.client.get_facts(grep="Windows")), 1)
+
+    def test_facts_agent_filter(self):
+        self.client.add_fact("system", "os", "Windows 11")
+        self._other_agent("codex").add_fact("system", "os", "Linux")
+
+        hits = self.client.get_facts(agent_id="codex")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['value'], 'Linux')
+
+    def test_facts_grep_combines_with_category(self):
+        self.client.add_fact("system", "store", "A")
+        self.client.add_fact("project", "store", "B")
+
+        hits = self.client.get_facts(category="project", grep="store")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['value'], 'B')
+
+    def test_facts_without_filters_unchanged(self):
+        self.client.add_fact("system", "os", "Windows 11")
+        self.assertEqual(len(self.client.get_facts()), 1)
+
+    # ── Lessons ────────────────────────────────────────────────
+
+    def test_lessons_grep_matches_all_three_fields(self):
+        self.client.add_lesson("Encoding", "cp1252 kaputt", "PYTHONIOENCODING setzen")
+
+        self.assertEqual(len(self.client.get_lessons(grep="Encoding")), 1)
+        self.assertEqual(len(self.client.get_lessons(grep="cp1252")), 1)
+        self.assertEqual(len(self.client.get_lessons(grep="PYTHONIOENCODING")), 1)
+        self.assertEqual(len(self.client.get_lessons(grep="voellig anderes")), 0)
+
+    def test_lessons_agent_filter(self):
+        self.client.add_lesson("A", "p", "s")
+        self._other_agent("codex").add_lesson("B", "p", "s")
+
+        hits = self.client.get_lessons(agent_id="codex")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['title'], 'B')
+
+    def test_lessons_grep_combines_with_severity(self):
+        self.client.add_lesson("Store A", "p", "s", severity="high")
+        self.client.add_lesson("Store B", "p", "s", severity="low")
+
+        hits = self.client.get_lessons(grep="store", severity="high")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]['title'], 'Store A')
+
+    def test_lessons_grep_applies_before_limit(self):
+        for i in range(20):
+            self.client.add_lesson(f"Rauschen {i}", "p", "s")
+        self.client.add_lesson("Store-Treffer", "p", "s")
+
+        hits = self.client.get_lessons(limit=5, grep="Store-Treffer")
+        self.assertEqual(len(hits), 1)
+
+    def test_lessons_without_filters_unchanged(self):
+        self.client.add_lesson("A", "p", "s")
+        self.assertEqual(len(self.client.get_lessons()), 1)
+
+
 if __name__ == '__main__':
     unittest.main()

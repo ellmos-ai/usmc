@@ -144,6 +144,56 @@ usmc changes "2026-02-28T00:00:00" --json
 > is still an open decision, because it changes behaviour for existing users and touches the
 > test suite. Until then, expect German output strings.
 
+## Finding Things Again
+
+Once several agents write to the same database, a chronological list stops being useful: a busy
+loop can produce hundreds of notes a day, and every other reader has to scroll past them.
+`working`, `facts` and `lessons` therefore take filters.
+
+```bash
+usmc working --tags store                  # one tag
+usmc working --tags store,release          # comma = OR
+usmc working --tags store,release --tags-all   # ... --tags-all makes it AND
+usmc working --agent codex-cli             # only this agent's notes
+usmc working --grep "Partner Center"       # substring in the content
+
+usmc facts   --grep store                  # substring in key or value
+usmc facts   --agent codex-cli
+usmc lessons --grep cp1252                 # substring in title, problem or solution
+usmc lessons --agent codex-cli --severity high
+```
+
+Same filters through the library and the high-level API:
+
+```python
+client.get_working(tags="store,release", tags_all=True, agent_id="codex-cli", grep="wave")
+api.working(tags="store")
+api.facts(grep="store")
+api.lessons(grep="cp1252")
+```
+
+Four properties are worth knowing, because they decide whether a search finds anything:
+
+- **Filters run in the SQL query, before `--limit`.** `--tags store -l 10` returns the ten best
+  *store* notes, not the store notes among the ten most recent ones.
+- **A tag matches only as a whole list entry.** `--tags rh` does not match `research`; the column
+  is compared delimiter-anchored. Spacing does not matter, `a,b` and `a, b` behave the same.
+- **Filters combine with AND.** `--tags store --agent codex-cli` means both conditions.
+- **Case is ignored for ASCII only.** SQLite has no Unicode case folding without ICU, so `Store`
+  and `store` match, but `Größe` and `GRÖSSE` do not. `%` and `_` in a `--grep` term are taken
+  literally, not as wildcards.
+
+`--tags` exists on `working` only — it is the sole table with a tags column. Untagged notes never
+match a tag filter.
+
+> [!TIP]
+> **USMC holds process state, not subject-matter status.** What a project currently *is* belongs in
+> its canonical register (for example `releases.json` or `APP-REGISTER.md` for the store pipeline);
+> USMC records where a run stopped and what the next step is. When you search here and find
+> nothing, check the register before concluding the information does not exist.
+> By convention the **first tag of a note names the pipeline**, which is what makes
+> `--tags store` a reliable entry point.
+
 ## Core Concepts
 
 | Concept | What it stores | Typical use |

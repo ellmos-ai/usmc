@@ -16,6 +16,14 @@ Verwendung:
     usmc context
     usmc clear
 
+Gezielt suchen statt scrollen (working/facts/lessons):
+    usmc working --tags store              # ODER-Verknuepfung bei 'a,b'
+    usmc working --tags store,welle --tags-all
+    usmc working --agent codex-cli         # Filter, NICHT die Schreib-Identitaet
+    usmc working --grep "Partner Center"
+
+Die Filter laufen in der Datenbankabfrage, also vor --limit.
+
 Author: Lukas Geiger
 License: MIT
 """
@@ -70,16 +78,31 @@ def cmd_fact(args) -> int:
     return 0
 
 
+def _filter_hint(args, names) -> str:
+    """Beschreibt die aktiven Filter fuer die Leermeldung."""
+    active = []
+    for label, value in names:
+        if value:
+            active.append(f"{label}={value}")
+    return f" (Filter aktiv: {', '.join(active)})" if active else ""
+
+
 def cmd_facts(args) -> int:
     """Listet Fakten auf."""
     client = get_client(args)
     facts = client.get_facts(
         category=args.category,
-        min_confidence=args.min_confidence
+        min_confidence=args.min_confidence,
+        agent_id=args.filter_agent,
+        grep=args.grep
     )
 
     if not facts:
-        print("Keine Fakten gefunden.")
+        print("Keine Fakten gefunden." + _filter_hint(args, [
+            ('--category', args.category),
+            ('--agent', args.filter_agent),
+            ('--grep', args.grep),
+        ]))
         return 0
 
     if args.json:
@@ -109,10 +132,20 @@ def cmd_note(args) -> int:
 def cmd_working(args) -> int:
     """Listet Working Memory auf."""
     client = get_client(args)
-    notes = client.get_working(limit=args.limit)
+    notes = client.get_working(
+        limit=args.limit,
+        agent_id=args.filter_agent,
+        tags=args.tags,
+        tags_all=args.tags_all,
+        grep=args.grep
+    )
 
     if not notes:
-        print("Keine aktiven Notizen.")
+        print("Keine aktiven Notizen." + _filter_hint(args, [
+            ('--tags' + ('-all' if args.tags_all else ''), args.tags),
+            ('--agent', args.filter_agent),
+            ('--grep', args.grep),
+        ]))
         return 0
 
     if args.json:
@@ -152,11 +185,17 @@ def cmd_lessons(args) -> int:
     client = get_client(args)
     lessons = client.get_lessons(
         limit=args.limit,
-        severity=args.severity
+        severity=args.severity,
+        agent_id=args.filter_agent,
+        grep=args.grep
     )
 
     if not lessons:
-        print("Keine Lessons gefunden.")
+        print("Keine Lessons gefunden." + _filter_hint(args, [
+            ('--severity', args.severity),
+            ('--agent', args.filter_agent),
+            ('--grep', args.grep),
+        ]))
         return 0
 
     if args.json:
@@ -243,6 +282,10 @@ def main(argv: Optional[list] = None) -> int:
     p_facts = subparsers.add_parser('facts', help='Listet Fakten auf')
     p_facts.add_argument('--category', '-c', choices=['user', 'project', 'system', 'domain'])
     p_facts.add_argument('--min-confidence', '-m', type=float, default=0.0)
+    p_facts.add_argument('--agent', dest='filter_agent', metavar='NAME',
+                         help='Nur Fakten dieses Agents (Filter, nicht die Schreib-Identitaet)')
+    p_facts.add_argument('--grep', '-g', metavar='BEGRIFF',
+                         help='Teilstring in key oder value (ASCII-Gross-/Kleinschreibung egal)')
     p_facts.add_argument('--json', '-j', action='store_true', help='JSON-Ausgabe')
     p_facts.set_defaults(func=cmd_facts)
 
@@ -255,8 +298,27 @@ def main(argv: Optional[list] = None) -> int:
     p_note.set_defaults(func=cmd_note)
 
     # working
-    p_working = subparsers.add_parser('working', help='Listet Working Memory auf')
+    p_working = subparsers.add_parser(
+        'working',
+        help='Listet Working Memory auf',
+        description=(
+            'Listet aktive Working-Memory-Notizen. Die Filter wirken in der '
+            'Datenbankabfrage, also vor --limit: --tags store -l 10 liefert die '
+            '10 besten Store-Notizen, nicht die Store-Notizen unter den letzten 10. '
+            'Konvention: der erste Tag einer Notiz benennt die Pipeline.'
+        )
+    )
     p_working.add_argument('--limit', '-l', type=int, default=10)
+    p_working.add_argument('--tags', metavar='T1[,T2]',
+                           help='Nur Notizen mit diesen Tags; Komma = ODER. '
+                                'Ein Tag matcht nur als ganzer Listeneintrag '
+                                '("rh" trifft nicht "research")')
+    p_working.add_argument('--tags-all', action='store_true',
+                           help='Aendert --tags von ODER auf UND (alle Tags muessen vorkommen)')
+    p_working.add_argument('--agent', dest='filter_agent', metavar='NAME',
+                           help='Nur Notizen dieses Agents (Filter, nicht die Schreib-Identitaet)')
+    p_working.add_argument('--grep', '-g', metavar='BEGRIFF',
+                           help='Teilstring im Inhalt (ASCII-Gross-/Kleinschreibung egal)')
     p_working.add_argument('--json', '-j', action='store_true', help='JSON-Ausgabe')
     p_working.set_defaults(func=cmd_working)
 
@@ -278,6 +340,11 @@ def main(argv: Optional[list] = None) -> int:
     p_lessons = subparsers.add_parser('lessons', help='Listet Lessons auf')
     p_lessons.add_argument('--severity', '-s', choices=['critical', 'high', 'medium', 'low'])
     p_lessons.add_argument('--limit', '-l', type=int, default=10)
+    p_lessons.add_argument('--agent', dest='filter_agent', metavar='NAME',
+                           help='Nur Lessons dieses Agents (Filter, nicht die Schreib-Identitaet)')
+    p_lessons.add_argument('--grep', '-g', metavar='BEGRIFF',
+                           help='Teilstring in title, problem oder solution '
+                                '(ASCII-Gross-/Kleinschreibung egal)')
     p_lessons.add_argument('--json', '-j', action='store_true', help='JSON-Ausgabe')
     p_lessons.set_defaults(func=cmd_lessons)
 

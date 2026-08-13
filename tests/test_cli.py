@@ -282,6 +282,20 @@ class TestUSMCCli(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('Keine Lessons gefunden.', out)
 
+    def test_empty_filter_result_is_valid_json_with_json_flag(self):
+        """Mit Filtern ist 'leer' der Normalfall -- --json muss parsebar bleiben."""
+        self.run_cli(['note', 'Irgendwas', '--tags', 'store'])
+        self.run_cli(['fact', 'system', 'os', 'Windows 11'])
+        self.run_cli(['lesson', 'Titel', 'p', 's'])
+
+        for args in (['working', '--tags', 'gibtsnicht', '--json'],
+                     ['facts', '--grep', 'gibtsnicht', '--json'],
+                     ['lessons', '--grep', 'gibtsnicht', '--json']):
+            with self.subTest(command=args[0]):
+                code, out, err = self.run_cli(args)
+                self.assertEqual(code, 0)
+                self.assertEqual(json.loads(out), [])
+
     def test_filters_are_optional(self):
         """Ohne Filter bleibt das Verhalten unveraendert (Rueckwaertskompatibilitaet)."""
         self.run_cli(['note', 'A', '--tags', 'store'])

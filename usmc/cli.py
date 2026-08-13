@@ -78,13 +78,20 @@ def cmd_fact(args) -> int:
     return 0
 
 
-def _filter_hint(args, names) -> str:
-    """Beschreibt die aktiven Filter fuer die Leermeldung."""
-    active = []
-    for label, value in names:
-        if value:
-            active.append(f"{label}={value}")
-    return f" (Filter aktiv: {', '.join(active)})" if active else ""
+def _print_empty(args, message: str, names) -> int:
+    """Meldet ein leeres Ergebnis -- als JSON-Array, wenn --json gesetzt ist.
+
+    Mit Filtern ist "leer" der Normalfall statt der Ausnahme, und der typische
+    Aufrufer ist ein Programm: eine deutsche Prosazeile im --json-Modus wuerde
+    dessen Parser brechen.
+    """
+    if args.json:
+        print("[]")
+        return 0
+    active = [f"{label}={value}" for label, value in names if value]
+    hint = f" (Filter aktiv: {', '.join(active)})" if active else ""
+    print(message + hint)
+    return 0
 
 
 def cmd_facts(args) -> int:
@@ -98,12 +105,11 @@ def cmd_facts(args) -> int:
     )
 
     if not facts:
-        print("Keine Fakten gefunden." + _filter_hint(args, [
+        return _print_empty(args, "Keine Fakten gefunden.", [
             ('--category', args.category),
             ('--agent', args.filter_agent),
             ('--grep', args.grep),
-        ]))
-        return 0
+        ])
 
     if args.json:
         print(json.dumps(facts, indent=2, ensure_ascii=False))
@@ -141,12 +147,11 @@ def cmd_working(args) -> int:
     )
 
     if not notes:
-        print("Keine aktiven Notizen." + _filter_hint(args, [
+        return _print_empty(args, "Keine aktiven Notizen.", [
             ('--tags' + ('-all' if args.tags_all else ''), args.tags),
             ('--agent', args.filter_agent),
             ('--grep', args.grep),
-        ]))
-        return 0
+        ])
 
     if args.json:
         print(json.dumps(notes, indent=2, ensure_ascii=False))
@@ -191,12 +196,11 @@ def cmd_lessons(args) -> int:
     )
 
     if not lessons:
-        print("Keine Lessons gefunden." + _filter_hint(args, [
+        return _print_empty(args, "Keine Lessons gefunden.", [
             ('--severity', args.severity),
             ('--agent', args.filter_agent),
             ('--grep', args.grep),
-        ]))
-        return 0
+        ])
 
     if args.json:
         print(json.dumps(lessons, indent=2, ensure_ascii=False))

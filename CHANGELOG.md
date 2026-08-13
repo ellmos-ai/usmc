@@ -2,7 +2,7 @@
 
 All notable changes to USMC are documented here.
 
-## 0.2.0 - 2026-08-13
+## 0.2.1 - 2026-08-13
 
 `working`, `facts` and `lessons` can be searched instead of only scrolled.
 
@@ -26,7 +26,9 @@ All notable changes to USMC are documented here.
   for `other`. A regression test asserts exactly this, because argparse would otherwise silently
   overwrite the global option with the subparser default.
 - Empty result messages now name the active filters, so a filter typo is visible instead of
-  looking like an empty database.
+  looking like an empty database. **With `--json` an empty result prints `[]`** rather than that
+  German sentence: filtering makes "no hits" the normal case, and the caller who filters
+  programmatically is the one whose parser would break on prose.
 - Documented in `README.md` and `README_de.md`, including the search convention: USMC carries
   process state, subject-matter status lives in the canonical registers, and the first tag of a
   note names its pipeline.

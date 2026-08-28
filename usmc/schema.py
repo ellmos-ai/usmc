@@ -13,7 +13,12 @@ License: MIT
 import sqlite3
 from typing import Optional
 
-from .lesson_contract import FEEDBACK_PROMPT, canonical_hash, lesson_ingest_hash
+from .lesson_contract import (
+    FEEDBACK_PROMPT,
+    LESSON_INGEST_HASH_VERSION,
+    canonical_hash,
+    lesson_ingest_hash,
+)
 
 SCHEMA_VERSION = 2
 
@@ -72,6 +77,7 @@ CREATE TABLE IF NOT EXISTS usmc_lessons (
     mutates_skill INTEGER NOT NULL DEFAULT 0,
     mutates_workflow INTEGER NOT NULL DEFAULT 0,
     ingest_payload_hash TEXT,
+    ingest_payload_hash_version INTEGER,
     helpful_count INTEGER NOT NULL DEFAULT 0,
     unhelpful_count INTEGER NOT NULL DEFAULT 0,
     independent_repeat_count INTEGER NOT NULL DEFAULT 0,
@@ -187,6 +193,7 @@ LESSON_V2_COLUMNS = (
     ("mutates_skill", "INTEGER NOT NULL DEFAULT 0"),
     ("mutates_workflow", "INTEGER NOT NULL DEFAULT 0"),
     ("ingest_payload_hash", "TEXT"),
+    ("ingest_payload_hash_version", "INTEGER"),
     ("helpful_count", "INTEGER NOT NULL DEFAULT 0"),
     ("unhelpful_count", "INTEGER NOT NULL DEFAULT 0"),
     ("independent_repeat_count", "INTEGER NOT NULL DEFAULT 0"),
@@ -410,7 +417,10 @@ def _v2_repair_needed(conn: sqlite3.Connection) -> bool:
             return True
     if conn.execute(
         "SELECT 1 FROM usmc_lessons WHERE source_key IS NOT NULL "
-        "AND episode_key IS NOT NULL AND ingest_payload_hash IS NULL LIMIT 1"
+        "AND episode_key IS NOT NULL AND (ingest_payload_hash IS NULL "
+        "OR ingest_payload_hash_version IS NULL "
+        "OR ingest_payload_hash_version != ?) LIMIT 1",
+        (LESSON_INGEST_HASH_VERSION,),
     ).fetchone():
         return True
     if conn.execute(
@@ -490,20 +500,24 @@ def _backfill_lesson_payload_hashes(conn: sqlite3.Connection) -> None:
     fields = (
         "category", "severity", "title", "problem", "solution", "source_kind",
         "source_key", "episode_key", "source_hash", "event_anchor",
-        "editorial_status", "evidence_class", "privacy_scope", "confidence",
+        "evidence_class", "privacy_scope",
         "sensitive_source", "user_preference", "policy_relevant", "conflict_flag",
         "mutates_skill", "mutates_workflow",
     )
     rows = conn.execute(
-        f"SELECT id, {', '.join(fields)} FROM usmc_lessons "
+        f"SELECT id, {', '.join(fields)}, ingest_payload_hash, "
+        "ingest_payload_hash_version FROM usmc_lessons "
         "WHERE source_key IS NOT NULL AND episode_key IS NOT NULL "
-        "AND ingest_payload_hash IS NULL"
+        "AND (ingest_payload_hash IS NULL OR ingest_payload_hash_version IS NULL "
+        "OR ingest_payload_hash_version != ?)",
+        (LESSON_INGEST_HASH_VERSION,),
     ).fetchall()
     for row in rows:
-        payload = dict(zip(fields, row[1:]))
+        payload = dict(zip(fields, row[1:1 + len(fields)]))
         conn.execute(
-            "UPDATE usmc_lessons SET ingest_payload_hash = ? WHERE id = ?",
-            (lesson_ingest_hash(payload), row[0]),
+            "UPDATE usmc_lessons SET ingest_payload_hash = ?, "
+            "ingest_payload_hash_version = ? WHERE id = ?",
+            (lesson_ingest_hash(payload), LESSON_INGEST_HASH_VERSION, row[0]),
         )
 
 

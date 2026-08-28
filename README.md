@@ -153,7 +153,9 @@ retry returns the original row; a different semantic, provenance or protection p
 closed without changing it. Content changes need a new `episode_key`, while editorial changes use
 the review surface. The current editorial status, counters, delivery state and calculated/current
 weight are deliberately outside the immutable intake hash. New keyed lessons start with a
-deliberately low weight of `0.20`.
+deliberately low weight of `0.20`. Before a keyed retry, policy evaluation or delivery (including
+replay), the client verifies that the current immutable row still matches its stored v2 hash;
+direct tampering fails closed and is never accepted as a new baseline.
 
 ```python
 lesson = client.add_lesson(

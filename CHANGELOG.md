@@ -62,6 +62,9 @@ Reported as ticket T-20260813-90: a model searching for store entries found noth
   and SessionStart commits or rolls back its session and delivery together.
 - Corrected the immutable intake-hash boundary so legitimate editorial review and later weighting
   state cannot invalidate an original retry, including backfill from the pre-hash v2 schema.
+- Added fail-closed keyed-row integrity checks before retry, promotion policy evaluation, new
+  delivery and delivery replay. Immutable row tampering cannot be promoted, delivered or silently
+  accepted as a new v2 hash baseline; mutable review, weighting and counter state remains valid.
 - Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`
   is **not** reserved for this project. As of 2026-08-08 no project of that name exists on
   PyPI, so a PyPI package called `usmc` is not necessarily this one. Install from GitHub.

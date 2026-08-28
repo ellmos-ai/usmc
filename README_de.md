@@ -153,7 +153,10 @@ Aufnahme-Payload. Ein identischer Retry liefert die ursprüngliche Zeile; ein ab
 Provenienz- oder Schutzwert scheitert ohne Mutation. Inhaltliche Änderungen benötigen einen neuen
 `episode_key`, redaktionelle Änderungen den Reviewpfad. Aktueller Redaktionsstatus, Zähler,
 Zustellstatus und berechnetes/aktuelles Gewicht gehören bewusst nicht zum unveränderlichen
-Aufnahme-Hash. Neue geschlüsselte Lektionen starten mit dem niedrigen Gewicht `0.20`.
+Aufnahme-Hash. Neue geschlüsselte Lektionen starten mit dem niedrigen Gewicht `0.20`. Vor einem
+geschlüsselten Retry, einer Policy-Auswertung oder Zustellung (einschließlich Replay) prüft der
+Client, ob die aktuellen unveränderlichen Zeilenwerte weiterhin zum gespeicherten v2-Hash passen.
+Direkte Manipulationen scheitern geschlossen und werden nie als neue Basis übernommen.
 
 ```python
 lesson = client.add_lesson(

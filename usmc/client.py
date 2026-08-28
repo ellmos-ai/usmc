@@ -59,6 +59,26 @@ def _lesson_dict(row) -> Dict:
     return result
 
 
+def _assert_keyed_lesson_integrity(lesson: Dict) -> None:
+    """Fail closed when a keyed v2 row no longer matches its immutable hash."""
+    keyed = lesson.get("source_key") is not None or lesson.get("episode_key") is not None
+    if not keyed:
+        return
+    if not lesson.get("source_key") or not lesson.get("episode_key"):
+        raise RuntimeError(
+            f"Lesson {lesson.get('id')} besitzt einen unvollständigen Idempotenzschlüssel"
+        )
+    if lesson.get("ingest_payload_hash_version") != LESSON_INGEST_HASH_VERSION:
+        raise RuntimeError(
+            f"Lesson {lesson.get('id')} besitzt keine gültige Intake-Hashversion"
+        )
+    stored_hash = lesson.get("ingest_payload_hash")
+    if not stored_hash or lesson_ingest_hash(lesson) != stored_hash:
+        raise RuntimeError(
+            f"Lesson {lesson.get('id')} verletzt die unveränderliche Zeilenintegrität"
+        )
+
+
 def _like_escape(value: str) -> str:
     """Maskiert LIKE-Platzhalter, damit ein Suchbegriff woertlich gilt.
 
@@ -632,12 +652,15 @@ class USMCClient:
             conn.execute("BEGIN IMMEDIATE")
             existing = None
             if keyed:
-                existing = conn.execute(
-                    "SELECT id, ingest_payload_hash FROM usmc_lessons "
+                existing_row = conn.execute(
+                    f"SELECT {_LESSON_SELECT} FROM usmc_lessons "
                     "WHERE source_key = ? AND episode_key = ?",
                     (source_key, episode_key),
                 ).fetchone()
-                if existing and existing[1] != ingest_payload_hash:
+                existing = _lesson_dict(existing_row) if existing_row else None
+                if existing:
+                    _assert_keyed_lesson_integrity(existing)
+                if existing and existing["ingest_payload_hash"] != ingest_payload_hash:
                     raise ValueError(
                         "source_key/episode_key wurde bereits mit einem anderen "
                         "Lesson-Payload verwendet; für eine inhaltliche Änderung "
@@ -645,12 +668,8 @@ class USMCClient:
                     )
 
             if existing:
-                row = conn.execute(
-                    f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE id = ?",
-                    (existing[0],),
-                ).fetchone()
                 conn.commit()
-                result = _lesson_dict(row)
+                result = existing
                 result["created"] = False
                 result["upserted"] = True
                 return result
@@ -924,6 +943,7 @@ class USMCClient:
         lesson = self.get_lesson(lesson_id)
         if lesson is None:
             raise ValueError(f"Lesson {lesson_id} nicht gefunden")
+        _assert_keyed_lesson_integrity(lesson)
         return direct_promotion_policy(
             lesson, direct_promotion_enabled=direct_promotion_enabled
         )
@@ -968,8 +988,8 @@ class USMCClient:
             "request_hash": canonical_hash(request),
         }
 
-    @staticmethod
     def _replay_delivery_batch(
+        self,
         conn: sqlite3.Connection, delivery_key: str
     ) -> List[Dict]:
         lesson_select = ", ".join(f"l.{field}" for field in _LESSON_FIELDS)
@@ -984,6 +1004,7 @@ class USMCClient:
         field_count = len(_LESSON_FIELDS)
         for row in rows:
             item = _lesson_dict(row[:field_count])
+            _assert_keyed_lesson_integrity(item)
             item.update({
                 "delivery_key": delivery_key,
                 "session_key": row[field_count],
@@ -1071,6 +1092,9 @@ class USMCClient:
                 ),
                 reverse=True,
             )
+
+        for lesson in candidates:
+            _assert_keyed_lesson_integrity(lesson)
 
         delivered = []
         for lesson in candidates[:prepared["limit"]]:

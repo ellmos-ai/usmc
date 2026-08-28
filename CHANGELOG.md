@@ -40,7 +40,7 @@ Reported as ticket T-20260813-90: a model searching for store entries found noth
 ## Unreleased
 
 - Added the backward-compatible lesson contract schema v2. Keyed lessons use a unique
-  `(source_key, episode_key)` and retry-safe SQLite upsert while the original unkeyed
+  `(source_key, episode_key)` and retry-safe immutable intake semantics while the original unkeyed
   `add_lesson()` path remains append-only. The additive migration preserves v1 rows and supports
   mixed old/new clients without a destructive contract phase.
 - Added provenance, editorial, evidence and privacy fields with a low `0.20` starting weight for
@@ -56,6 +56,10 @@ Reported as ticket T-20260813-90: a model searching for store entries found noth
 - Added high-level API and CLI surfaces (`lesson-feedback`, `lesson-review`, `lesson-policy`,
   `lesson-deliver`, and optional `start` delivery flags) plus isolated migration, concurrent
   deduplication, rollback/retry, weighting, privacy/review and backward-compatibility tests.
+- Hardened the v2 idempotency invariants after review: keyed lesson retries now require the full
+  immutable intake payload; feedback keys are globally exactly-once; delivery retries replay the
+  persisted batch; partial-v2 schemas repair all required named columns/indexes transactionally;
+  and SessionStart commits or rolls back its session and delivery together.
 - Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`
   is **not** reserved for this project. As of 2026-08-08 no project of that name exists on
   PyPI, so a PyPI package called `usmc` is not necessarily this one. Install from GitHub.

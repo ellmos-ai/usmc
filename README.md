@@ -148,9 +148,10 @@ usmc changes "2026-02-28T00:00:00" --json
 
 The original `add_lesson(title, problem, solution, ...)` call remains append-only. A lesson enters
 the provenance-aware v2 contract only when both `source_key` and `episode_key` are supplied. That
-pair is unique across the database and retries use SQLite `ON CONFLICT` upsert semantics. New keyed
-lessons start with a deliberately low weight of `0.20`; an upsert keeps editorial state, feedback,
-delivery counts and the original row identity intact.
+pair is unique across the database and identifies one immutable intake payload. An identical
+retry returns the original row; a different semantic, provenance or protection payload fails
+closed without changing it. Content changes need a new `episode_key`, while editorial changes use
+the review surface. New keyed lessons start with a deliberately low weight of `0.20`.
 
 ```python
 lesson = client.add_lesson(
@@ -180,11 +181,14 @@ client.record_lesson_feedback(
 ```
 
 Feedback stores helpful/unhelpful use, independent repetition and delivery failure as separate,
-idempotent signals. An independent repetition can therefore remain useful evidence while also
+idempotent signals. A `feedback_key` is globally exactly-once; reusing it for another lesson or
+payload fails closed. An independent repetition can therefore remain useful evidence while also
 being marked as a possible delivery failure. Delivery is synchronous and request-driven: without
 an explicit context or selected lesson IDs, nothing is shown; one request returns at most three
 approved (or legacy), local/private and non-sensitive lessons, each with the short question
-`War diese Lesson hilfreich? (ja/nein)`.
+`War diese Lesson hilfreich? (ja/nein)`. Retrying the same `delivery_key` replays only its stored
+delivery rows in their original order, without reselection or another `times_shown` increment.
+SessionStart persists the session and its delivery in one SQLite transaction.
 
 The direct-promotion surface is policy evaluation only. `evaluate_lesson_promotion()` accepts only
 verified, fully provenanced agent lessons from local/private sources. User preferences, policy
@@ -207,9 +211,11 @@ usmc lesson-policy 1
 ```
 
 Opening a v1 database with the new client performs an additive, transactional migration to v2.
-The migration is retry-safe and preserves every old column and row. Old clients can continue to
-read and append lessons because all v2 fields have compatible defaults; rollback means running the
-old client against the expanded database, not contracting or deleting the new schema.
+The migration is retry-safe, verifies required v2 columns/tables/indexes even when the stored
+version already says v2, and preserves every old column and row. Unsafe global feedback-key
+duplicates stop the transaction with a clear error instead of being deleted. Old clients can
+continue to read and append lessons because all v2 fields have compatible defaults; rollback means
+running the old client against the expanded database, not contracting or deleting the schema.
 
 ## Finding Things Again
 

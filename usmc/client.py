@@ -31,6 +31,7 @@ from .lesson_contract import (
     VALID_EDITORIAL_STATUSES,
     canonical_hash,
     direct_promotion_policy,
+    lesson_ingest_hash,
     lesson_weight,
     validate_lesson_contract,
 )
@@ -42,7 +43,8 @@ _LESSON_FIELDS = (
     "source_key", "episode_key", "source_hash", "event_anchor",
     "editorial_status", "evidence_class", "privacy_scope",
     "sensitive_source", "user_preference", "policy_relevant", "conflict_flag",
-    "mutates_skill", "mutates_workflow", "helpful_count", "unhelpful_count",
+    "mutates_skill", "mutates_workflow", "ingest_payload_hash",
+    "helpful_count", "unhelpful_count",
     "independent_repeat_count", "delivery_failure_count", "last_delivered_at",
     "created_at", "updated_at",
 )
@@ -540,9 +542,9 @@ class USMCClient:
 
         Der alte, ungeschluesselte Aufruf bleibt append-only und startet mit
         confidence 1.0. Werden ``source_key`` und ``episode_key`` gemeinsam
-        gesetzt, gilt der v2-Vertrag: global eindeutiger Upsert und niedrige
-        Anfangsgewichtung (0.20), ohne Feedback- oder Zustellzaehler zu
-        ueberschreiben.
+        gesetzt, gilt der v2-Vertrag: genau ein unveränderlicher Intake-Payload
+        mit niedriger Anfangsgewichtung (0.20). Ein identischer Retry liest die
+        bestehende Zeile; ein abweichender Payload scheitert ohne Mutation.
 
         Args:
             title: Kurztitel
@@ -600,6 +602,30 @@ class USMCClient:
             int(bool(policy_relevant)), int(bool(conflict_flag)),
             int(bool(mutates_skill)), int(bool(mutates_workflow)),
         )
+        ingest_payload_hash = None
+        if keyed:
+            ingest_payload_hash = lesson_ingest_hash({
+                "category": category,
+                "severity": severity,
+                "title": title,
+                "problem": problem,
+                "solution": solution,
+                "source_kind": resolved_source_kind,
+                "source_key": source_key,
+                "episode_key": episode_key,
+                "source_hash": source_hash,
+                "event_anchor": event_anchor,
+                "editorial_status": resolved_editorial,
+                "evidence_class": resolved_evidence,
+                "privacy_scope": resolved_privacy,
+                "confidence": resolved_weight,
+                "sensitive_source": flag_values[0],
+                "user_preference": flag_values[1],
+                "policy_relevant": flag_values[2],
+                "conflict_flag": flag_values[3],
+                "mutates_skill": flag_values[4],
+                "mutates_workflow": flag_values[5],
+            })
 
         conn = self._get_conn()
         try:
@@ -607,9 +633,27 @@ class USMCClient:
             existing = None
             if keyed:
                 existing = conn.execute(
-                    "SELECT id FROM usmc_lessons WHERE source_key = ? AND episode_key = ?",
+                    "SELECT id, ingest_payload_hash FROM usmc_lessons "
+                    "WHERE source_key = ? AND episode_key = ?",
                     (source_key, episode_key),
                 ).fetchone()
+                if existing and existing[1] != ingest_payload_hash:
+                    raise ValueError(
+                        "source_key/episode_key wurde bereits mit einem anderen "
+                        "Lesson-Payload verwendet; für eine inhaltliche Änderung "
+                        "ist ein neuer episode_key oder ein Reviewpfad erforderlich"
+                    )
+
+            if existing:
+                row = conn.execute(
+                    f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE id = ?",
+                    (existing[0],),
+                ).fetchone()
+                conn.commit()
+                result = _lesson_dict(row)
+                result["created"] = False
+                result["upserted"] = True
+                return result
 
             sql = """
                 INSERT INTO usmc_lessons
@@ -618,60 +662,25 @@ class USMCClient:
                      episode_key, source_hash, event_anchor, editorial_status,
                      evidence_class, privacy_scope, sensitive_source,
                      user_preference, policy_relevant, conflict_flag,
-                     mutates_skill, mutates_workflow, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, 1, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     mutates_skill, mutates_workflow, ingest_payload_hash,
+                     created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, 1, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             params = (
                 self.agent_id, category, severity, title, problem, solution,
                 resolved_weight, resolved_source_kind, source_key, episode_key,
                 source_hash, event_anchor, resolved_editorial, resolved_evidence,
-                resolved_privacy, *flag_values, now, now,
+                resolved_privacy, *flag_values, ingest_payload_hash, now, now,
             )
-            if keyed:
-                sql += """
-                    ON CONFLICT(source_key, episode_key)
-                    WHERE source_key IS NOT NULL AND episode_key IS NOT NULL
-                    DO UPDATE SET
-                        category = excluded.category,
-                        severity = excluded.severity,
-                        title = excluded.title,
-                        problem = excluded.problem,
-                        solution = excluded.solution,
-                        source_hash = excluded.source_hash,
-                        event_anchor = COALESCE(excluded.event_anchor, usmc_lessons.event_anchor),
-                        source_kind = COALESCE(?, usmc_lessons.source_kind),
-                        editorial_status = COALESCE(?, usmc_lessons.editorial_status),
-                        evidence_class = COALESCE(?, usmc_lessons.evidence_class),
-                        privacy_scope = COALESCE(?, usmc_lessons.privacy_scope),
-                        confidence = COALESCE(?, usmc_lessons.confidence),
-                        sensitive_source = COALESCE(?, usmc_lessons.sensitive_source),
-                        user_preference = COALESCE(?, usmc_lessons.user_preference),
-                        policy_relevant = COALESCE(?, usmc_lessons.policy_relevant),
-                        conflict_flag = COALESCE(?, usmc_lessons.conflict_flag),
-                        mutates_skill = COALESCE(?, usmc_lessons.mutates_skill),
-                        mutates_workflow = COALESCE(?, usmc_lessons.mutates_workflow),
-                        updated_at = excluded.updated_at
-                """
-                params += (
-                    source_kind, editorial_status, evidence_class, privacy_scope,
-                    weight,
-                    None if sensitive_source is None else int(sensitive_source),
-                    None if user_preference is None else int(user_preference),
-                    None if policy_relevant is None else int(policy_relevant),
-                    None if conflict_flag is None else int(conflict_flag),
-                    None if mutates_skill is None else int(mutates_skill),
-                    None if mutates_workflow is None else int(mutates_workflow),
-                )
-
             cursor = conn.execute(sql, params)
-            lesson_id = existing[0] if existing else cursor.lastrowid
+            lesson_id = cursor.lastrowid
             row = conn.execute(
                 f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE id = ?",
                 (lesson_id,),
             ).fetchone()
             conn.commit()
             result = _lesson_dict(row)
-            result["created"] = existing is None
+            result["created"] = True
             result["upserted"] = keyed
             return result
         except Exception:
@@ -830,13 +839,16 @@ class USMCClient:
                 raise ValueError("delivery_key gehört nicht zu dieser Lesson")
 
             existing = conn.execute(
-                "SELECT id, payload_hash FROM usmc_lesson_feedback "
-                "WHERE lesson_id = ? AND feedback_key = ?",
-                (lesson_id, feedback_key),
+                "SELECT id, lesson_id, payload_hash FROM usmc_lesson_feedback "
+                "WHERE feedback_key = ?",
+                (feedback_key,),
             ).fetchone()
-            if existing and existing[1] != payload_hash:
+            if existing and (
+                existing[1] != lesson_id or existing[2] != payload_hash
+            ):
                 raise ValueError(
-                    "feedback_key wurde bereits mit anderem Payload verwendet"
+                    "feedback_key wurde bereits global mit einer anderen Lesson "
+                    "oder einem anderen Payload verwendet"
                 )
             created = existing is None
             if created:
@@ -915,20 +927,17 @@ class USMCClient:
             lesson, direct_promotion_enabled=direct_promotion_enabled
         )
 
-    def deliver_lessons(
-        self,
+    @staticmethod
+    def _prepare_delivery_request(
         session_key: str,
         delivery_key: str,
-        context: Optional[str] = None,
-        lesson_ids: Optional[Iterable[int]] = None,
-        limit: int = MAX_SESSION_LESSONS,
-    ) -> List[Dict]:
-        """Liefert höchstens drei freigegebene Lessons exakt einmal aus.
-
-        Ohne Kontext oder explizite Auswahl erfolgt keine Zustellung. Die
-        Methode ist ein synchroner API-Vertrag und startet keinen Daemon oder
-        Dauerhinweis.
-        """
+        context: Optional[str],
+        lesson_ids: Optional[Iterable[int]],
+        limit: int,
+        *,
+        session_start: bool = False,
+        session_task: Optional[str] = None,
+    ) -> Dict:
         session_key = session_key.strip()
         delivery_key = delivery_key.strip()
         if not session_key or not delivery_key:
@@ -936,8 +945,6 @@ class USMCClient:
         if not 1 <= limit <= MAX_SESSION_LESSONS:
             raise ValueError(f"limit muss zwischen 1 und {MAX_SESSION_LESSONS} liegen")
         selected_ids = list(dict.fromkeys(int(item) for item in (lesson_ids or [])))
-        if not selected_ids and not (context and context.strip()):
-            return []
         mode = "selected" if selected_ids else "context"
         request = {
             "session_key": session_key,
@@ -947,110 +954,178 @@ class USMCClient:
             "lesson_ids": selected_ids,
             "limit": limit,
         }
-        request_hash = canonical_hash(request)
-        now = datetime.now().isoformat()
-        conn = self._get_conn()
-        try:
-            conn.execute("BEGIN IMMEDIATE")
-            batch = conn.execute(
-                "SELECT request_hash FROM usmc_lesson_delivery_batches "
-                "WHERE delivery_key = ?",
-                (delivery_key,),
-            ).fetchone()
-            if batch and batch[0] != request_hash:
+        if session_start:
+            request["session_start"] = True
+            request["session_task"] = session_task
+        return {
+            "session_key": session_key,
+            "delivery_key": delivery_key,
+            "context": context,
+            "selected_ids": selected_ids,
+            "limit": limit,
+            "mode": mode,
+            "request_hash": canonical_hash(request),
+        }
+
+    @staticmethod
+    def _replay_delivery_batch(
+        conn: sqlite3.Connection, delivery_key: str
+    ) -> List[Dict]:
+        lesson_select = ", ".join(f"l.{field}" for field in _LESSON_FIELDS)
+        rows = conn.execute(
+            f"SELECT {lesson_select}, d.session_key, d.delivery_mode, "
+            "d.feedback_prompt FROM usmc_lesson_deliveries d "
+            "JOIN usmc_lessons l ON l.id = d.lesson_id "
+            "WHERE d.delivery_key = ? ORDER BY d.id ASC",
+            (delivery_key,),
+        ).fetchall()
+        result = []
+        field_count = len(_LESSON_FIELDS)
+        for row in rows:
+            item = _lesson_dict(row[:field_count])
+            item.update({
+                "delivery_key": delivery_key,
+                "session_key": row[field_count],
+                "delivery_mode": row[field_count + 1],
+                "new_delivery": False,
+                "feedback_prompt": row[field_count + 2],
+            })
+            result.append(item)
+        return result
+
+    def _deliver_lessons_in_transaction(
+        self,
+        conn: sqlite3.Connection,
+        prepared: Dict,
+        *,
+        session_id: Optional[int] = None,
+    ) -> List[Dict]:
+        delivery_key = prepared["delivery_key"]
+        batch = conn.execute(
+            "SELECT request_hash, session_id FROM usmc_lesson_delivery_batches "
+            "WHERE delivery_key = ?",
+            (delivery_key,),
+        ).fetchone()
+        if batch:
+            if batch[0] != prepared["request_hash"]:
                 raise ValueError(
                     "delivery_key wurde bereits für eine andere Anfrage verwendet"
                 )
-            if not batch:
-                conn.execute("""
-                    INSERT INTO usmc_lesson_delivery_batches
-                        (delivery_key, session_key, delivery_mode, request_hash,
-                         agent_id, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """, (
-                    delivery_key, session_key, mode, request_hash,
-                    self.agent_id, now,
-                ))
-
-            base_where = (
-                "is_active = 1 AND editorial_status IN ('legacy', 'approved') "
-                "AND privacy_scope IN ('local', 'private') "
-                "AND sensitive_source = 0"
-            )
-            if selected_ids:
-                placeholders = ",".join("?" for _ in selected_ids)
-                rows = conn.execute(
-                    f"SELECT {_LESSON_SELECT} FROM usmc_lessons "
-                    f"WHERE {base_where} AND id IN ({placeholders})",
-                    selected_ids,
-                ).fetchall()
-                by_id = {row[0]: _lesson_dict(row) for row in rows}
-                candidates = [by_id[item] for item in selected_ids if item in by_id]
-            else:
-                rows = conn.execute(
-                    f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE {base_where}"
-                ).fetchall()
-                candidates = [_lesson_dict(row) for row in rows]
-                terms = [
-                    term.casefold() for term in re.findall(r"\w+", context or "")
-                    if len(term) >= 2
-                ] or [(context or "").strip().casefold()]
-
-                def relevance(lesson):
-                    haystack = " ".join(str(lesson.get(field) or "") for field in (
-                        "category", "title", "problem", "solution",
-                        "source_key", "event_anchor",
-                    )).casefold()
-                    return sum(1 for term in terms if term in haystack)
-
-                candidates = [item for item in candidates if relevance(item) > 0]
-                severity_rank = {"critical": 4, "high": 3, "medium": 2, "low": 1}
-                candidates.sort(
-                    key=lambda item: (
-                        relevance(item), item["weight"],
-                        severity_rank.get(item["severity"], 0), item["created_at"],
-                    ),
-                    reverse=True,
+            if session_id is not None and batch[1] != session_id:
+                raise ValueError(
+                    "delivery_key gehört bereits zu einem anderen SessionStart"
                 )
+            return self._replay_delivery_batch(conn, delivery_key)
 
-            delivered = []
-            for lesson in candidates[:limit]:
-                payload_hash = canonical_hash({
-                    "lesson_id": lesson["id"],
-                    "delivery_key": delivery_key,
-                    "session_key": session_key,
-                    "mode": mode,
-                    "context": context,
-                })
-                cursor = conn.execute("""
-                    INSERT INTO usmc_lesson_deliveries
-                        (lesson_id, delivery_key, session_key, delivery_mode,
-                         context, feedback_prompt, payload_hash, agent_id, created_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(lesson_id, delivery_key) DO NOTHING
-                """, (
-                    lesson["id"], delivery_key, session_key, mode, context,
-                    FEEDBACK_PROMPT, payload_hash, self.agent_id, now,
-                ))
-                new_delivery = cursor.rowcount > 0
-                if new_delivery:
-                    conn.execute(
-                        "UPDATE usmc_lessons SET times_shown = times_shown + 1, "
-                        "last_delivered_at = ?, updated_at = ? WHERE id = ?",
-                        (now, now, lesson["id"]),
-                    )
-                item = dict(lesson)
-                if new_delivery:
-                    item["times_shown"] = item["times_shown"] + 1
-                    item["last_delivered_at"] = now
-                item.update({
-                    "delivery_key": delivery_key,
-                    "session_key": session_key,
-                    "delivery_mode": mode,
-                    "new_delivery": new_delivery,
-                    "feedback_prompt": FEEDBACK_PROMPT,
-                })
-                delivered.append(item)
+        now = datetime.now().isoformat()
+        conn.execute("""
+            INSERT INTO usmc_lesson_delivery_batches
+                (delivery_key, session_id, session_key, delivery_mode,
+                 request_hash, agent_id, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            delivery_key, session_id, prepared["session_key"], prepared["mode"],
+            prepared["request_hash"], self.agent_id, now,
+        ))
+
+        base_where = (
+            "is_active = 1 AND editorial_status IN ('legacy', 'approved') "
+            "AND privacy_scope IN ('local', 'private') "
+            "AND sensitive_source = 0"
+        )
+        selected_ids = prepared["selected_ids"]
+        context = prepared["context"]
+        if selected_ids:
+            placeholders = ",".join("?" for _ in selected_ids)
+            rows = conn.execute(
+                f"SELECT {_LESSON_SELECT} FROM usmc_lessons "
+                f"WHERE {base_where} AND id IN ({placeholders})",
+                selected_ids,
+            ).fetchall()
+            by_id = {row[0]: _lesson_dict(row) for row in rows}
+            candidates = [by_id[item] for item in selected_ids if item in by_id]
+        else:
+            rows = conn.execute(
+                f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE {base_where}"
+            ).fetchall()
+            candidates = [_lesson_dict(row) for row in rows]
+            terms = [
+                term.casefold() for term in re.findall(r"\w+", context or "")
+                if len(term) >= 2
+            ] or [(context or "").strip().casefold()]
+
+            def relevance(lesson):
+                haystack = " ".join(str(lesson.get(field) or "") for field in (
+                    "category", "title", "problem", "solution",
+                    "source_key", "event_anchor",
+                )).casefold()
+                return sum(1 for term in terms if term in haystack)
+
+            candidates = [item for item in candidates if relevance(item) > 0]
+            severity_rank = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+            candidates.sort(
+                key=lambda item: (
+                    relevance(item), item["weight"],
+                    severity_rank.get(item["severity"], 0), item["created_at"],
+                ),
+                reverse=True,
+            )
+
+        delivered = []
+        for lesson in candidates[:prepared["limit"]]:
+            payload_hash = canonical_hash({
+                "lesson_id": lesson["id"],
+                "delivery_key": delivery_key,
+                "session_key": prepared["session_key"],
+                "mode": prepared["mode"],
+                "context": context,
+            })
+            conn.execute("""
+                INSERT INTO usmc_lesson_deliveries
+                    (lesson_id, delivery_key, session_key, delivery_mode,
+                     context, feedback_prompt, payload_hash, agent_id, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                lesson["id"], delivery_key, prepared["session_key"],
+                prepared["mode"], context, FEEDBACK_PROMPT, payload_hash,
+                self.agent_id, now,
+            ))
+            conn.execute(
+                "UPDATE usmc_lessons SET times_shown = times_shown + 1, "
+                "last_delivered_at = ?, updated_at = ? WHERE id = ?",
+                (now, now, lesson["id"]),
+            )
+            item = dict(lesson)
+            item["times_shown"] = item["times_shown"] + 1
+            item["last_delivered_at"] = now
+            item.update({
+                "delivery_key": delivery_key,
+                "session_key": prepared["session_key"],
+                "delivery_mode": prepared["mode"],
+                "new_delivery": True,
+                "feedback_prompt": FEEDBACK_PROMPT,
+            })
+            delivered.append(item)
+        return delivered
+
+    def deliver_lessons(
+        self,
+        session_key: str,
+        delivery_key: str,
+        context: Optional[str] = None,
+        lesson_ids: Optional[Iterable[int]] = None,
+        limit: int = MAX_SESSION_LESSONS,
+    ) -> List[Dict]:
+        """Liefert höchstens drei freigegebene Lessons exakt einmal aus."""
+        prepared = self._prepare_delivery_request(
+            session_key, delivery_key, context, lesson_ids, limit
+        )
+        if not prepared["selected_ids"] and not (context and context.strip()):
+            return []
+        conn = self._get_conn()
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            delivered = self._deliver_lessons_in_transaction(conn, prepared)
             conn.commit()
             return delivered
         except Exception:
@@ -1089,33 +1164,87 @@ class USMCClient:
         if wants_lessons and not delivery_key:
             raise ValueError("delivery_key ist bei SessionStart-Zustellung Pflicht")
         now = datetime.now().isoformat()
-
         conn = self._get_conn()
         try:
+            if not wants_lessons:
+                cursor = conn.execute("""
+                    INSERT INTO usmc_sessions (agent_id, started_at, current_task)
+                    VALUES (?, ?, ?)
+                """, (self.agent_id, now, task))
+                conn.commit()
+                return {
+                    'id': cursor.lastrowid,
+                    'agent_id': self.agent_id,
+                    'started_at': now,
+                    'current_task': task,
+                }
+
+            prepared = self._prepare_delivery_request(
+                lesson_session_key or delivery_key,
+                delivery_key,
+                lesson_context,
+                selected_ids,
+                lesson_limit,
+                session_start=True,
+                session_task=task,
+            )
+            conn.execute("BEGIN IMMEDIATE")
+            batch = conn.execute(
+                "SELECT request_hash, session_id "
+                "FROM usmc_lesson_delivery_batches WHERE delivery_key = ?",
+                (prepared["delivery_key"],),
+            ).fetchone()
+            if batch:
+                if batch[0] != prepared["request_hash"]:
+                    raise ValueError(
+                        "delivery_key wurde bereits für eine andere Anfrage verwendet"
+                    )
+                if batch[1] is None:
+                    raise ValueError(
+                        "delivery_key stammt nicht aus einem atomaren SessionStart"
+                    )
+                session = conn.execute(
+                    "SELECT id, agent_id, started_at, current_task "
+                    "FROM usmc_sessions WHERE id = ?",
+                    (batch[1],),
+                ).fetchone()
+                if session is None:
+                    raise RuntimeError(
+                        "Delivery-Batch verweist auf eine fehlende Session"
+                    )
+                lessons = self._replay_delivery_batch(
+                    conn, prepared["delivery_key"]
+                )
+                conn.commit()
+                return {
+                    "id": session[0],
+                    "agent_id": session[1],
+                    "started_at": session[2],
+                    "current_task": session[3],
+                    "lessons": lessons,
+                }
+
             cursor = conn.execute("""
                 INSERT INTO usmc_sessions (agent_id, started_at, current_task)
                 VALUES (?, ?, ?)
             """, (self.agent_id, now, task))
+            session_id = cursor.lastrowid
+            lessons = self._deliver_lessons_in_transaction(
+                conn, prepared, session_id=session_id
+            )
             conn.commit()
-
-            result = {
-                'id': cursor.lastrowid,
-                'agent_id': self.agent_id,
-                'started_at': now,
-                'current_task': task
+            return {
+                "id": session_id,
+                "agent_id": self.agent_id,
+                "started_at": now,
+                "current_task": task,
+                "lessons": lessons,
             }
+        except Exception:
+            conn.rollback()
+            raise
         finally:
             self._close_conn(conn)
-
-        if wants_lessons:
-            result["lessons"] = self.deliver_lessons(
-                session_key=lesson_session_key or delivery_key,
-                delivery_key=delivery_key,
-                context=lesson_context,
-                lesson_ids=selected_ids,
-                limit=lesson_limit,
-            )
-        return result
 
     def end_session(self, session_id: int, handoff_notes: Optional[str] = None) -> bool:
         """

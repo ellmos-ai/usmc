@@ -148,9 +148,11 @@ usmc changes "2026-02-28T00:00:00" --json
 
 Der bisherige Aufruf `add_lesson(title, problem, solution, ...)` bleibt append-only. Eine Lektion
 nutzt den provenance-fähigen v2-Vertrag erst, wenn `source_key` und `episode_key` gemeinsam
-gesetzt sind. Dieses Paar ist datenbankweit eindeutig; Wiederholungen laufen über SQLite-
-`ON CONFLICT` als Upsert. Neue geschlüsselte Lektionen starten bewusst mit dem niedrigen Gewicht
-`0.20`. Ein Upsert erhält Redaktionsstatus, Feedback, Zustellzähler und die ursprüngliche Zeilen-ID.
+gesetzt sind. Dieses Paar ist datenbankweit eindeutig und bezeichnet genau einen unveränderlichen
+Aufnahme-Payload. Ein identischer Retry liefert die ursprüngliche Zeile; ein abweichender Inhalt,
+Provenienz- oder Schutzwert scheitert ohne Mutation. Inhaltliche Änderungen benötigen einen neuen
+`episode_key`, redaktionelle Änderungen den Reviewpfad. Neue geschlüsselte Lektionen starten mit
+dem niedrigen Gewicht `0.20`.
 
 ```python
 lesson = client.add_lesson(
@@ -180,12 +182,17 @@ client.record_lesson_feedback(
 ```
 
 Feedback speichert hilfreiche oder nicht hilfreiche Nutzung, unabhängige Wiederholung und
-Zustellfehler als getrennte, idempotente Signale. Eine unabhängige Wiederholung kann damit
+Zustellfehler als getrennte, idempotente Signale. Ein `feedback_key` gilt global genau einmal;
+seine Wiederverwendung für eine andere Lektion oder einen anderen Payload scheitert. Eine
+unabhängige Wiederholung kann damit
 weiterhin Evidenz sein und zugleich als möglicher Zustellfehler markiert werden. Die Zustellung
 ist synchron und an eine konkrete Anfrage gebunden: Ohne expliziten Kontext oder ausgewählte
 Lesson-IDs wird nichts angezeigt. Eine Anfrage liefert höchstens drei freigegebene (oder alte),
 lokale/private und nicht sensible Lektionen, jeweils mit der kurzen Frage
-`War diese Lesson hilfreich? (ja/nein)`.
+`War diese Lesson hilfreich? (ja/nein)`. Ein Retry desselben `delivery_key` rekonstruiert nur die
+zuerst persistierten Zustellzeilen in stabiler Reihenfolge, ohne Neuselektion oder erneutes
+Hochzählen von `times_shown`. SessionStart speichert Session und Zustellung in einer SQLite-
+Transaktion.
 
 Die Direct-Promotion-Oberfläche wertet ausschließlich eine Policy aus. Nur verifizierte,
 vollständig provenienzbelegte Agenten-Lektionen aus lokalen/privaten Quellen können geeignet
@@ -208,10 +215,12 @@ usmc lesson-policy 1
 ```
 
 Beim Öffnen einer v1-Datenbank führt der neue Client eine additive, transaktionale Migration auf
-v2 aus. Sie ist retry-sicher und erhält jede alte Spalte und Zeile. Alte Clients können weiterhin
-lesen und Lektionen anhängen, weil alle v2-Felder kompatible Standardwerte besitzen. Rollback
-bedeutet, den alten Client gegen die erweiterte Datenbank zu betreiben — nicht das neue Schema zu
-verkleinern oder Daten zu löschen.
+v2 aus. Sie ist retry-sicher, prüft erforderliche v2-Spalten, -Tabellen und -Indizes auch bei
+bereits gespeicherter Version 2 und erhält jede alte Spalte und Zeile. Unsichere globale
+Duplikate eines `feedback_key` brechen die Transaktion mit klarer Fehlermeldung ab, statt Daten zu
+löschen. Alte Clients können weiterhin lesen und Lektionen anhängen, weil alle v2-Felder
+kompatible Standardwerte besitzen. Rollback bedeutet, den alten Client gegen die erweiterte
+Datenbank zu betreiben — nicht das Schema zu verkleinern oder Daten zu löschen.
 
 ## Wiederfinden
 

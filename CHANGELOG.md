@@ -60,6 +60,8 @@ Reported as ticket T-20260813-90: a model searching for store entries found noth
   immutable intake payload; feedback keys are globally exactly-once; delivery retries replay the
   persisted batch; partial-v2 schemas repair all required named columns/indexes transactionally;
   and SessionStart commits or rolls back its session and delivery together.
+- Corrected the immutable intake-hash boundary so legitimate editorial review and later weighting
+  state cannot invalidate an original retry, including backfill from the pre-hash v2 schema.
 - Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`
   is **not** reserved for this project. As of 2026-08-08 no project of that name exists on
   PyPI, so a PyPI package called `usmc` is not necessarily this one. Install from GitHub.

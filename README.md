@@ -151,7 +151,9 @@ the provenance-aware v2 contract only when both `source_key` and `episode_key` a
 pair is unique across the database and identifies one immutable intake payload. An identical
 retry returns the original row; a different semantic, provenance or protection payload fails
 closed without changing it. Content changes need a new `episode_key`, while editorial changes use
-the review surface. New keyed lessons start with a deliberately low weight of `0.20`.
+the review surface. The current editorial status, counters, delivery state and calculated/current
+weight are deliberately outside the immutable intake hash. New keyed lessons start with a
+deliberately low weight of `0.20`.
 
 ```python
 lesson = client.add_lesson(

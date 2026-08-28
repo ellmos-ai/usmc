@@ -26,6 +26,7 @@ from datetime import datetime
 from . import schema
 from .lesson_contract import (
     FEEDBACK_PROMPT,
+    LESSON_INGEST_HASH_VERSION,
     MAX_SESSION_LESSONS,
     NEW_LESSON_INITIAL_WEIGHT,
     VALID_EDITORIAL_STATUSES,
@@ -44,6 +45,7 @@ _LESSON_FIELDS = (
     "editorial_status", "evidence_class", "privacy_scope",
     "sensitive_source", "user_preference", "policy_relevant", "conflict_flag",
     "mutates_skill", "mutates_workflow", "ingest_payload_hash",
+    "ingest_payload_hash_version",
     "helpful_count", "unhelpful_count",
     "independent_repeat_count", "delivery_failure_count", "last_delivered_at",
     "created_at", "updated_at",
@@ -615,10 +617,8 @@ class USMCClient:
                 "episode_key": episode_key,
                 "source_hash": source_hash,
                 "event_anchor": event_anchor,
-                "editorial_status": resolved_editorial,
                 "evidence_class": resolved_evidence,
                 "privacy_scope": resolved_privacy,
-                "confidence": resolved_weight,
                 "sensitive_source": flag_values[0],
                 "user_preference": flag_values[1],
                 "policy_relevant": flag_values[2],
@@ -663,14 +663,15 @@ class USMCClient:
                      evidence_class, privacy_scope, sensitive_source,
                      user_preference, policy_relevant, conflict_flag,
                      mutates_skill, mutates_workflow, ingest_payload_hash,
-                     created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, 1, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     ingest_payload_hash_version, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, 1, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             params = (
                 self.agent_id, category, severity, title, problem, solution,
                 resolved_weight, resolved_source_kind, source_key, episode_key,
                 source_hash, event_anchor, resolved_editorial, resolved_evidence,
-                resolved_privacy, *flag_values, ingest_payload_hash, now, now,
+                resolved_privacy, *flag_values, ingest_payload_hash,
+                LESSON_INGEST_HASH_VERSION if keyed else None, now, now,
             )
             cursor = conn.execute(sql, params)
             lesson_id = cursor.lastrowid

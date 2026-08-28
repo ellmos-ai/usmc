@@ -151,8 +151,9 @@ nutzt den provenance-fähigen v2-Vertrag erst, wenn `source_key` und `episode_ke
 gesetzt sind. Dieses Paar ist datenbankweit eindeutig und bezeichnet genau einen unveränderlichen
 Aufnahme-Payload. Ein identischer Retry liefert die ursprüngliche Zeile; ein abweichender Inhalt,
 Provenienz- oder Schutzwert scheitert ohne Mutation. Inhaltliche Änderungen benötigen einen neuen
-`episode_key`, redaktionelle Änderungen den Reviewpfad. Neue geschlüsselte Lektionen starten mit
-dem niedrigen Gewicht `0.20`.
+`episode_key`, redaktionelle Änderungen den Reviewpfad. Aktueller Redaktionsstatus, Zähler,
+Zustellstatus und berechnetes/aktuelles Gewicht gehören bewusst nicht zum unveränderlichen
+Aufnahme-Hash. Neue geschlüsselte Lektionen starten mit dem niedrigen Gewicht `0.20`.
 
 ```python
 lesson = client.add_lesson(

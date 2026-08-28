@@ -229,6 +229,13 @@ class TestLessonMigration(TempDbCase):
             (lesson["id"],),
         ).fetchone()[0]
         self.assertTrue(payload_hash)
+        self.assertEqual(
+            conn.execute(
+                "SELECT ingest_payload_hash_version FROM usmc_lessons WHERE id = ?",
+                (lesson["id"],),
+            ).fetchone()[0],
+            2,
+        )
         schema.migrate(conn)
         conn.close()
 
@@ -240,6 +247,34 @@ class TestLessonMigration(TempDbCase):
         )
         self.assertFalse(retry["created"])
         self.assertTrue(retry["sensitive_source"])
+
+    def test_fb5_upgrade_backfill_ignores_later_editorial_state(self):
+        client = USMCClient(self.db_path, "fb5-upgrade")
+        lesson = client.add_lesson(
+            "Upgrade", "Problem", "Lösung",
+            source_key="fb5", episode_key="reviewed",
+            event_anchor="anchor", evidence_class="verified",
+        )
+        client.set_lesson_editorial_status(lesson["id"], "approved")
+
+        # Exakter fb5-Zustand: v2-Key/Reviewfeld vorhanden, aber noch keine
+        # gespeicherte Intake-Hashspalte. Der aktuelle Status ist approved.
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("ALTER TABLE usmc_lessons DROP COLUMN ingest_payload_hash_version")
+        conn.execute("ALTER TABLE usmc_lessons DROP COLUMN ingest_payload_hash")
+        conn.commit()
+        schema.migrate(conn)
+        schema.migrate(conn)
+        self.assertEqual(schema.get_schema_version(conn), 2)
+        conn.close()
+
+        retry = client.add_lesson(
+            "Upgrade", "Problem", "Lösung",
+            source_key="fb5", episode_key="reviewed",
+            event_anchor="anchor", evidence_class="verified",
+        )
+        self.assertFalse(retry["created"])
+        self.assertEqual(retry["editorial_status"], "approved")
 
     def test_global_feedback_duplicates_fail_migration_and_roll_back(self):
         client = USMCClient(self.db_path, "duplicate-fixture")
@@ -363,6 +398,28 @@ class TestIdempotentLessonIntake(TempDbCase):
 
         self.assertEqual(len(set(ids)), 1)
         self.assertEqual(len(self.client.get_lessons(grep="Parallel")), 1)
+
+    def test_current_weight_is_not_part_of_immutable_intake_hash(self):
+        first = self.client.add_lesson(
+            "Gewichtung", "P", "S",
+            source_key="source", episode_key="weight-state",
+            event_anchor="weight-event",
+        )
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(
+            "UPDATE usmc_lessons SET confidence = 0.8 WHERE id = ?",
+            (first["id"],),
+        )
+        conn.commit()
+        conn.close()
+
+        retry = self.client.add_lesson(
+            "Gewichtung", "P", "S",
+            source_key="source", episode_key="weight-state",
+            event_anchor="weight-event",
+        )
+        self.assertFalse(retry["created"])
+        self.assertEqual(retry["confidence"], 0.8)
 
     def test_aborted_insert_can_be_retried_without_duplicate(self):
         conn = sqlite3.connect(self.db_path)

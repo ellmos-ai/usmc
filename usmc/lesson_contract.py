@@ -7,6 +7,7 @@ from typing import Dict, Optional
 
 
 NEW_LESSON_INITIAL_WEIGHT = 0.20
+LESSON_INGEST_HASH_VERSION = 2
 MAX_SESSION_LESSONS = 3
 FEEDBACK_PROMPT = "War diese Lesson hilfreich? (ja/nein)"
 
@@ -18,7 +19,7 @@ VALID_PRIVACY_SCOPES = ("local", "private", "shared", "public")
 LESSON_INGEST_FIELDS = (
     "category", "severity", "title", "problem", "solution", "source_kind",
     "source_key", "episode_key", "source_hash", "event_anchor",
-    "editorial_status", "evidence_class", "privacy_scope", "confidence",
+    "evidence_class", "privacy_scope",
     "sensitive_source", "user_preference", "policy_relevant", "conflict_flag",
     "mutates_skill", "mutates_workflow",
 )
@@ -41,7 +42,6 @@ def lesson_ingest_payload(lesson: Dict) -> Dict:
     payload = {field: lesson.get(field) for field in LESSON_INGEST_FIELDS}
     for field in _LESSON_BOOLEAN_FIELDS:
         payload[field] = bool(payload[field])
-    payload["confidence"] = float(payload["confidence"])
     return payload
 
 

@@ -31,6 +31,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
 
+from .schema import LESSON_V2_COLUMNS
+
+_LESSON_V2_COLUMN_NAMES = frozenset(name for name, _ in LESSON_V2_COLUMNS)
+
 UNION_VERSION = 1
 UNION_META_KEY = "memory_union"
 CONTRACT_PATH = Path(__file__).with_name("memory_union.contract.json")
@@ -340,8 +344,16 @@ def apply_union(conn: sqlite3.Connection) -> Dict[str, int]:
     Kopiert usmc_*-Zeilen mit unveraenderten IDs nach memory_*, ersetzt die
     usmc_*-Tabellen durch Lese-Views und setzt ``usmc_meta.memory_union``.
     Alles in einer Transaktion; bei jeder Abweichung Abbruch ohne Mutation.
-    Unbekannte Spalten (z. B. Lesson-Provenienz eines spaeteren Vertrags)
-    brechen ab, statt still verloren zu gehen.
+    Unbekannte Spalten (z. B. eine kuenftige, hier noch nicht abgebildete
+    Erweiterung) brechen ab, statt still verloren zu gehen.
+
+    Ausnahme ``usmc_lessons`` mit Lesson-Schema v2 (S3, source_key/
+    episode_key/Provenienz/Feedback/Zustellung, T-20260922-668077756):
+    diese Spalten SIND bekannt, haben aber bewusst keinen Platz im
+    gemeinsamen BACH/OCEAN-Vertragsschema (eigene, hier nicht umgesetzte
+    Stufe). ``usmc_lessons`` wird dann NICHT konvertiert -- bleibt eine
+    reale, schreibbare Tabelle -- waehrend facts/working/sessions normal
+    in die Vereinigung wandern. Kein Abbruch der gesamten Migration.
     """
     if is_union(conn):
         return {}
@@ -360,6 +372,11 @@ def apply_union(conn: sqlite3.Connection) -> Dict[str, int]:
                 continue
             extra = set(_columns(conn, legacy)) - set(_V1_COLUMNS[legacy])
             if extra:
+                if legacy == "usmc_lessons" and extra <= _LESSON_V2_COLUMN_NAMES:
+                    # Bewusst NICHT Teil dieser Stufe (siehe Funktions-
+                    # Docstring): usmc_lessons bleibt unangetastet liegen,
+                    # keine Datenaenderung fuer diese Tabelle, Rest laeuft weiter.
+                    continue
                 raise UnionMigrationError(
                     f"unmapped-columns {legacy}: {', '.join(sorted(extra))}"
                 )

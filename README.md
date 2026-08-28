@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Version: 0.2.3](https://img.shields.io/badge/Version-0.2.3-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-113%20passed-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-145%20passed-brightgreen.svg)](tests)
 [![Verified: 2026-09-19](https://img.shields.io/badge/Verified-2026--09--19-blue.svg)](CHANGELOG.md)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Dependencies](https://img.shields.io/badge/Dependencies-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
@@ -249,6 +249,82 @@ usmc changes "2026-09-19T00:00:00" --json
 ```
 
 ---
+
+## Idempotent Lessons (schema v2)
+
+The original `add_lesson(title, problem, solution, ...)` call remains append-only. A lesson enters
+the provenance-aware v2 contract only when both `source_key` and `episode_key` are supplied. That
+pair is unique across the database and retries use SQLite `ON CONFLICT` upsert semantics. New keyed
+lessons start with a deliberately low weight of `0.20`; an upsert keeps editorial state, feedback,
+delivery counts and the original row identity intact.
+
+```python
+lesson = client.add_lesson(
+    "Windows encoding",
+    "A subprocess returned cp1252",
+    "Set PYTHONIOENCODING=utf-8",
+    source_key="hook:codex",
+    episode_key="session-42:encoding",
+    event_anchor="tool-result:17",
+    evidence_class="verified",
+    privacy_scope="local",
+)
+
+client.set_lesson_editorial_status(lesson["id"], "approved")
+delivered = client.deliver_lessons(
+    session_key="session-43",
+    delivery_key="session-43:start",
+    context="Windows subprocess encoding",
+    limit=3,
+)
+client.record_lesson_feedback(
+    lesson["id"],
+    feedback_key="session-43:lesson-1",
+    helpful=True,
+    delivery_key="session-43:start",
+)
+```
+
+Feedback stores helpful/unhelpful use, independent repetition and delivery failure as separate,
+idempotent signals. An independent repetition can therefore remain useful evidence while also
+being marked as a possible delivery failure. Delivery is synchronous and request-driven: without
+an explicit context or selected lesson IDs, nothing is shown; one request returns at most three
+approved (or legacy), local/private and non-sensitive lessons, each with the short question
+`War diese Lesson hilfreich? (ja/nein)`.
+
+The direct-promotion surface is policy evaluation only. `evaluate_lesson_promotion()` accepts only
+verified, fully provenanced agent lessons from local/private sources. User preferences, policy
+content, conflicts, sensitive sources and any skill/workflow mutation always require review. The
+product gate defaults to off, and the method never publishes or mutates a skill, workflow or
+editorial status.
+
+Equivalent CLI paths are available:
+
+```bash
+usmc lesson "Encoding" "cp1252" "Use UTF-8" \
+  --source-key hook:codex --episode-key session-42:encoding \
+  --event-anchor tool-result:17 --evidence-class verified --json
+usmc lesson-review 1 approved
+usmc lesson-deliver --session-key session-43 --delivery-key session-43:start \
+  --context "Windows encoding" --json
+usmc lesson-feedback 1 --feedback-key session-43:lesson-1 \
+  --helpful yes --delivery-key session-43:start --json
+usmc lesson-policy 1
+```
+
+Opening a v1 database with the new client performs an additive, transactional migration to v2.
+The migration is retry-safe and preserves every old column and row. Old clients can continue to
+read and append lessons because all v2 fields have compatible defaults; rollback means running the
+old client against the expanded database, not contracting or deleting the new schema.
+
+**Shared-schema (`USMC_MEMORY_UNION=1`) databases:** lesson schema v2 is scoped to `usmc_*` only
+and is not part of the shared BACH/OCEAN contract yet. `add_lesson()` without `source_key`/
+`episode_key` (and without any other v2-only field) keeps working unchanged in either mode; the
+keyed v2 API (`add_lesson` with a key, `get_lessons`, `get_lesson`,
+`set_lesson_editorial_status`, `record_lesson_feedback`, `deliver_lessons`) raises
+`LessonV2UnionUnsupportedError` on a shared-schema database. `usmc_lessons` itself is never
+converted by `apply_union()` -- it stays a real, writable table -- so this is a deliberate policy
+lock, not a data-loss risk.
 
 ## Core Concepts & Primitives
 

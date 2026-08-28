@@ -15,6 +15,18 @@ VALID_EDITORIAL_STATUSES = ("legacy", "draft", "review", "approved", "rejected")
 VALID_EVIDENCE_CLASSES = ("unknown", "anecdotal", "corroborated", "verified")
 VALID_PRIVACY_SCOPES = ("local", "private", "shared", "public")
 
+LESSON_INGEST_FIELDS = (
+    "category", "severity", "title", "problem", "solution", "source_kind",
+    "source_key", "episode_key", "source_hash", "event_anchor",
+    "editorial_status", "evidence_class", "privacy_scope", "confidence",
+    "sensitive_source", "user_preference", "policy_relevant", "conflict_flag",
+    "mutates_skill", "mutates_workflow",
+)
+_LESSON_BOOLEAN_FIELDS = {
+    "sensitive_source", "user_preference", "policy_relevant", "conflict_flag",
+    "mutates_skill", "mutates_workflow",
+}
+
 
 def canonical_hash(payload: Dict) -> str:
     """Return a stable SHA-256 for an idempotency payload."""
@@ -22,6 +34,20 @@ def canonical_hash(payload: Dict) -> str:
         payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def lesson_ingest_payload(lesson: Dict) -> Dict:
+    """Normalize the immutable semantic/provenance/protection intake payload."""
+    payload = {field: lesson.get(field) for field in LESSON_INGEST_FIELDS}
+    for field in _LESSON_BOOLEAN_FIELDS:
+        payload[field] = bool(payload[field])
+    payload["confidence"] = float(payload["confidence"])
+    return payload
+
+
+def lesson_ingest_hash(lesson: Dict) -> str:
+    """Hash a keyed lesson's complete immutable intake payload."""
+    return canonical_hash(lesson_ingest_payload(lesson))
 
 
 def validate_lesson_contract(

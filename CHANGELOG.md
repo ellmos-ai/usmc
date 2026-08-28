@@ -26,6 +26,7 @@ All notable changes to USMC are documented here.
     - Extended `tests/test_metadata.py` with `test_notice_attribution`, `test_level1_sbom_inventory`, auto-assign/label-sync workflow hardening tests, pyproject guardrails, and updated test badge synchronization (126 passed, 58 subtests).
     - Extended `tests/test_repository_hygiene.py` with canonical lock, IDEAPAD, and swap file ignore contract tests.
 - **Shared BACH/OCEAN memory schema (S1, T-20260920-823767362):** new `usmc.memory_union` with the canonical DDL of the memory tables shared with BACH, a pinned PRAGMA contract (`memory_union.contract.json`), and an opt-in migration (`USMC_MEMORY_UNION=1`) from `usmc_*` to `memory_*` with a prior file backup, `usmc_*` read views, provenance triggers installed only after the copy, and fail-closed handling of unknown columns. The client writes to `memory_*` once the union is active; reads keep using `usmc_*`. Tests never open `~/.usmc` (`tests/conftest.py`).
+- **Lesson contract v2 scoped to `usmc_*`, locked in union mode (T-20260922-668077756):** integrated the S3 lesson-v2 contract (see 0.2.1 below) onto the shared-schema branch. `usmc_lessons` keeps carrying schema v2 regardless of union mode, but `memory_union.apply_union()` now recognizes the known v2 columns and deliberately skips converting `usmc_lessons` (stays a real, writable table; facts/working/sessions still migrate normally) instead of aborting the whole migration. The v2 lesson API (keyed upsert, feedback, delivery, editorial status) raises `LessonV2UnionUnsupportedError` when called on a union database — a policy lock, not a technical necessity, until lesson-v2 has its own BACH/OCEAN contract stage. The plain, unkeyed `add_lesson()` call is unaffected in either mode.
 
 ## 0.2.3 - 2026-09-19
 
@@ -89,6 +90,39 @@ Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und Versionslauf:
   - Corrected PyPI statement in READMEs and `llms.txt` (name `usmc` is not claimed on PyPI).
 
 ## 0.2.1 - 2026-08-13
+
+- Added the backward-compatible lesson contract schema v2. Keyed lessons use a unique
+  `(source_key, episode_key)` and retry-safe SQLite upsert while the original unkeyed
+  `add_lesson()` path remains append-only. The additive migration preserves v1 rows and supports
+  mixed old/new clients without a destructive contract phase.
+- Added provenance, editorial, evidence and privacy fields with a low `0.20` starting weight for
+  keyed lessons. Helpful use, unhelpful use, independent repetition and delivery failure are
+  stored as separate idempotent feedback signals.
+- Added request-idempotent, synchronous lesson delivery for explicit context or selected IDs,
+  including optional SessionStart integration. Delivery is capped at three approved/legacy,
+  local/private, non-sensitive lessons and asks one short helpfulness question; there is no
+  notification daemon.
+- Added a pure direct-promotion policy surface. The product gate remains off and never publishes;
+  user preferences, policy content, conflicts, sensitive sources, and skill/workflow mutation
+  always require review.
+- Added high-level API and CLI surfaces (`lesson-feedback`, `lesson-review`, `lesson-policy`,
+  `lesson-deliver`, and optional `start` delivery flags) plus isolated migration, concurrent
+  deduplication, rollback/retry, weighting, privacy/review and backward-compatibility tests.
+- Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`
+  is **not** reserved for this project. As of 2026-08-08 no project of that name exists on
+  PyPI, so a PyPI package called `usmc` is not necessarily this one. Install from GitHub.
+- Documented that the CLI messages, `--help` texts and `generate_context()` headings are
+  currently German while the rest of the project is English, so the gap is visible instead
+  of surprising users.
+- Removed the internal pre-release audit file `TODO.md` from version control and added it to
+  `.gitignore`; it is planning material, not repository content.
+- Added `.gitattributes` (`* text=auto eol=lf`, binary assets excluded). The committed files
+  were already LF, but nothing pinned that, so working copies drifted into mixed CRLF/LF.
+- Rewrote the remaining German `.gitignore` comments in neutral English.
+- Synchronized the maintained German README with the canonical English
+  onboarding structure and restored byte-identical code and Mermaid examples.
+- Technical hygiene: test the zero-dependency package on Python 3.14 in CI and
+  advertise that supported target in the package classifiers.
 
 ## 2026-07-27
 

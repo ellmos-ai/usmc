@@ -66,11 +66,15 @@ class TestApplyUnion(unittest.TestCase):
     def test_v1_rows_move_with_ids_and_compat_views(self):
         conn = _v1_db()
         copied = mu.apply_union(conn)
-        self.assertEqual(copied, {"usmc_facts": 2, "usmc_working": 2, "usmc_lessons": 1, "usmc_sessions": 2})
+        # usmc_lessons trägt seit S3 immer Lesson-Schema v2 (schema.init_db()
+        # legt die v2-Spalten direkt an) und wird darum bewusst NICHT
+        # konvertiert -- siehe apply_union()-Docstring, T-20260922-668077756.
+        self.assertEqual(copied, {"usmc_facts": 2, "usmc_working": 2, "usmc_sessions": 2})
         self.assertTrue(mu.is_union(conn))
         self.assertEqual(
-            _names(conn, "view"), {"usmc_facts", "usmc_working", "usmc_lessons", "usmc_sessions"}
+            _names(conn, "view"), {"usmc_facts", "usmc_working", "usmc_sessions"}
         )
+        self.assertIn("usmc_lessons", _names(conn, "table"))  # bleibt reale Tabelle
         self.assertEqual(
             conn.execute("SELECT agent_id, value FROM usmc_facts WHERE id = 4").fetchone(),
             ("claude-code", "v2"),
@@ -81,6 +85,10 @@ class TestApplyUnion(unittest.TestCase):
         )
         self.assertEqual(
             conn.execute("SELECT type FROM usmc_working WHERE id = 11").fetchone(), ("handoff",)
+        )
+        # Die Lesson-Zeile aus V1_ROWS bleibt unangetastet in usmc_lessons.
+        self.assertEqual(
+            conn.execute("SELECT title FROM usmc_lessons WHERE id = 21").fetchone(), ("T",)
         )
         self.assertEqual(mu.describe_schema(conn), mu.load_contract()["schema"])
 
@@ -113,13 +121,31 @@ class TestApplyUnion(unittest.TestCase):
         self.assertEqual(conn.execute("SELECT COUNT(*) FROM usmc_working").fetchone()[0], 2)
 
     def test_unmapped_columns_abort_without_mutation(self):
+        # Eine echte, unerwartete Spalte (kein bekanntes Lesson-v2-Feld) muss
+        # weiterhin die gesamte Migration abbrechen -- die Lesson-v2-Ausnahme
+        # in apply_union() gilt nur fuer die bekannten LESSON_V2_COLUMNS.
         conn = _v1_db()
-        conn.execute("ALTER TABLE usmc_lessons ADD COLUMN source_key TEXT")
+        conn.execute("ALTER TABLE usmc_facts ADD COLUMN mystery_field TEXT")
         conn.commit()
         with self.assertRaises(mu.UnionMigrationError) as ctx:
             mu.apply_union(conn)
-        self.assertIn("source_key", str(ctx.exception))
+        self.assertIn("mystery_field", str(ctx.exception))
         self._assert_unchanged(conn)
+
+    def test_lesson_v2_columns_are_skipped_not_aborted(self):
+        """Regression T-20260922-668077756: bekannte Lesson-v2-Spalten (S3)
+        duerfen die Vereinigung NICHT abbrechen -- usmc_lessons wird
+        stattdessen uebersprungen (bleibt reale Tabelle), facts/working/
+        sessions konvertieren normal."""
+        conn = _v1_db()
+        copied = mu.apply_union(conn)
+        self.assertNotIn("usmc_lessons", copied)
+        self.assertEqual(set(copied), {"usmc_facts", "usmc_working", "usmc_sessions"})
+        self.assertTrue(mu.is_union(conn))
+        self.assertEqual(mu._object_type(conn, "usmc_lessons"), "table")
+        self.assertEqual(
+            conn.execute("SELECT COUNT(*) FROM usmc_lessons").fetchone()[0], 1
+        )
 
     def test_constraint_violation_rolls_back_everything(self):
         conn = _v1_db()

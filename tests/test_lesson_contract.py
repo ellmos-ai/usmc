@@ -147,17 +147,160 @@ class TestLessonMigration(TempDbCase):
         self.assertIn("delivery_failure_count", columns)
         self.assertEqual(client.get_lessons()[0]["title"], "Alt")
 
+    def test_partial_v2_repairs_all_columns_and_named_indexes(self):
+        USMCClient(self.db_path, "partial-v2")
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("DROP INDEX idx_lessons_source_episode")
+        conn.execute("DROP TABLE usmc_lesson_feedback")
+        conn.execute("DROP TABLE usmc_lesson_delivery_batches")
+        conn.execute("DROP TABLE usmc_lesson_deliveries")
+        conn.executescript("""
+            CREATE TABLE usmc_lesson_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lesson_id INTEGER, feedback_key TEXT, helpful INTEGER,
+                independent_repeat INTEGER DEFAULT 0,
+                delivery_failed INTEGER DEFAULT 0, delivery_key TEXT,
+                payload_hash TEXT, agent_id TEXT, created_at TEXT
+            );
+            CREATE TABLE usmc_lesson_delivery_batches (
+                delivery_key TEXT, session_key TEXT, delivery_mode TEXT,
+                request_hash TEXT, agent_id TEXT, created_at TEXT
+            );
+            CREATE TABLE usmc_lesson_deliveries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lesson_id INTEGER, delivery_key TEXT, session_key TEXT,
+                delivery_mode TEXT, context TEXT, feedback_prompt TEXT,
+                agent_id TEXT, created_at TEXT
+            );
+        """)
+        conn.commit()
+        schema.migrate(conn)
+        schema.migrate(conn)
+
+        self.assertIn(
+            "event_anchor",
+            {row[1] for row in conn.execute("PRAGMA table_info(usmc_lesson_feedback)")},
+        )
+        self.assertIn(
+            "session_id",
+            {row[1] for row in conn.execute(
+                "PRAGMA table_info(usmc_lesson_delivery_batches)"
+            )},
+        )
+        self.assertIn(
+            "payload_hash",
+            {row[1] for row in conn.execute("PRAGMA table_info(usmc_lesson_deliveries)")},
+        )
+        indexes = {
+            row[1]
+            for table in (
+                "usmc_lessons", "usmc_lesson_feedback",
+                "usmc_lesson_delivery_batches", "usmc_lesson_deliveries",
+            )
+            for row in conn.execute(f"PRAGMA index_list({table})")
+        }
+        self.assertTrue({
+            "idx_lessons_source_episode",
+            "idx_lesson_feedback_key",
+            "idx_lesson_delivery_batches_key",
+            "idx_lesson_deliveries_lesson_key",
+            "idx_lesson_deliveries_batch_order",
+        }.issubset(indexes))
+        self.assertEqual(schema.get_schema_version(conn), 2)
+        conn.close()
+
+    def test_partial_v2_backfills_keyed_lesson_payload_hash(self):
+        client = USMCClient(self.db_path, "payload-backfill")
+        lesson = client.add_lesson(
+            "Backfill", "Problem", "Lösung",
+            source_key="legacy-v2", episode_key="episode",
+            event_anchor="anchor", evidence_class="verified",
+            sensitive_source=True,
+        )
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(
+            "UPDATE usmc_lessons SET ingest_payload_hash = NULL WHERE id = ?",
+            (lesson["id"],),
+        )
+        conn.commit()
+        schema.migrate(conn)
+        payload_hash = conn.execute(
+            "SELECT ingest_payload_hash FROM usmc_lessons WHERE id = ?",
+            (lesson["id"],),
+        ).fetchone()[0]
+        self.assertTrue(payload_hash)
+        schema.migrate(conn)
+        conn.close()
+
+        retry = client.add_lesson(
+            "Backfill", "Problem", "Lösung",
+            source_key="legacy-v2", episode_key="episode",
+            event_anchor="anchor", evidence_class="verified",
+            sensitive_source=True,
+        )
+        self.assertFalse(retry["created"])
+        self.assertTrue(retry["sensitive_source"])
+
+    def test_global_feedback_duplicates_fail_migration_and_roll_back(self):
+        client = USMCClient(self.db_path, "duplicate-fixture")
+        first = client.add_lesson("Erste", "P", "S")
+        second = client.add_lesson("Zweite", "P", "S")
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("DROP TABLE usmc_lesson_feedback")
+        conn.executescript("""
+            CREATE TABLE usmc_lesson_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lesson_id INTEGER NOT NULL, feedback_key TEXT NOT NULL,
+                helpful INTEGER, independent_repeat INTEGER DEFAULT 0,
+                delivery_failed INTEGER DEFAULT 0, delivery_key TEXT,
+                payload_hash TEXT, agent_id TEXT, created_at TEXT,
+                UNIQUE(lesson_id, feedback_key)
+            );
+        """)
+        for lesson_id, payload_hash in ((first["id"], "a"), (second["id"], "b")):
+            conn.execute(
+                "INSERT INTO usmc_lesson_feedback "
+                "(lesson_id, feedback_key, helpful, payload_hash, agent_id, created_at) "
+                "VALUES (?, 'globally-duplicated', 1, ?, 'fixture', '2026-01-01')",
+                (lesson_id, payload_hash),
+            )
+        conn.execute(
+            "UPDATE usmc_meta SET value = '1' WHERE key = 'schema_version'"
+        )
+        conn.commit()
+
+        with self.assertRaisesRegex(RuntimeError, "Feedback-Idempotenzmigration"):
+            schema.migrate(conn)
+        self.assertEqual(schema.get_schema_version(conn), 1)
+        self.assertNotIn(
+            "event_anchor",
+            {row[1] for row in conn.execute("PRAGMA table_info(usmc_lesson_feedback)")},
+        )
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM usmc_lesson_feedback "
+                "WHERE feedback_key = 'globally-duplicated'"
+            ).fetchone()[0],
+            2,
+        )
+        self.assertNotIn(
+            "idx_lesson_feedback_key",
+            {row[1] for row in conn.execute("PRAGMA index_list(usmc_lesson_feedback)")},
+        )
+        conn.close()
+
 
 class TestIdempotentLessonIntake(TempDbCase):
     def setUp(self):
         super().setUp()
         self.client = USMCClient(self.db_path, "writer")
 
-    def test_keyed_upsert_preserves_identity_signals_and_review(self):
+    def test_keyed_retry_is_immutable_and_preserves_protection(self):
         first = self.client.add_lesson(
             "Titel", "Problem", "Lösung",
             source_key="hook:codex", episode_key="episode-1",
             event_anchor="event-1", evidence_class="verified",
+            sensitive_source=True,
         )
         self.client.record_lesson_feedback(
             first["id"], "feedback-1", helpful=True
@@ -165,16 +308,42 @@ class TestIdempotentLessonIntake(TempDbCase):
         self.client.set_lesson_editorial_status(first["id"], "approved")
 
         second = self.client.add_lesson(
-            "Titel korrigiert", "Problem", "Lösung 2",
+            "Titel", "Problem", "Lösung",
             source_key="hook:codex", episode_key="episode-1",
+            event_anchor="event-1", evidence_class="verified",
+            sensitive_source=True,
         )
         self.assertEqual(first["id"], second["id"])
         self.assertFalse(second["created"])
         self.assertEqual(second["created_at"], first["created_at"])
         self.assertEqual(second["helpful_count"], 1)
         self.assertEqual(second["editorial_status"], "approved")
+        self.assertTrue(second["sensitive_source"])
         self.assertEqual(second["confidence"], 0.2)
         self.assertEqual(len(self.client.get_lessons()), 1)
+
+        with self.assertRaisesRegex(ValueError, "anderen Lesson-Payload"):
+            self.client.add_lesson(
+                "Titel", "Problem", "Lösung",
+                source_key="hook:codex", episode_key="episode-1",
+                event_anchor="event-1", evidence_class="verified",
+                sensitive_source=False,
+            )
+        protected = self.client.get_lesson(first["id"])
+        self.assertEqual(protected["title"], "Titel")
+        self.assertTrue(protected["sensitive_source"])
+        policy = self.client.evaluate_lesson_promotion(
+            first["id"], direct_promotion_enabled=True
+        )
+        self.assertFalse(policy["allowed"])
+        self.assertIn("sensitive-source", policy["review_reasons"])
+        self.assertEqual(
+            self.client.deliver_lessons(
+                "protected-session", "protected-delivery",
+                lesson_ids=[first["id"]],
+            ),
+            [],
+        )
 
     def test_concurrent_retries_deduplicate_to_one_row(self):
         workers = 8
@@ -273,6 +442,31 @@ class TestLessonFeedbackAndDelivery(TempDbCase):
                 self.lesson["id"], "same", helpful=False
             )
 
+    def test_feedback_key_is_globally_exactly_once(self):
+        other = self.client.add_lesson(
+            "Andere Lesson", "P", "S",
+            source_key="source", episode_key="other-feedback",
+        )
+        first = self.client.record_lesson_feedback(
+            self.lesson["id"], "global-feedback", helpful=True
+        )
+        retry = self.client.record_lesson_feedback(
+            self.lesson["id"], "global-feedback", helpful=True
+        )
+        self.assertTrue(first["created"])
+        self.assertFalse(retry["created"])
+
+        with self.assertRaisesRegex(ValueError, "bereits global"):
+            self.client.record_lesson_feedback(
+                other["id"], "global-feedback", helpful=True
+            )
+        with self.assertRaisesRegex(ValueError, "bereits global"):
+            self.client.record_lesson_feedback(
+                self.lesson["id"], "global-feedback", independent_repeat=True
+            )
+        self.assertEqual(self.client.get_lesson(self.lesson["id"])["helpful_count"], 1)
+        self.assertEqual(self.client.get_lesson(other["id"])["helpful_count"], 0)
+
     def test_concurrent_same_feedback_key_counts_once(self):
         workers = 8
         barrier = Barrier(workers)
@@ -328,6 +522,36 @@ class TestLessonFeedbackAndDelivery(TempDbCase):
             self.client.deliver_lessons(
                 "session", "delivery", context="anderer Kontext"
             )
+
+    def test_delivery_retry_replays_first_batch_without_reselection(self):
+        self.client.set_lesson_editorial_status(self.lesson["id"], "approved")
+        first = self.client.deliver_lessons(
+            "stable-session", "stable-delivery", context="Encoding", limit=1
+        )
+        self.assertEqual([item["id"] for item in first], [self.lesson["id"]])
+
+        later = self.client.add_lesson(
+            "Encoding bevorzugt", "Encoding", "Neue Lösung",
+            source_key="source", episode_key="later",
+            event_anchor="later", weight=0.9,
+        )
+        self.client.set_lesson_editorial_status(later["id"], "approved")
+        retry = self.client.deliver_lessons(
+            "stable-session", "stable-delivery", context="Encoding", limit=1
+        )
+        self.assertEqual([item["id"] for item in retry], [self.lesson["id"]])
+        self.assertFalse(retry[0]["new_delivery"])
+        self.assertEqual(self.client.get_lesson(self.lesson["id"])["times_shown"], 1)
+        self.assertEqual(self.client.get_lesson(later["id"])["times_shown"], 0)
+        conn = sqlite3.connect(self.db_path)
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM usmc_lesson_deliveries "
+                "WHERE delivery_key = 'stable-delivery'"
+            ).fetchone()[0],
+            1,
+        )
+        conn.close()
 
     def test_concurrent_same_delivery_key_counts_once(self):
         self.client.set_lesson_editorial_status(self.lesson["id"], "approved")
@@ -465,6 +689,110 @@ class TestLessonPolicyAndSessionStart(TempDbCase):
             self.client.start_session(lesson_context="Lesson")
         with self.assertRaises(ValueError):
             self.client.deliver_lessons("s", "d", context="Lesson", limit=4)
+
+    def test_session_start_delivery_is_atomic_and_retry_returns_same_session(self):
+        lesson = self._lesson("atomic-success")
+        self.client.set_lesson_editorial_status(lesson["id"], "approved")
+        first = self.client.start_session(
+            task="Atomar",
+            lesson_ids=[lesson["id"]],
+            delivery_key="atomic-start",
+        )
+        retry = self.client.start_session(
+            task="Atomar",
+            lesson_ids=[lesson["id"]],
+            delivery_key="atomic-start",
+        )
+        self.assertEqual(first["id"], retry["id"])
+        self.assertTrue(first["lessons"][0]["new_delivery"])
+        self.assertFalse(retry["lessons"][0]["new_delivery"])
+        conn = sqlite3.connect(self.db_path)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM usmc_sessions").fetchone()[0], 1)
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM usmc_lesson_deliveries "
+                "WHERE delivery_key = 'atomic-start'"
+            ).fetchone()[0],
+            1,
+        )
+        conn.close()
+        self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
+
+        with self.assertRaisesRegex(ValueError, "andere Anfrage"):
+            self.client.start_session(
+                task="Geänderter Payload",
+                lesson_ids=[lesson["id"]],
+                delivery_key="atomic-start",
+            )
+        conn = sqlite3.connect(self.db_path)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM usmc_sessions").fetchone()[0], 1)
+        conn.close()
+        self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
+
+    def test_session_start_delivery_failure_rolls_back_and_retries_cleanly(self):
+        lesson = self._lesson("atomic-failure")
+        self.client.set_lesson_editorial_status(lesson["id"], "approved")
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("""
+            CREATE TRIGGER fail_atomic_delivery
+            BEFORE INSERT ON usmc_lesson_deliveries
+            BEGIN SELECT RAISE(ABORT, 'simulated atomic delivery crash'); END
+        """)
+        conn.commit()
+        conn.close()
+
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.client.start_session(
+                task="Rollback",
+                lesson_ids=[lesson["id"]],
+                delivery_key="atomic-failure",
+            )
+        conn = sqlite3.connect(self.db_path)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM usmc_sessions").fetchone()[0], 0)
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM usmc_lesson_delivery_batches "
+                "WHERE delivery_key = 'atomic-failure'"
+            ).fetchone()[0],
+            0,
+        )
+        conn.execute("DROP TRIGGER fail_atomic_delivery")
+        conn.commit()
+        conn.close()
+        self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 0)
+
+        retried = self.client.start_session(
+            task="Rollback",
+            lesson_ids=[lesson["id"]],
+            delivery_key="atomic-failure",
+        )
+        self.assertEqual(len(retried["lessons"]), 1)
+        self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
+
+    def test_session_start_rejects_standalone_delivery_key_without_session_row(self):
+        lesson = self._lesson("atomic-collision")
+        self.client.set_lesson_editorial_status(lesson["id"], "approved")
+        self.client.deliver_lessons(
+            "standalone", "shared-delivery-key", lesson_ids=[lesson["id"]]
+        )
+        with self.assertRaisesRegex(ValueError, "andere Anfrage"):
+            self.client.start_session(
+                task="SessionStart",
+                lesson_ids=[lesson["id"]],
+                lesson_session_key="standalone",
+                delivery_key="shared-delivery-key",
+            )
+        conn = sqlite3.connect(self.db_path)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM usmc_sessions").fetchone()[0], 0)
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM usmc_lesson_deliveries "
+                "WHERE delivery_key = 'shared-delivery-key'"
+            ).fetchone()[0],
+            1,
+        )
+        conn.close()
+        self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
 
     def test_high_level_api_exposes_contract_without_changing_old_call(self):
         api.init(self.db_path, "api")

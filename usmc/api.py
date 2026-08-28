@@ -22,7 +22,7 @@ License: MIT
 """
 
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Iterable
 
 from .client import USMCClient
 
@@ -179,7 +179,11 @@ def lesson(
     title: str,
     problem: str,
     solution: str,
-    severity: str = 'medium'
+    severity: str = 'medium',
+    category: str = 'general',
+    source_key: Optional[str] = None,
+    episode_key: Optional[str] = None,
+    **contract,
 ) -> Dict:
     """
     Speichert eine Lesson Learned.
@@ -189,6 +193,8 @@ def lesson(
         problem: Problem-Beschreibung
         solution: Loesung
         severity: critical, high, medium, low
+        source_key/episode_key: Gemeinsam gesetzter idempotenter v2-Schluessel
+        contract: Optionale Provenienz-, Review-, Privacy- und Policyfelder
 
     Returns:
         Dict mit Ergebnis
@@ -197,7 +203,11 @@ def lesson(
         title=title,
         problem=problem,
         solution=solution,
-        severity=severity
+        severity=severity,
+        category=category,
+        source_key=source_key,
+        episode_key=episode_key,
+        **contract,
     )
 
 
@@ -205,7 +215,8 @@ def lessons(
     severity: Optional[str] = None,
     limit: int = 10,
     agent_id: Optional[str] = None,
-    grep: Optional[str] = None
+    grep: Optional[str] = None,
+    delivery_eligible_only: bool = False,
 ) -> List[Dict]:
     """Holt Lessons Learned (optional gefiltert).
 
@@ -216,7 +227,58 @@ def lessons(
         grep: Teilstring in title, problem oder solution
     """
     return get_client().get_lessons(
-        limit=limit, severity=severity, agent_id=agent_id, grep=grep
+        limit=limit, severity=severity, agent_id=agent_id, grep=grep,
+        delivery_eligible_only=delivery_eligible_only,
+    )
+
+
+def lesson_feedback(
+    lesson_id: int,
+    feedback_key: str,
+    helpful: Optional[bool] = None,
+    independent_repeat: bool = False,
+    delivery_failed: bool = False,
+    delivery_key: Optional[str] = None,
+    event_anchor: Optional[str] = None,
+) -> Dict:
+    """Speichert eine idempotente, getrennt auswertbare Rueckmeldung."""
+    return get_client().record_lesson_feedback(
+        lesson_id=lesson_id,
+        feedback_key=feedback_key,
+        helpful=helpful,
+        independent_repeat=independent_repeat,
+        delivery_failed=delivery_failed,
+        delivery_key=delivery_key,
+        event_anchor=event_anchor,
+    )
+
+
+def lesson_review(lesson_id: int, status: str) -> Dict:
+    """Setzt den Redaktionsstatus ohne Publikationswirkung."""
+    return get_client().set_lesson_editorial_status(lesson_id, status)
+
+
+def lesson_promotion(lesson_id: int) -> Dict:
+    """Prueft den Direct-Promotion-Gate; produktiv immer deaktiviert."""
+    return get_client().evaluate_lesson_promotion(
+        lesson_id, direct_promotion_enabled=False
+    )
+
+
+def deliver_lessons(
+    session_key: str,
+    delivery_key: str,
+    context: Optional[str] = None,
+    lesson_ids: Optional[Iterable[int]] = None,
+    limit: int = 3,
+) -> List[Dict]:
+    """Liefert synchron und begrenzt Kontext- oder Auswahl-Lessons."""
+    return get_client().deliver_lessons(
+        session_key=session_key,
+        delivery_key=delivery_key,
+        context=context,
+        lesson_ids=lesson_ids,
+        limit=limit,
     )
 
 
@@ -224,9 +286,23 @@ def lessons(
 # Sessions
 # ═══════════════════════════════════════════════════════════════════════════
 
-def start(task: Optional[str] = None) -> Dict:
+def start(
+    task: Optional[str] = None,
+    lesson_context: Optional[str] = None,
+    lesson_ids: Optional[Iterable[int]] = None,
+    lesson_limit: int = 3,
+    delivery_key: Optional[str] = None,
+    lesson_session_key: Optional[str] = None,
+) -> Dict:
     """Startet eine neue Session."""
-    return get_client().start_session(task=task)
+    return get_client().start_session(
+        task=task,
+        lesson_context=lesson_context,
+        lesson_ids=lesson_ids,
+        lesson_limit=lesson_limit,
+        delivery_key=delivery_key,
+        lesson_session_key=lesson_session_key,
+    )
 
 
 def end(session_id: int, notes: Optional[str] = None) -> bool:

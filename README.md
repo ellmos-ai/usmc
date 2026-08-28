@@ -5,7 +5,7 @@
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-61%20passed-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-passing-brightgreen.svg)](tests)
 [![llms.txt](https://img.shields.io/badge/llms.txt-verified-blue.svg)](llms.txt)
 
 **Deutsch:** [README_de.md](README_de.md)
@@ -144,6 +144,73 @@ usmc changes "2026-02-28T00:00:00" --json
 > is still an open decision, because it changes behaviour for existing users and touches the
 > test suite. Until then, expect German output strings.
 
+## Idempotent Lessons (schema v2)
+
+The original `add_lesson(title, problem, solution, ...)` call remains append-only. A lesson enters
+the provenance-aware v2 contract only when both `source_key` and `episode_key` are supplied. That
+pair is unique across the database and retries use SQLite `ON CONFLICT` upsert semantics. New keyed
+lessons start with a deliberately low weight of `0.20`; an upsert keeps editorial state, feedback,
+delivery counts and the original row identity intact.
+
+```python
+lesson = client.add_lesson(
+    "Windows encoding",
+    "A subprocess returned cp1252",
+    "Set PYTHONIOENCODING=utf-8",
+    source_key="hook:codex",
+    episode_key="session-42:encoding",
+    event_anchor="tool-result:17",
+    evidence_class="verified",
+    privacy_scope="local",
+)
+
+client.set_lesson_editorial_status(lesson["id"], "approved")
+delivered = client.deliver_lessons(
+    session_key="session-43",
+    delivery_key="session-43:start",
+    context="Windows subprocess encoding",
+    limit=3,
+)
+client.record_lesson_feedback(
+    lesson["id"],
+    feedback_key="session-43:lesson-1",
+    helpful=True,
+    delivery_key="session-43:start",
+)
+```
+
+Feedback stores helpful/unhelpful use, independent repetition and delivery failure as separate,
+idempotent signals. An independent repetition can therefore remain useful evidence while also
+being marked as a possible delivery failure. Delivery is synchronous and request-driven: without
+an explicit context or selected lesson IDs, nothing is shown; one request returns at most three
+approved (or legacy), local/private and non-sensitive lessons, each with the short question
+`War diese Lesson hilfreich? (ja/nein)`.
+
+The direct-promotion surface is policy evaluation only. `evaluate_lesson_promotion()` accepts only
+verified, fully provenanced agent lessons from local/private sources. User preferences, policy
+content, conflicts, sensitive sources and any skill/workflow mutation always require review. The
+product gate defaults to off, and the method never publishes or mutates a skill, workflow or
+editorial status.
+
+Equivalent CLI paths are available:
+
+```bash
+usmc lesson "Encoding" "cp1252" "Use UTF-8" \
+  --source-key hook:codex --episode-key session-42:encoding \
+  --event-anchor tool-result:17 --evidence-class verified --json
+usmc lesson-review 1 approved
+usmc lesson-deliver --session-key session-43 --delivery-key session-43:start \
+  --context "Windows encoding" --json
+usmc lesson-feedback 1 --feedback-key session-43:lesson-1 \
+  --helpful yes --delivery-key session-43:start --json
+usmc lesson-policy 1
+```
+
+Opening a v1 database with the new client performs an additive, transactional migration to v2.
+The migration is retry-safe and preserves every old column and row. Old clients can continue to
+read and append lessons because all v2 fields have compatible defaults; rollback means running the
+old client against the expanded database, not contracting or deleting the new schema.
+
 ## Finding Things Again
 
 Once several agents write to the same database, a chronological list stops being useful: a busy
@@ -234,6 +301,9 @@ working directories.
 
 - `usmc_facts` - persistent facts with confidence scores
 - `usmc_lessons` - lessons learned with severity
+- `usmc_lesson_feedback` - idempotent helpful/repeat/delivery-failure signals
+- `usmc_lesson_delivery_batches` - request-level delivery idempotency
+- `usmc_lesson_deliveries` - bounded contextual or selected deliveries
 - `usmc_working` - temporary notes, context, scratchpad
 - `usmc_sessions` - agent session tracking
 - `usmc_meta` - internal schema version

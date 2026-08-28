@@ -103,7 +103,7 @@ class TestUSMCCli(unittest.TestCase):
 
         code, out, err = self.run_cli(['clear'])
         self.assertEqual(code, 0)
-        self.assertIn('2 Eintraege deaktiviert', out)
+        self.assertIn('2 Einträge deaktiviert', out)
 
         code, out, err = self.run_cli(['working'])
         self.assertIn('Keine aktiven Notizen', out)
@@ -305,6 +305,73 @@ class TestUSMCCli(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn('A', out)
         self.assertIn('B', out)
+
+    def test_keyed_lesson_cli_is_idempotent(self):
+        args = [
+            'lesson', 'Idempotent', 'Problem', 'Lösung',
+            '--source-key', 'cli-source', '--episode-key', 'episode-1',
+            '--event-anchor', 'event-1', '--evidence-class', 'verified',
+            '--json',
+        ]
+        code, out, err = self.run_cli(args)
+        self.assertEqual(code, 0)
+        first = json.loads(out)
+        code, out, err = self.run_cli(args)
+        second = json.loads(out)
+        self.assertEqual(first['id'], second['id'])
+        self.assertTrue(first['created'])
+        self.assertFalse(second['created'])
+        self.assertEqual(second['weight'], 0.2)
+
+    def test_feedback_review_delivery_and_policy_cli(self):
+        code, out, err = self.run_cli([
+            'lesson', 'Kontext', 'P', 'S',
+            '--source-key', 'cli', '--episode-key', 'feedback',
+            '--event-anchor', 'event', '--evidence-class', 'verified', '--json',
+        ])
+        lesson_id = json.loads(out)['id']
+
+        code, out, err = self.run_cli([
+            'lesson-review', str(lesson_id), 'approved', '--json'
+        ])
+        self.assertEqual(json.loads(out)['editorial_status'], 'approved')
+
+        code, out, err = self.run_cli([
+            'lesson-deliver', '--session-key', 'session-cli',
+            '--delivery-key', 'delivery-cli', '--lesson-id', str(lesson_id),
+            '--json',
+        ])
+        delivered = json.loads(out)
+        self.assertEqual(len(delivered), 1)
+        self.assertIn('hilfreich', delivered[0]['feedback_prompt'])
+
+        code, out, err = self.run_cli([
+            'lesson-feedback', str(lesson_id), '--feedback-key', 'feedback-cli',
+            '--helpful', 'yes', '--delivery-key', 'delivery-cli', '--json',
+        ])
+        self.assertEqual(json.loads(out)['helpful_count'], 1)
+
+        code, out, err = self.run_cli(['lesson-policy', str(lesson_id)])
+        policy = json.loads(out)
+        self.assertTrue(policy['eligible'])
+        self.assertFalse(policy['allowed'])
+
+    def test_session_start_selected_lesson_cli(self):
+        client = USMCClient(self.db_path, agent_id='test')
+        lesson = client.add_lesson(
+            'SessionStart', 'P', 'S', source_key='cli', episode_key='start',
+            event_anchor='event', evidence_class='verified',
+        )
+        client.set_lesson_editorial_status(lesson['id'], 'approved')
+
+        code, out, err = self.run_cli([
+            'start', '--task', 'Test', '--lesson-id', str(lesson['id']),
+            '--delivery-key', 'start-cli', '--json',
+        ])
+        self.assertEqual(code, 0)
+        session = json.loads(out)
+        self.assertEqual(len(session['lessons']), 1)
+        self.assertEqual(session['lessons'][0]['id'], lesson['id'])
 
 
 if __name__ == '__main__':

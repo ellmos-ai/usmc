@@ -403,7 +403,11 @@ class TestIdempotentLessonIntake(TempDbCase):
         first = self.client.add_lesson(
             "Gewichtung", "P", "S",
             source_key="source", episode_key="weight-state",
-            event_anchor="weight-event",
+            event_anchor="weight-event", evidence_class="verified",
+        )
+        self.client.set_lesson_editorial_status(first["id"], "approved")
+        self.client.record_lesson_feedback(
+            first["id"], "mutable-counter", helpful=True
         )
         conn = sqlite3.connect(self.db_path)
         conn.execute(
@@ -416,10 +420,90 @@ class TestIdempotentLessonIntake(TempDbCase):
         retry = self.client.add_lesson(
             "Gewichtung", "P", "S",
             source_key="source", episode_key="weight-state",
-            event_anchor="weight-event",
+            event_anchor="weight-event", evidence_class="verified",
         )
         self.assertFalse(retry["created"])
         self.assertEqual(retry["confidence"], 0.8)
+        self.assertEqual(retry["editorial_status"], "approved")
+        self.assertEqual(retry["helpful_count"], 1)
+        self.assertTrue(
+            self.client.evaluate_lesson_promotion(
+                first["id"], direct_promotion_enabled=True
+            )["allowed"]
+        )
+        self.assertEqual(
+            len(self.client.deliver_lessons(
+                "mutable-session", "mutable-delivery",
+                lesson_ids=[first["id"]],
+            )),
+            1,
+        )
+
+    def test_tampered_immutable_row_fails_retry_promotion_and_delivery(self):
+        first = self.client.add_lesson(
+            "Integrität", "Problem", "Original",
+            source_key="source", episode_key="tampered",
+            event_anchor="tamper-event", evidence_class="verified",
+            sensitive_source=True,
+        )
+        self.client.set_lesson_editorial_status(first["id"], "approved")
+        stored_hash = first["ingest_payload_hash"]
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(
+            "UPDATE usmc_lessons SET solution = 'Manipuliert', "
+            "sensitive_source = 0 WHERE id = ?",
+            (first["id"],),
+        )
+        conn.commit()
+        schema.migrate(conn)
+        schema.migrate(conn)
+        after_migrate = conn.execute(
+            "SELECT solution, sensitive_source, ingest_payload_hash, "
+            "ingest_payload_hash_version FROM usmc_lessons WHERE id = ?",
+            (first["id"],),
+        ).fetchone()
+        self.assertEqual(after_migrate, ("Manipuliert", 0, stored_hash, 2))
+        conn.close()
+
+        with self.assertRaisesRegex(RuntimeError, "Zeilenintegrität"):
+            self.client.add_lesson(
+                "Integrität", "Problem", "Original",
+                source_key="source", episode_key="tampered",
+                event_anchor="tamper-event", evidence_class="verified",
+                sensitive_source=True,
+            )
+        with self.assertRaisesRegex(RuntimeError, "Zeilenintegrität"):
+            self.client.evaluate_lesson_promotion(
+                first["id"], direct_promotion_enabled=True
+            )
+        with self.assertRaisesRegex(RuntimeError, "Zeilenintegrität"):
+            self.client.deliver_lessons(
+                "tamper-session", "tamper-delivery",
+                lesson_ids=[first["id"]],
+            )
+
+        conn = sqlite3.connect(self.db_path)
+        unchanged = conn.execute(
+            "SELECT solution, sensitive_source, ingest_payload_hash, "
+            "times_shown FROM usmc_lessons WHERE id = ?",
+            (first["id"],),
+        ).fetchone()
+        self.assertEqual(unchanged, ("Manipuliert", 0, stored_hash, 0))
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM usmc_lesson_delivery_batches "
+                "WHERE delivery_key = 'tamper-delivery'"
+            ).fetchone()[0],
+            0,
+        )
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM usmc_lesson_deliveries "
+                "WHERE delivery_key = 'tamper-delivery'"
+            ).fetchone()[0],
+            0,
+        )
+        conn.close()
 
     def test_aborted_insert_can_be_retried_without_duplicate(self):
         conn = sqlite3.connect(self.db_path)
@@ -610,6 +694,27 @@ class TestLessonFeedbackAndDelivery(TempDbCase):
         )
         conn.close()
 
+    def test_delivery_replay_rejects_tampered_persisted_lesson(self):
+        self.client.set_lesson_editorial_status(self.lesson["id"], "approved")
+        self.client.deliver_lessons(
+            "replay-session", "replay-tamper",
+            lesson_ids=[self.lesson["id"]],
+        )
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(
+            "UPDATE usmc_lessons SET solution = 'Manipuliert' WHERE id = ?",
+            (self.lesson["id"],),
+        )
+        conn.commit()
+        conn.close()
+
+        with self.assertRaisesRegex(RuntimeError, "Zeilenintegrität"):
+            self.client.deliver_lessons(
+                "replay-session", "replay-tamper",
+                lesson_ids=[self.lesson["id"]],
+            )
+        self.assertEqual(self.client.get_lesson(self.lesson["id"])["times_shown"], 1)
+
     def test_concurrent_same_delivery_key_counts_once(self):
         self.client.set_lesson_editorial_status(self.lesson["id"], "approved")
         workers = 8
@@ -784,6 +889,43 @@ class TestLessonPolicyAndSessionStart(TempDbCase):
         conn = sqlite3.connect(self.db_path)
         self.assertEqual(conn.execute("SELECT COUNT(*) FROM usmc_sessions").fetchone()[0], 1)
         conn.close()
+        self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
+
+    def test_session_start_replay_rejects_tampered_lesson(self):
+        lesson = self._lesson("atomic-replay-tamper")
+        self.client.set_lesson_editorial_status(lesson["id"], "approved")
+        started = self.client.start_session(
+            task="Replay-Integrität",
+            lesson_ids=[lesson["id"]],
+            delivery_key="atomic-replay-tamper",
+        )
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(
+            "UPDATE usmc_lessons SET problem = 'Manipuliert' WHERE id = ?",
+            (lesson["id"],),
+        )
+        conn.commit()
+        conn.close()
+
+        with self.assertRaisesRegex(RuntimeError, "Zeilenintegrität"):
+            self.client.start_session(
+                task="Replay-Integrität",
+                lesson_ids=[lesson["id"]],
+                delivery_key="atomic-replay-tamper",
+            )
+        conn = sqlite3.connect(self.db_path)
+        self.assertEqual(
+            conn.execute("SELECT COUNT(*) FROM usmc_sessions").fetchone()[0], 1
+        )
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM usmc_lesson_deliveries "
+                "WHERE delivery_key = 'atomic-replay-tamper'"
+            ).fetchone()[0],
+            1,
+        )
+        conn.close()
+        self.assertEqual(started["id"], 1)
         self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
 
     def test_session_start_delivery_failure_rolls_back_and_retries_cleanly(self):

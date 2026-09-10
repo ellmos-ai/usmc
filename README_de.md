@@ -5,10 +5,12 @@
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-61%20bestanden-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-102%20bestanden-brightgreen.svg)](tests)
 [![llms.txt](https://img.shields.io/badge/llms.txt-gepr%C3%BCft-blue.svg)](llms.txt)
 
-**English:** [README.md](README.md)
+**Sprachen:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
+
+[Schnellstart](#schnellstart) • [Architektur](#architektur--datenfluss) • [Multi-Agenten-Ablauf](#multi-agenten-interaktionssequenz) • [Kernkonzepte](#kernkonzepte) • [Positionierung](#positionierung) • [Lizenz](#lizenz)
 
 USMC ist eine Python-Speicherschicht ohne externe Abhängigkeiten für LLM-Agenten. Mehrere lokale Agenten teilen sich damit eine SQLite-basierte Erinnerung für Fakten, Lektionen, Arbeitsnotizen, Sitzungen und kompakten Prompt-Kontext.
 
@@ -25,6 +27,7 @@ Dieses Repository ist das ellmos-Projekt `ellmos-ai/usmc`, in Suchtexten auch **
 | Schnellstart | [Schnellstart](#schnellstart) weiter unten |
 | CLI-Referenz | `usmc --help` |
 | Englische README | [README.md](README.md) |
+| Spanische README | [README_es.md](README_es.md) |
 | Tests | `python -m pytest -q` |
 | Änderungsprotokoll | [CHANGELOG.md](CHANGELOG.md) |
 | Issues / Feedback | [GitHub Issues](https://github.com/ellmos-ai/usmc/issues) |
@@ -72,6 +75,39 @@ graph TD
     FM --> DB
     LM --> DB
     WM --> DB
+```
+
+### Multi-Agenten Interaktionssequenz
+
+Das folgende Sequenzdiagramm verdeutlicht, wie mehrere autonome Agenten (z. B. Codex und Claude) über die lokale USMC-SQLite-Datenbank ohne Hintergrund-Daemon synchronisieren und Aufgaben übergeben:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as "Agent A (z. B. Codex)"
+    participant M as "USMC Client (SQLite DB)"
+    participant B as "Agent B (z. B. Claude)"
+
+    Note over A,B: Geteilter lokaler SQLite-Speicher (~/.usmc/usmc_memory.db)
+
+    A->>M: "start_session(task='FastAPI setup')"
+    M-->>A: "{'id': 1, 'agent_id': 'codex'}"
+    A->>M: "add_fact('project', 'framework', 'FastAPI', confidence=0.9)"
+    M-->>A: "{'id': 42, 'category': 'project', 'key': 'framework'}"
+    A->>M: "add_lesson(title='Windows encoding', severity='high', ...)"
+    M-->>A: "{'id': 12, 'title': 'Windows encoding'}"
+    A->>M: "add_working('Setup complete; ready for tests', tags='backend')"
+    M-->>A: "{'id': 105, 'content': 'Setup complete...'}"
+    A->>M: "end_session(session_id=1, handoff_notes='Ready for test suite')"
+    M-->>A: "Sitzung mit Übergabenotiz beendet"
+
+    Note over B: Agent B startet nächsten Arbeitslauf
+    B->>M: "start_session(task='Test execution')"
+    M-->>B: "{'id': 2, 'agent_id': 'claude'}"
+    B->>M: "get_changes_since('2026-09-10T00:00:00')"
+    M-->>B: "{'facts': [...], 'lessons': [...], 'working': [...]}"
+    B->>M: "generate_context(max_items=5)"
+    M-->>B: "Formatierter Markdown-Kontext für LLM-Prompt"
 ```
 
 ## Installation

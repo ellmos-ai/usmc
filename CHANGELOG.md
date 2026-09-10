@@ -39,6 +39,14 @@ Reported as ticket T-20260813-90: a model searching for store entries found noth
 
 ## Unreleased
 
+- Discoverability & Marketing (Pfad B): added multi-agent interaction sequence
+  diagram (`sequenceDiagram` with `autonumber` and strictly quoted labels)
+  documenting cross-agent session handoff and context generation.
+- Internationalization (Policy P-006 Stufe 2): added full Spanish documentation
+  (`README_es.md`), updated trilingual language switchers (`English · Deutsch · Español`)
+  and quick navigation anchors across `README.md`, `README_de.md`, and `README_es.md`.
+- Synchronized test count badges to 102 passing tests across all READMEs (including new metadata contract tests).
+- Updated `llms.txt` verification timestamp to 2026-09-10 with Spanish documentation reference.
 - Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`
   is **not** reserved for this project. As of 2026-08-08 no project of that name exists on
   PyPI, so a PyPI package called `usmc` is not necessarily this one. Install from GitHub.

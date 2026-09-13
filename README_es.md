@@ -96,7 +96,7 @@ sequenceDiagram
     M-->>A: "{'id': 42, 'category': 'project', 'key': 'framework'}"
     A->>M: "add_lesson(title='Windows encoding', severity='high', ...)"
     M-->>A: "{'id': 12, 'title': 'Windows encoding'}"
-    A->>M: "add_working('Setup complete; ready for tests', tags='backend')"
+    A->>M: "add_working('Setup complete - ready for tests', tags='backend')"
     M-->>A: "{'id': 105, 'content': 'Setup complete...'}"
     A->>M: "end_session(session_id=1, handoff_notes='Ready for test suite')"
     M-->>A: "Sesión finalizada con notas de traspaso"

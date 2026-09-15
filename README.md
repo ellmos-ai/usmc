@@ -240,6 +240,17 @@ match a tag filter.
 | Sessions | Start/end records with handoff notes | Cross-agent continuity |
 | Changes | Pollable update stream | Lightweight sync between agents |
 
+## Runtime language contract
+
+The public runtime language is intentionally German (`de`) for compatibility
+with existing automations. `USMCClient.generate_context()` and the CLI emit
+German human-readable prose and help text. Command names, category values,
+JSON keys, product names, and other technical labels remain stable English
+protocol tokens; there is no implicit locale detection or silent language
+switch. The contract is exposed as `usmc.RUNTIME_LANGUAGE == "de"` and is
+covered by the test suite. An English runtime would require an explicit,
+versioned maintainer decision.
+
 ## Multi-Agent Example
 
 ```python

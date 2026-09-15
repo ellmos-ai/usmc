@@ -45,8 +45,13 @@ Reported as ticket T-20260813-90: a model searching for store entries found noth
 - Internationalization (Policy P-006 Stufe 2): added full Spanish documentation
   (`README_es.md`), updated trilingual language switchers (`English · Deutsch · Español`)
   and quick navigation anchors across `README.md`, `README_de.md`, and `README_es.md`.
-- Synchronized test count badges to 102 passing tests across all READMEs (including new metadata contract tests).
-- Updated `llms.txt` verification timestamp to 2026-09-10 with Spanish documentation reference.
+- Synchronized test count badges across all READMEs (including new metadata contract tests).
+- Runtime language contract: human-readable API/CLI prose and help remain intentionally
+  German (`de`) for compatibility; command names, category values and JSON keys remain
+  stable English protocol tokens. The contract is exposed as `usmc.RUNTIME_LANGUAGE` and
+  covered by tests.
+- Ruff hygiene: resolved five lint findings (unused imports, unnecessary `f`-strings,
+  ambiguous loop variable) without functional regression.
 - Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`
   is **not** reserved for this project. As of 2026-08-08 no project of that name exists on
   PyPI, so a PyPI package called `usmc` is not necessarily this one. Install from GitHub.
@@ -55,8 +60,7 @@ Reported as ticket T-20260813-90: a model searching for store entries found noth
   of surprising users.
 - Removed the internal pre-release audit file `TODO.md` from version control and added it to
   `.gitignore`; it is planning material, not repository content.
-- Added `.gitattributes` (`* text=auto eol=lf`, binary assets excluded). The committed files
-  were already LF, but nothing pinned that, so working copies drifted into mixed CRLF/LF.
+- Added `.gitattributes` (`* text=auto eol=lf`, binary assets excluded).
 - Rewrote the remaining German `.gitignore` comments in neutral English.
 - Synchronized the maintained German README with the canonical English
   onboarding structure and restored byte-identical code and Mermaid examples.

@@ -31,4 +31,10 @@ from .client import USMCClient
 from . import api
 
 __version__ = "0.2.1"
-__all__ = ["USMCClient", "api"]
+
+# Runtime language contract: human-readable API/CLI prose stays German for
+# compatibility with existing automations. Command names, category values,
+# JSON keys, and other protocol identifiers remain stable English tokens.
+RUNTIME_LANGUAGE = "de"
+
+__all__ = ["USMCClient", "api", "RUNTIME_LANGUAGE"]

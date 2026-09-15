@@ -13,7 +13,7 @@ from pathlib import Path
 # Package-Pfad hinzufuegen
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from usmc import USMCClient, __version__
+from usmc import RUNTIME_LANGUAGE, USMCClient, __version__
 from usmc.client import default_db_path
 
 
@@ -92,6 +92,7 @@ class TestVersionSingleSource(unittest.TestCase):
     def test_cli_version_uses_package_version(self):
         import usmc.cli as cli
         self.assertEqual(cli.__version__, __version__)
+        self.assertEqual(RUNTIME_LANGUAGE, "de")
 
 
 if __name__ == "__main__":

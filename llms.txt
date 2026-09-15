@@ -41,6 +41,15 @@ agent context generation SQLite
 - Python client API, high-level helper API, and CLI
 - No runtime dependencies outside the Python standard library
 
+## Runtime contract and verification
+
+- Human-readable API/CLI prose and help remain intentionally German (`de`) for
+  compatibility; command names, category values and JSON keys are stable
+  English protocol tokens. The package exposes `usmc.RUNTIME_LANGUAGE == "de"`.
+- Verified: test suite with 102+ tests passed, Ruff and compileall
+  clean, and local builds succeed.
+- Source version is `0.2.1`; `ellmos-module.v2.json` is active and public.
+
 ## Quick install
 
 ```bash

@@ -5,6 +5,8 @@ USMCClient - United Shared Memory Client
 
 Standalone Cross-Agent Memory Sharing mit eigener SQLite-DB.
 Kein Zugriff auf bach.db -- voellig unabhaengig.
+Die menschenlesbare Kontextausgabe bleibt aus Kompatibilitaetsgruenden
+bewusst Deutsch; siehe ``usmc.RUNTIME_LANGUAGE``.
 
 Methoden:
     add_fact(), get_facts(), add_lesson(), get_lessons(),
@@ -17,7 +19,6 @@ License: MIT
 
 import os
 import sqlite3
-import json
 from pathlib import Path
 from typing import Optional, List, Dict
 from datetime import datetime

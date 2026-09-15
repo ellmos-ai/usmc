@@ -30,7 +30,7 @@ CLI:
 from .client import USMCClient
 from . import api
 
-__version__ = "0.1.0"
+__version__ = "0.2.1"
 
 # Runtime language contract: human-readable API/CLI prose stays German for
 # compatibility with existing automations. Command names, category values,

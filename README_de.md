@@ -5,15 +5,12 @@
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-61%20bestanden-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-102%20bestanden-brightgreen.svg)](tests)
 [![llms.txt](https://img.shields.io/badge/llms.txt-gepr%C3%BCft-blue.svg)](llms.txt)
 
-> Verifikationsstand (2026-08-11): Lokal bestehen 61 Tests und 15 Subtests;
-> Ruff, `compileall`, die CLI-Prüfungen sowie sdist-/Wheel-Build sind grün.
-> Es gibt keinen Git-Tag und kein öffentliches Release; das Paket bleibt
-> `Unreleased`.
+**Sprachen:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
 
-**English:** [README.md](README.md)
+[Schnellstart](#schnellstart) • [Architektur](#architektur--datenfluss) • [Multi-Agenten-Ablauf](#multi-agenten-interaktionssequenz) • [Kernkonzepte](#kernkonzepte) • [Positionierung](#positionierung) • [Lizenz](#lizenz)
 
 USMC ist eine Python-Speicherschicht ohne externe Abhängigkeiten für LLM-Agenten. Mehrere lokale Agenten teilen sich damit eine SQLite-basierte Erinnerung für Fakten, Lektionen, Arbeitsnotizen, Sitzungen und kompakten Prompt-Kontext.
 
@@ -30,6 +27,7 @@ Dieses Repository ist das ellmos-Projekt `ellmos-ai/usmc`, in Suchtexten auch **
 | Schnellstart | [Schnellstart](#schnellstart) weiter unten |
 | CLI-Referenz | `usmc --help` |
 | Englische README | [README.md](README.md) |
+| Spanische README | [README_es.md](README_es.md) |
 | Tests | `python -m pytest -q` |
 | Änderungsprotokoll | [CHANGELOG.md](CHANGELOG.md) |
 | Issues / Feedback | [GitHub Issues](https://github.com/ellmos-ai/usmc/issues) |
@@ -79,6 +77,39 @@ graph TD
     WM --> DB
 ```
 
+### Multi-Agenten Interaktionssequenz
+
+Das folgende Sequenzdiagramm verdeutlicht, wie mehrere autonome Agenten (z. B. Codex und Claude) über die lokale USMC-SQLite-Datenbank ohne Hintergrund-Daemon synchronisieren und Aufgaben übergeben:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as "Agent A (z. B. Codex)"
+    participant M as "USMC Client (SQLite DB)"
+    participant B as "Agent B (z. B. Claude)"
+
+    Note over A,B: Geteilter lokaler SQLite-Speicher (~/.usmc/usmc_memory.db)
+
+    A->>M: "start_session(task='FastAPI setup')"
+    M-->>A: "{'id': 1, 'agent_id': 'codex'}"
+    A->>M: "add_fact('project', 'framework', 'FastAPI', confidence=0.9)"
+    M-->>A: "{'id': 42, 'category': 'project', 'key': 'framework'}"
+    A->>M: "add_lesson(title='Windows encoding', severity='high', ...)"
+    M-->>A: "{'id': 12, 'title': 'Windows encoding'}"
+    A->>M: "add_working('Setup complete - ready for tests', tags='backend')"
+    M-->>A: "{'id': 105, 'content': 'Setup complete...'}"
+    A->>M: "end_session(session_id=1, handoff_notes='Ready for test suite')"
+    M-->>A: "Sitzung mit Übergabenotiz beendet"
+
+    Note over B: Agent B startet nächsten Arbeitslauf
+    B->>M: "start_session(task='Test execution')"
+    M-->>B: "{'id': 2, 'agent_id': 'claude'}"
+    B->>M: "get_changes_since('2026-09-10T00:00:00')"
+    M-->>B: "{'facts': [...], 'lessons': [...], 'working': [...]}"
+    B->>M: "generate_context(max_items=5)"
+    M-->>B: "Formatierter Markdown-Kontext für LLM-Prompt"
+```
+
 ## Installation
 
 Direkt von GitHub:
@@ -93,7 +124,10 @@ Aus einem lokalen Checkout:
 pip install -e .
 ```
 
-Der PyPI-Paketname `usmc` ist für dieses Projekt vorgesehen, aber noch nicht veröffentlicht. Bis zum ersten PyPI-Release bitte die GitHub-Installation verwenden.
+Es gibt noch kein PyPI-Release, und der Name `usmc` ist auf PyPI derzeit nicht vergeben
+(Stand 2026-08-08 existiert dort kein Projekt dieses Namens). Bis zum ersten Release bitte
+die GitHub-Installation oben verwenden und nicht davon ausgehen, dass ein `pip install usmc`
+von PyPI dieses Projekt installiert.
 
 ## Schnellstart
 
@@ -138,6 +172,63 @@ usmc lesson "Encoding bug" "cp1252 output" "Set PYTHONIOENCODING=utf-8" --severi
 usmc context
 usmc changes "2026-02-28T00:00:00" --json
 ```
+
+> [!NOTE]
+> **Befehlsnamen und Optionen sind englisch, die CLI-Meldungen, `--help`-Texte und die von
+> `generate_context()` erzeugten Überschriften sind derzeit deutsch.** Die Bibliotheks-API ist
+> sprachneutral, die Ausgabe an den Nutzer nicht. Die Umstellung der Laufzeitausgabe auf Englisch
+> ist eine noch offene Entscheidung, weil sie das Verhalten bestehender Nutzer ändert und die
+> Testsuite berührt. Bis dahin sind deutsche Ausgabetexte zu erwarten.
+
+## Wiederfinden
+
+Sobald mehrere Agenten in dieselbe Datenbank schreiben, hilft eine chronologische Liste nicht
+mehr: Ein aktiver Loop erzeugt am Tag hunderte Notizen, und jeder andere Leser muss daran
+vorbeiscrollen. `working`, `facts` und `lessons` nehmen deshalb Filter entgegen.
+
+```bash
+usmc working --tags store                  # ein Tag
+usmc working --tags store,release          # Komma = ODER
+usmc working --tags store,release --tags-all   # ... --tags-all macht daraus UND
+usmc working --agent codex-cli             # nur Notizen dieses Agenten
+usmc working --grep "Partner Center"       # Teilstring im Inhalt
+
+usmc facts   --grep store                  # Teilstring in key oder value
+usmc facts   --agent codex-cli
+usmc lessons --grep cp1252                 # Teilstring in title, problem oder solution
+usmc lessons --agent codex-cli --severity high
+```
+
+Dieselben Filter über Bibliothek und High-Level-API:
+
+```python
+client.get_working(tags="store,release", tags_all=True, agent_id="codex-cli", grep="welle")
+api.working(tags="store")
+api.facts(grep="store")
+api.lessons(grep="cp1252")
+```
+
+Vier Eigenschaften entscheiden darüber, ob eine Suche etwas findet:
+
+- **Die Filter laufen in der SQL-Abfrage, also vor `--limit`.** `--tags store -l 10` liefert die
+  zehn besten *Store*-Notizen, nicht die Store-Notizen unter den zehn neuesten.
+- **Ein Tag matcht nur als ganzer Listeneintrag.** `--tags rh` trifft nicht `research`; die Spalte
+  wird begrenzer-verankert verglichen. Leerzeichen sind egal, `a,b` und `a, b` verhalten sich gleich.
+- **Filter werden mit UND verknüpft.** `--tags store --agent codex-cli` heißt: beides muss zutreffen.
+- **Groß-/Kleinschreibung wird nur für ASCII ignoriert.** SQLite kennt ohne ICU kein
+  Unicode-Casefolding, `Store` und `store` matchen also, `Größe` und `GRÖSSE` nicht. `%` und `_`
+  in einem `--grep`-Begriff gelten wörtlich, nicht als Platzhalter.
+
+`--tags` gibt es nur bei `working` — nur diese Tabelle hat eine Tags-Spalte. Notizen ohne Tags
+matchen nie einen Tag-Filter.
+
+> [!TIP]
+> **USMC trägt Prozess-Zustand, nicht den Fachstand.** Was ein Projekt gerade *ist*, steht in
+> seinem kanonischen Register (für die Store-Pipeline etwa `releases.json` oder `APP-REGISTER.md`);
+> USMC hält fest, wo ein Lauf stehengeblieben ist und was der nächste Schritt wäre. Wer hier sucht
+> und nichts findet, schaut ins Register, bevor er schließt, dass es die Information nicht gibt.
+> Konvention: Der **erste Tag einer Notiz benennt die Pipeline** — genau das macht
+> `--tags store` zu einem verlässlichen Einstieg.
 
 ## Kernkonzepte
 

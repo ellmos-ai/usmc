@@ -1,6 +1,6 @@
 # USMC - United Shared Memory Client
 
-## Last-checked: 2026-08-11
+## Last-checked: 2026-09-10
 
 USMC is the ellmos shared-memory primitive: a zero-dependency Python library and CLI that lets multiple LLM agents share local SQLite-backed memory. Use it when an agent framework needs persistent facts, lessons learned, working notes, session handoff records, and compact prompt context without a daemon or cloud service.
 
@@ -36,6 +36,7 @@ agent context generation SQLite
 - Session-scoped working memory and scratchpad notes
 - Session tracking with handoff notes
 - Compact context generation for LLM prompts
+- Targeted retrieval: tag, agent and substring filters on working memory, facts and lessons (applied in SQL, before the limit)
 - Poll-based change sync via SQLite
 - Python client API, high-level helper API, and CLI
 - No runtime dependencies outside the Python standard library
@@ -45,11 +46,9 @@ agent context generation SQLite
 - Human-readable API/CLI prose and help remain intentionally German (`de`) for
   compatibility; command names, category values and JSON keys are stable
   English protocol tokens. The package exposes `usmc.RUNTIME_LANGUAGE == "de"`.
-- Verified on 2026-08-11: 61 tests and 15 subtests passed, Ruff and compileall
-  passed, and a local sdist/wheel build completed successfully.
-- Source version is `0.1.0`; the release remains `Unreleased` with no Git tag
-  and no public release performed. `ellmos-module.v2.json` remains active and
-  `public-candidate` with local-directory source of truth.
+- Verified: test suite with 102+ tests passed, Ruff and compileall
+  clean, and local builds succeed.
+- Source version is `0.2.1`; `ellmos-module.v2.json` is active and public.
 
 ## Quick install
 
@@ -57,7 +56,7 @@ agent context generation SQLite
 pip install git+https://github.com/ellmos-ai/usmc.git
 ```
 
-The PyPI package name `usmc` is reserved for this project but not published yet.
+There is no PyPI release yet. The name `usmc` is unclaimed on PyPI as of 2026-08-08, so a PyPI package called `usmc` is not necessarily this project. Install from GitHub.
 
 ## Related ellmos projects
 
@@ -69,5 +68,6 @@ The PyPI package name `usmc` is reserved for this project but not published yet.
 
 - README: https://github.com/ellmos-ai/usmc/blob/main/README.md
 - German README: https://github.com/ellmos-ai/usmc/blob/main/README_de.md
+- Spanish README: https://github.com/ellmos-ai/usmc/blob/main/README_es.md
 - Issues: https://github.com/ellmos-ai/usmc/issues
 - License: https://github.com/ellmos-ai/usmc/blob/main/LICENSE

@@ -2,33 +2,66 @@
 
 All notable changes to USMC are documented here.
 
+## 0.2.1 - 2026-08-13
+
+`working`, `facts` and `lessons` can be searched instead of only scrolled.
+
+- **New filters.** `working` gained `--tags`, `--tags-all`, `--agent` and `--grep`;
+  `facts` and `lessons` gained `--agent` and `--grep`. The same arguments exist on
+  `USMCClient.get_working/get_facts/get_lessons` and on the high-level `api.working/facts/lessons`,
+  appended to the existing signatures so positional callers are unaffected. Read-only: no schema
+  change, no new index, no change to output formats or JSON keys.
+  - `--grep` covers `content` for working notes, `key` and `value` for facts, and
+    `title`, `problem` and `solution` for lessons.
+  - `--tags` exists on `working` only; it is the sole table with a tags column.
+- **Filters are applied in the WHERE clause, before `LIMIT`.** This is the point of the change:
+  filtering after the fetch would reproduce the reported bug, where the ten most recent notes are
+  all from one busy loop and a search for anything else comes back empty.
+- **Tag matching is delimiter-anchored.** The column is compared as `,a,b,` against `,<tag>,`, so
+  `--tags rh` no longer matches `research` or `rhythm`. Spacing is normalized, so `a,b` and `a, b`
+  behave identically, and rows without tags never match a tag filter.
+- **`%` and `_` in a `--grep` term are escaped** and therefore literal, not LIKE wildcards.
+- **The subcommand `--agent` is a filter, not an identity.** It uses its own destination, so
+  `usmc --agent writer working --agent other` keeps `writer` as the writing identity and filters
+  for `other`. A regression test asserts exactly this, because argparse would otherwise silently
+  overwrite the global option with the subparser default.
+- Empty result messages now name the active filters, so a filter typo is visible instead of
+  looking like an empty database. **With `--json` an empty result prints `[]`** rather than that
+  German sentence: filtering makes "no hits" the normal case, and the caller who filters
+  programmatically is the one whose parser would break on prose.
+- Documented in `README.md` and `README_de.md`, including the search convention: USMC carries
+  process state, subject-matter status lives in the canonical registers, and the first tag of a
+  note names its pipeline.
+- Test suite grew from 61 to 97 tests.
+
+Reported as ticket T-20260813-90: a model searching for store entries found nothing because
+`usmc working` offered no filter beyond `--limit` and the list was dominated by research notes.
+
 ## Unreleased
 
-- Freshness/readback verification (2026-08-11): the EN/DE README snapshots,
-  `llms.txt`, version/classifier metadata, `ellmos-module.v2.json`, and the
-  `Unreleased` status agree with the current local evidence. The local run
-  passed 61 tests and 15 subtests, Ruff, `compileall`, CLI version/help, and
-  `python -m build --no-isolation` (sdist + wheel). No local or remote Git tag
-  and no public release exists. The historical `TODO.md` audit sections and
-  its uncommitted TASKWRITER addition remain untouched foreign state.
-- Runtime language contract (2026-08-10): human-readable API/CLI prose and
-  help remain intentionally German (`de`) for compatibility; command names,
-  category values and JSON keys remain stable English protocol tokens. The
-  contract is exposed as `usmc.RUNTIME_LANGUAGE` and covered by tests.
-- Audit/release readback (2026-08-10): source version `0.1.0`, classifiers
-  Python 3.10–3.14, manifest `ellmos.module.v2` active/public-candidate, and
-  `llms.txt` checked on 2026-08-10. No Git tag or public release exists;
-  status remains `Unreleased`. The existing uncommitted `TODO.md` TASKWRITER
-  section is foreign state and was intentionally left untouched.
-- Maintainer-Verifikation am 2026-08-10: 61 Tests und 15 Subtests, Ruff,
-  `compileall`, `usmc --version`, `usmc --help` und `python -m build
-  --no-isolation` (sdist + Wheel) lokal erfolgreich.
-- Fünf bestehende Ruff-Hygienebefunde (ungenutzte Imports, unnötige `f`-Präfixe,
-  ambiger Schleifenname) ohne Verhaltensänderung behoben; die vorhandene
-  `TODO.md`-Änderung blieb unangetastet.
-- Technical hygiene & documentation verification (2026-08-04): refreshed the
-  `llms.txt` verification date; verified 61 tests, 15 subtests, `compileall`,
-  and the installed `usmc --version` / `usmc --help` console entry points.
+- Discoverability & Marketing (Pfad B): added multi-agent interaction sequence
+  diagram (`sequenceDiagram` with `autonumber` and strictly quoted labels)
+  documenting cross-agent session handoff and context generation.
+- Internationalization (Policy P-006 Stufe 2): added full Spanish documentation
+  (`README_es.md`), updated trilingual language switchers (`English · Deutsch · Español`)
+  and quick navigation anchors across `README.md`, `README_de.md`, and `README_es.md`.
+- Synchronized test count badges across all READMEs (including new metadata contract tests).
+- Runtime language contract: human-readable API/CLI prose and help remain intentionally
+  German (`de`) for compatibility; command names, category values and JSON keys remain
+  stable English protocol tokens. The contract is exposed as `usmc.RUNTIME_LANGUAGE` and
+  covered by tests.
+- Ruff hygiene: resolved five lint findings (unused imports, unnecessary `f`-strings,
+  ambiguous loop variable) without functional regression.
+- Corrected the PyPI statement in `README.md`, `README_de.md` and `llms.txt`: the name `usmc`
+  is **not** reserved for this project. As of 2026-08-08 no project of that name exists on
+  PyPI, so a PyPI package called `usmc` is not necessarily this one. Install from GitHub.
+- Documented that the CLI messages, `--help` texts and `generate_context()` headings are
+  currently German while the rest of the project is English, so the gap is visible instead
+  of surprising users.
+- Removed the internal pre-release audit file `TODO.md` from version control and added it to
+  `.gitignore`; it is planning material, not repository content.
+- Added `.gitattributes` (`* text=auto eol=lf`, binary assets excluded).
+- Rewrote the remaining German `.gitignore` comments in neutral English.
 - Synchronized the maintained German README with the canonical English
   onboarding structure and restored byte-identical code and Mermaid examples.
 - Technical hygiene: test the zero-dependency package on Python 3.14 in CI and

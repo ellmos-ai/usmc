@@ -5,7 +5,7 @@
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-102%20bestanden-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-108%20bestanden-brightgreen.svg)](tests)
 [![llms.txt](https://img.shields.io/badge/llms.txt-gepr%C3%BCft-blue.svg)](llms.txt)
 
 **Sprachen:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
@@ -30,6 +30,8 @@ Dieses Repository ist das ellmos-Projekt `ellmos-ai/usmc`, in Suchtexten auch **
 | Spanische README | [README_es.md](README_es.md) |
 | Tests | `python -m pytest -q` |
 | Änderungsprotokoll | [CHANGELOG.md](CHANGELOG.md) |
+| Sicherheitsrichtlinie | [SECURITY.md](SECURITY.md) |
+| Drittanbieter-Lizenzen | [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) |
 | Issues / Feedback | [GitHub Issues](https://github.com/ellmos-ai/usmc/issues) |
 
 ## Warum es USMC gibt

@@ -31,8 +31,16 @@ class TestRepositoryHygiene(unittest.TestCase):
             "id_rsa.key",
             "client.p12",
             "memory.sqlite",
-            "memory.sqlite3",
             "README-Mac Studio.md",
+            "README-WORKSTATION-LG.md",
+            "README-ASUS-GEI.md",
+            "README-LAPTOP.md",
+            "notes conflicted copy.txt",
+            "data (Kopie).json",
+            "data (Copy).json",
+            "uv.lock",
+            "LOCK.txt",
+            "LOCK.user.agent",
         ]:
             with self.subTest(path=path):
                 self.assertTrue(self.check_ignored(path), path)

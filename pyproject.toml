@@ -8,6 +8,7 @@ dynamic = ["version"]
 description = "United Shared Memory Client - local SQLite memory for LLM agents"
 readme = "README.md"
 license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_LICENSES.md"]
 requires-python = ">=3.10"
 authors = [
     { name = "Lukas Geiger", email = "lukas@lukisch.dev" }
@@ -41,6 +42,13 @@ Homepage = "https://github.com/ellmos-ai/usmc"
 Repository = "https://github.com/ellmos-ai/usmc"
 Issues = "https://github.com/ellmos-ai/usmc/issues"
 Documentation = "https://github.com/ellmos-ai/usmc#readme"
+Changelog = "https://github.com/ellmos-ai/usmc/blob/main/CHANGELOG.md"
+Security = "https://github.com/ellmos-ai/usmc/blob/main/SECURITY.md"
+"Parent Organization" = "https://github.com/ellmos-ai"
+"Umbrella Ecosystem" = "https://github.com/open-bricks"
+"Third-Party Licenses" = "https://github.com/ellmos-ai/usmc/blob/main/THIRD_PARTY_LICENSES.md"
+"Marketing Log" = "https://github.com/ellmos-ai/usmc/blob/main/MARKETING-LOG.txt"
+"LLM Ready" = "https://github.com/ellmos-ai/usmc/blob/main/llms.txt"
 
 [project.scripts]
 usmc = "usmc.cli:main"
@@ -52,5 +60,19 @@ include = ["usmc*"]
 version = { attr = "usmc.__version__" }
 
 [tool.pytest.ini_options]
+minversion = "7.0"
 pythonpath = "."
 testpaths = ["tests"]
+norecursedirs = [".git", ".pytest_cache", "__pycache__", "build", "dist"]
+addopts = "-ra -v"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",  # line too long
+    "E402",  # module level import not at top of file
+]

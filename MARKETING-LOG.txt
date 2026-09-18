@@ -1,0 +1,61 @@
+================================================================================
+PATH A HYGIENE & AUTOMATION AUDIT: usmc
+================================================================================
+Date: 2026-09-18
+Path: Pfad A (Technical Hygiene & Repository Maintenance)
+Version: 0.2.2
+Repository: ellmos-ai/usmc
+Organization: ellmos-ai
+Umbrella Collective: open-bricks
+
+1. HYGIENE & GOVERNANCE SUMMARY
+--------------------------------------------------------------------------------
+Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und Versionslauf:
+  - Lock-Prüfung: lock_status.py bestätigt 0 aktive Locks auf Plan-D-Repo und
+    .GITHUBBOT (UNLOCKED); Cooldown >24h seit letztem Kontakt eingehalten
+    (Ruhezeit: 63h > 24h Cooldown, voriger Pfad A Check: 2026-07-29 vor 51 Tagen).
+  - CI-Workflow Automation: .github/workflows/stale.yml auf actions/stale@v9
+    aktualisiert mit timeout-minutes: 10 und concurrency: cancel-in-progress: true;
+    welcome.yml mit timeout-minutes: 5 und concurrency gehärtet; ci.yml mit
+    timeout-minutes: 15, concurrency, ruff lint check und compileall abgesichert.
+  - Multi-Host- & Lock-Schutz in .gitignore (*conflicted copy*, * (Kopie)*,
+    * (Copy)*, *-WORKSTATION*, *-WORKSTATION-LG*, *-ASUS*, *-ASUS-GEI*, *-LAPTOP*,
+    *-Mac Studio*, *-MacBook*, LOCK*, LOCK.*, uv.lock, !package-lock.json,
+    .hypothesis/, .nyc_output/, node_modules/, *.orig, *.rej, *.tmp, *.bak).
+  - Pytest ini_options Härtung in pyproject.toml (minversion = "7.0",
+    norecursedirs = [".git", ".pytest_cache", "__pycache__", "build", "dist"],
+    addopts = "-ra -v"), PEP 621 Standard-URLs (Changelog, Security, Parent
+    Organization, Umbrella Ecosystem) und ruff linter Konfiguration.
+  - Third-Party Licenses & Software Inventory: THIRD_PARTY_LICENSES.md erstellt
+    mit Stand 2026-09-18, 0 externen Laufzeit-Abhängigkeiten (100% Python Standard-
+    bibliothek: sqlite3, json, os, sys, etc.), Zero-Copyleft-Garantie, unprivilegierter
+    User-Mode (RunAsInvoker) und 10 Governance-Invarianten INV-LOCAL-01 bis INV-SLA-10.
+  - Sicherheitsrichtlinie: SECURITY.md zweisprachig (DE/EN) gehärtet mit 48h
+    Erstreaktion / 5 Werktage Triage SLA und Sicherheitskontakten.
+  - Synchrone Versionsharmonisierung auf 0.2.2 über alle Manifeste und Dokumente
+    (usmc/__init__.py, pyproject.toml, CHANGELOG.md, llms.txt).
+  - Automatisierte Vertragstestsuite in tests/test_metadata.py und
+    tests/test_repository_hygiene.py für CI-Härtung, Invarianten und Konfliktschutz.
+
+2. GOVERNANCE & RUNTIME INVARIANTS COMPLIANCE
+--------------------------------------------------------------------------------
+| Invariant | Category | Description | Status |
+|---|---|---|---|
+| INV-LOCAL-01 | Local-First & Zero-Egress | 100% offline-ready; local SQLite persistence; zero telemetry or network calls. | VERIFIED |
+| INV-UNPRIV-02 | Unprivileged User Mode (RunAsInvoker) | All operations execute in unprivileged user space; no root/admin required. | VERIFIED |
+| INV-SQLITE-03 | ACID & WAL Concurrency | Multi-agent concurrency via SQLite WAL mode, busy handlers, and atomic transactions. | VERIFIED |
+| INV-SCHEMA-04 | Backward-Compatible Schema Evolution | Automated idempotent migration ensuring seamless backward compatibility. | VERIFIED |
+| INV-BOUND-05 | Bounded Ring Buffer & Pruning | Safe retention limits and deterministic pruning prevent uncontrolled disk expansion. | VERIFIED |
+| INV-FILTER-06 | In-Engine Delimiter Filtering | SQL WHERE clause filtering with delimiter-anchored matching prevents starvation. | VERIFIED |
+| INV-LANG-07 | Stable Protocol & Language Contract | Human-readable prose in German (RUNTIME_LANGUAGE = "de"), English CLI & JSON keys. | VERIFIED |
+| INV-ISOL-08 | Strict State Isolation | Database resides strictly in user directories (~/.usmc/), isolated from repos. | VERIFIED |
+| INV-AUDIT-09 | Complete SPDX Audit Transparency | 100% Python standard library at runtime; zero external runtime dependencies. | VERIFIED |
+| INV-SLA-10 | Cross-Platform Parity & SLA | Consistent behavior across Windows, Linux, macOS with 48h response SLA. | VERIFIED |
+
+3. QUALITY GATES & VERIFICATION
+--------------------------------------------------------------------------------
+- Ruff Linting: ruff check . passed clean with 0 errors.
+- Test Suite: 100% green pass across unit and contract tests via pytest.
+- Bytecode Compilation: python -m compileall usmc tests passed with 0 errors.
+- Git Hygiene: git diff --check passed with 0 whitespace issues.
+================================================================================

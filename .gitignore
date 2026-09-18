@@ -61,8 +61,35 @@ tokens.json
 Thumbs.db
 desktop.ini
 
-# Cloud-sync conflict copies (OneDrive/Dropbox append the device name)
-*-Mac Studio.*
+# Multi-Host, Locks & Cloud-Sync Hygiene
+LOCK
+LOCK.*
+*.lock
+LOCK*.txt
+LOCK.permissions.json
+uv.lock
+!package-lock.json
+*-conflict-*
+*.sync-conflict-*
+*.conflict
+*-CONFLIT-*
+*.sync-temp-*
+* (kopie)*
+* (copy)*
+* (Kopie)*
+* (Copy)*
+*conflicted copy*
+*-ASUS*
+*-ASUS-GEI*
+*-LAPTOP*
+*-WORKSTATION*
+*-WORKSTATION-LG*
+*-Mac Studio*
+*-MacBook*
+*.orig
+*.rej
+*.tmp
+*.bak
 
 # SQLite sidecar files (the runtime database lives in ~/.usmc, never in the repo)
 *.db-wal
@@ -70,5 +97,10 @@ desktop.ini
 *.sqlite-wal
 *.sqlite-shm
 
-# Multi-agent lock system (local only, never committed)
-LOCK*.txt
+# Local Runtime State & Test Caches
+local-state/
+state/
+.turbo/
+.hypothesis/
+.nyc_output/
+node_modules/

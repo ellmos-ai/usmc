@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Metadata and documentation parity contract tests."""
+"""Metadata, documentation parity, and discoverability contract tests."""
 
 import unittest
 from pathlib import Path
@@ -32,9 +32,9 @@ class TestMetadataContract(unittest.TestCase):
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
-        self.assertIn("Tests-108%20passed", en_text)
-        self.assertIn("Tests-108%20bestanden", de_text)
-        self.assertIn("Tests-108%20aprobados", es_text)
+        self.assertIn("Tests-113%20passed", en_text)
+        self.assertIn("Tests-113%20bestanden", de_text)
+        self.assertIn("Tests-113%20aprobados", es_text)
 
     def test_mermaid_sequence_diagram_present(self):
         for name in ["README.md", "README_de.md", "README_es.md"]:
@@ -49,8 +49,8 @@ class TestMetadataContract(unittest.TestCase):
         path = ROOT / "llms.txt"
         self.assertTrue(path.exists())
         text = path.read_text(encoding="utf-8")
-        self.assertIn("Last-checked: 2026-09-18", text)
-        self.assertIn("0.2.2", text)
+        self.assertIn("Last-checked: 2026-09-19", text)
+        self.assertIn("0.2.3", text)
         self.assertIn("README_es.md", text)
         self.assertIn("THIRD_PARTY_LICENSES.md", text)
         self.assertIn("SECURITY.md", text)
@@ -109,15 +109,15 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("RunAsInvoker", tpl)
         self.assertIn("dependencies = []", tpl)
         for i in range(1, 11):
-            inv = f"INV-{'' if i == 10 else ''}{'LOCAL' if i == 1 else 'UNPRIV' if i == 2 else 'SQLITE' if i == 3 else 'SCHEMA' if i == 4 else 'BOUND' if i == 5 else 'FILTER' if i == 6 else 'LANG' if i == 7 else 'ISOL' if i == 8 else 'AUDIT' if i == 9 else 'SLA'}-{i:02d}"
+            inv = f"INV-{'LOCAL' if i == 1 else 'UNPRIV' if i == 2 else 'SQLITE' if i == 3 else 'SCHEMA' if i == 4 else 'BOUND' if i == 5 else 'FILTER' if i == 6 else 'LANG' if i == 7 else 'ISOL' if i == 8 else 'AUDIT' if i == 9 else 'SLA'}-{i:02d}"
             self.assertIn(inv, tpl)
 
     def test_version_consistency(self):
-        self.assertEqual(usmc.__version__, "0.2.2")
+        self.assertEqual(usmc.__version__, "0.2.3")
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-        self.assertIn("## 0.2.2 - 2026-09-18", changelog)
+        self.assertIn("## 0.2.3 - 2026-09-19", changelog)
         llms = (ROOT / "llms.txt").read_text(encoding="utf-8")
-        self.assertIn("Source version is `0.2.2`", llms)
+        self.assertIn("Source version is `0.2.3`", llms)
 
     def test_pyproject_toml_guardrails(self):
         pyproj = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
@@ -125,6 +125,126 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn('minversion = "7.0"', pyproj)
         self.assertIn("norecursedirs =", pyproj)
         self.assertIn("[tool.ruff]", pyproj)
+
+    def test_sixteen_point_navigation_parity(self):
+        en_text = (ROOT / "README.md").read_text(encoding="utf-8")
+        de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
+        es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
+
+        en_anchors = [
+            "#key-features",
+            "#target-personas--discoverability",
+            "#comparative-matrix-vs-alternatives",
+            "#architecture--data-flow",
+            "#multi-agent-interaction-sequence",
+            "#governance--runtime-invariants",
+            "#quick-start",
+            "#core-concepts--primitives",
+            "#finding-things--advanced-filtering",
+            "#multi-agent-session-coordination",
+            "#runtime-language-contract",
+            "#database-schema--state-isolation",
+            "#sibling-ecosystem--positioning",
+            "#third-party-licenses--transparency",
+            "#security-policy--vulnerability-reporting",
+            "#license--liability",
+        ]
+        de_anchors = [
+            "#hauptmerkmale",
+            "#zielgruppen--auffindbarkeit",
+            "#vergleichsmatrix-gegenueber-alternativen",
+            "#architektur--datenfluss",
+            "#multi-agenten-interaktionssequenz",
+            "#governance--laufzeit-invarianten",
+            "#schnellstart",
+            "#kernkonzepte--primitive",
+            "#gezieltes-suchen--filterung",
+            "#multi-agenten-sitzungskoordination",
+            "#laufzeit-sprachvertrag",
+            "#datenbankschema--status-isolation",
+            "#geschwister-oekosystem--positionierung",
+            "#drittanbieter-lizenzen--transparenz",
+            "#sicherheitsrichtlinie--meldewege",
+            "#lizenz--haftung",
+        ]
+        es_anchors = [
+            "#características-principales",
+            "#arquetipos-de-usuario--visibilidad",
+            "#matriz-comparativa-frente-a-alternativas",
+            "#arquitectura-y-flujo-de-datos",
+            "#secuencia-de-interacción-multi-agente",
+            "#invariantes-de-gobernanza-y-ejecución",
+            "#inicio-rápido",
+            "#conceptos-clave-y-primitivas",
+            "#búsqueda-precisa-y-filtros",
+            "#coordinación-de-sesiones-multi-agente",
+            "#contrato-de-idioma-en-ejecución",
+            "#esquema-de-base-de-datos-y-aislamiento",
+            "#ecosistema-hermano-y-posicionamiento",
+            "#licencias-de-terceros-y-transparencia",
+            "#política-de-seguridad-y-reporte-de-vulnerabilidades",
+            "#licencia-y-responsabilidad",
+        ]
+
+        self.assertEqual(len(en_anchors), 16)
+        self.assertEqual(len(de_anchors), 16)
+        self.assertEqual(len(es_anchors), 16)
+
+        for anchor in en_anchors:
+            self.assertIn(anchor, en_text, f"Missing English anchor: {anchor}")
+        for anchor in de_anchors:
+            self.assertIn(anchor, de_text, f"Missing German anchor: {anchor}")
+        for anchor in es_anchors:
+            self.assertIn(anchor, es_text, f"Missing Spanish anchor: {anchor}")
+
+    def test_target_personas_present(self):
+        mkt = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
+        en = (ROOT / "README.md").read_text(encoding="utf-8")
+        de = (ROOT / "README_de.md").read_text(encoding="utf-8")
+        es = (ROOT / "README_es.md").read_text(encoding="utf-8")
+
+        self.assertIn("Autonomous Multi-Agent Swarm Engineers", mkt)
+        self.assertIn("Local-First & Zero-Egress Engineers", mkt)
+        self.assertIn("Desktop App & MCP Tool Integrators", mkt)
+        self.assertIn("Enterprise Security & Compliance Auditors", mkt)
+
+        self.assertIn("Autonomous Multi-Agent Swarm Engineers", en)
+        self.assertIn("Autonome Multi-Agenten-Entwickler", de)
+        self.assertIn("Desarrolladores de enjambres multi-agente", es)
+
+    def test_comparative_matrix_present(self):
+        for name, key in [
+            ("README.md", "Runtime Dependencies"),
+            ("README_de.md", "Laufzeitabhängigkeiten"),
+            ("README_es.md", "Dependencias en ejecución"),
+            ("MARKETING-LOG.txt", "Runtime Dependencies"),
+        ]:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            with self.subTest(name=name):
+                self.assertIn(key, text)
+                self.assertIn("Mem0", text)
+                self.assertIn("Redis", text)
+
+    def test_governance_invariants_table(self):
+        for name in ["README.md", "README_de.md", "README_es.md", "MARKETING-LOG.txt"]:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            with self.subTest(name=name):
+                for i in range(1, 11):
+                    inv = f"INV-{'LOCAL' if i == 1 else 'UNPRIV' if i == 2 else 'SQLITE' if i == 3 else 'SCHEMA' if i == 4 else 'BOUND' if i == 5 else 'FILTER' if i == 6 else 'LANG' if i == 7 else 'ISOL' if i == 8 else 'AUDIT' if i == 9 else 'SLA'}-{i:02d}"
+                    self.assertIn(inv, text)
+
+    def test_sibling_ecosystem_linked(self):
+        for name in ["README.md", "README_de.md", "README_es.md"]:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            with self.subTest(name=name):
+                self.assertIn("https://github.com/ellmos-ai/rinnsal", text)
+                self.assertIn("https://github.com/ellmos-ai/bach", text)
+                self.assertIn("https://github.com/ellmos-ai/skills", text)
+                self.assertIn("https://github.com/ellmos-ai/connectors", text)
+                self.assertIn("https://github.com/ellmos-ai/clutch", text)
+                self.assertIn("https://github.com/ellmos-ai/policy-registry", text)
+                self.assertIn("https://github.com/dev-bricks/DevCenter", text)
+                self.assertIn("https://github.com/open-bricks", text)
 
 
 if __name__ == "__main__":

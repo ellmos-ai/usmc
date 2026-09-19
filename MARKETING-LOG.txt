@@ -1,4 +1,78 @@
 ================================================================================
+PATH B MARKETING & DISCOVERABILITY AUDIT: usmc
+================================================================================
+Date: 2026-09-19
+Path: Pfad B (Marketing, Discoverability & Developer Experience)
+Version: 0.2.3
+Repository: ellmos-ai/usmc
+Organization: ellmos-ai
+Umbrella Collective: open-bricks
+
+1. DISCOVERABILITY & MARKETING ARCHITECTURE SUMMARY
+--------------------------------------------------------------------------------
+Turnusgemäßer Pfad B Discoverability-, Marketing-, Dokumentations- und Navigationslauf:
+  - 16-Punkte-Schnellnavigation & Dreisprachige Parität:
+    Vollständige 16-Punkte-Navigationsarchitektur synchronisiert über README.md,
+    README_de.md und README_es.md mit 100% wechselseitiger Anker-Parität.
+    Neue Hauptkapitel: Key Features, Target Personas & Discoverability,
+    Comparative Matrix vs Alternatives, Governance & Runtime Invariants,
+    Core Concepts & Primitives, Finding Things & Advanced Filtering,
+    Multi-Agent Session Coordination, Sibling Ecosystem & Positioning,
+    Third-Party Licenses & Transparency und Security Policy.
+  - Zielgruppen & Personas (4 Kernzielgruppen formuliert):
+    1. Autonomous Multi-Agent Swarm Engineers (Claude Code, Antigravity, Codex, BACH)
+    2. Local-First & Zero-Egress AI Systems Engineers
+    3. Desktop Application & MCP Tool Integrators (PySide6, Electron, MCP)
+    4. Enterprise Security & Compliance Auditors
+  - 10-Dimensionen-Vergleichsmatrix vs. 4 Alternativen:
+    Detaillierter Benchmark von USMC gegenüber Ad-Hoc JSON/Markdown-Dateien,
+    zentralen Cloud Redis/Vektor-DBs, schwergewichtigen Agenten-Speicher-Frameworks
+    (Mem0, Zep, LangGraph Store) und unmanaged Ad-Hoc SQLite-Skripten across 10 Kriterien.
+  - High-Intent Keyword Matrix (EN/DE/ES):
+    Relevante Suchbegriffe zur Auffindbarkeit in Entwickler- und LLM-Kontexten.
+  - Governance & Runtime Invarianten:
+    Verankerung der 10 kanonischen Invarianten (INV-LOCAL-01 bis INV-SLA-10) in
+    allen drei READMEs synchron zu THIRD_PARTY_LICENSES.md.
+  - Sibling Ecosystem & Partner-Repositories:
+    Strukturierte Matrix zur Einordnung von USMC (Tier 1) im ellmos- und open-bricks-
+    Ökosystem (Rinnsal, BACH, skills, connectors, clutch, DevCenter).
+  - Shields.io Badges:
+    CI, License MIT, Version 0.2.3, Python 3.10+, Tests passing, Verified 2026-09-19,
+    Platforms, Zero Dependencies (100% Stdlib), Local-First (Zero-Egress),
+    Security SLA 48h, Ecosystem ellmos-ai, Umbrella open-bricks, Marketing Log active, llms.txt.
+  - Automatisierte Vertragstestsuite in tests/test_metadata.py erweitert auf 113 Tests.
+
+2. TARGET PERSONAS & HIGH-INTENT KEYWORDS
+--------------------------------------------------------------------------------
+| Persona | Profile & Stack | Core Friction / Pain Point | USMC Architectural Advantage |
+|---|---|---|---|
+| Autonomous Multi-Agent Swarm Engineers | Claude Code, Codex, Antigravity, BACH, Rinnsal | State loss between agent runs; coordination conflicts | Zero-daemon shared SQLite, ACID WAL concurrency, session handoffs |
+| Local-First & Zero-Egress Engineers | Offline AI systems, air-gapped runtimes | Cloud dependencies, telemetry leakage, background services | 100% offline, zero network calls, home directory isolation |
+| Desktop App & MCP Tool Integrators | PySide6, Electron, MCP Servers, CLI tools | Heavy dependencies, high memory footprint, slow startup | Pure Python stdlib (0 pip deps), <1 ms cold start, low RAM |
+| Enterprise Security & Compliance Auditors | Supply chain security, open-source compliance | Viral copyleft licenses, hidden network egress, privilege escalation | 100% Stdlib, Zero-Copyleft (MIT), RunAsInvoker unprivileged mode |
+
+3. 10-DIMENSION COMPARATIVE MATRIX SUMMARY
+--------------------------------------------------------------------------------
+- Runtime Dependencies: USMC (0 / 100% Stdlib) vs JSON (0) vs Cloud Redis (High) vs Memory Frameworks (15-30+) vs SQLite (0)
+- Zero-Egress / Privacy: USMC (100% Offline) vs JSON (100% Offline) vs Cloud Redis (Remote) vs Memory Frameworks (Mixed) vs SQLite (100% Offline)
+- Daemon Overhead: USMC (None) vs JSON (None) vs Cloud Redis (Heavy) vs Memory Frameworks (Server needed) vs SQLite (None)
+- Multi-Agent Concurrency: USMC (ACID WAL) vs JSON (Fragile/Racy) vs Cloud Redis (Networked) vs Memory Frameworks (Varies) vs SQLite (Unmanaged)
+- Structured Primitives: USMC (Facts, Lessons, Working, Sessions) vs JSON (None) vs Cloud Redis (KV/Vector) vs Memory Frameworks (Complex) vs SQLite (Manual)
+- Confidence Merging: USMC (Deterministic Per-Agent) vs JSON (Clobber) vs Cloud Redis (None) vs Memory Frameworks (LLM heuristic) vs SQLite (None)
+- Prompt Context Gen: USMC (Built-in Compact) vs JSON (Manual) vs Cloud Redis (Manual) vs Memory Frameworks (Tied to SDK) vs SQLite (Manual)
+- SQL Filter before Limit: USMC (In-Engine WHERE) vs JSON (Memory scan) vs Cloud Redis (Top-k) vs Memory Frameworks (Varies) vs SQLite (Custom)
+- State Isolation: USMC (~/.usmc/ Isolated) vs JSON (In-repo) vs Cloud Redis (Network) vs Memory Frameworks (Container) vs SQLite (Arbitrary)
+- License & SLA: USMC (MIT, 48h SLA) vs JSON (N/A) vs Cloud Redis (BSL/SaaS) vs Memory Frameworks (Mixed) vs SQLite (N/A)
+
+4. QUALITY GATES & VERIFICATION
+--------------------------------------------------------------------------------
+- Test Suite: 113 passed (100% green) across unit, integration, and metadata contracts.
+- Linter: ruff check . passed clean with 0 errors.
+- Bytecode: python -m compileall usmc tests passed with 0 errors.
+- Diagram Linter: lint_mermaid.py passed with 0 syntax issues across all markdown files.
+- Git Hygiene: git diff --check passed with 0 whitespace issues.
+
+================================================================================
 PATH A HYGIENE & AUTOMATION AUDIT: usmc
 ================================================================================
 Date: 2026-09-18

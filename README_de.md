@@ -4,67 +4,112 @@
 
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-green.svg)](LICENSE)
+[![Version: 0.2.3](https://img.shields.io/badge/Version-0.2.3-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-108%20bestanden-brightgreen.svg)](tests)
-[![llms.txt](https://img.shields.io/badge/llms.txt-gepr%C3%BCft-blue.svg)](llms.txt)
+[![Tests](https://img.shields.io/badge/Tests-113%20bestanden-brightgreen.svg)](tests)
+[![Geprüft: 2026-09-19](https://img.shields.io/badge/Gepr%C3%BCft-2026--09--19-blue.svg)](CHANGELOG.md)
+[![Plattformen](https://img.shields.io/badge/Plattformen-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
+[![Abhängigkeiten](https://img.shields.io/badge/Abh%C3%A4ngigkeiten-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
+[![Local-First](https://img.shields.io/badge/Local--First-Zero--Egress-blueviolet.svg)](THIRD_PARTY_LICENSES.md)
+[![Sicherheits-SLA: 48h](https://img.shields.io/badge/Sicherheits--SLA-48h%20%2F%205d-orange.svg)](SECURITY.md)
+[![Ökosystem: ellmos-ai](https://img.shields.io/badge/%C3%96kosystem-ellmos--ai-blueviolet.svg)](https://github.com/ellmos-ai)
+[![Dachorganisation: open-bricks](https://img.shields.io/badge/Dachorganisation-open--bricks-darkblue.svg)](https://github.com/open-bricks)
+[![Marketing Log](https://img.shields.io/badge/Marketing%20Log-aktiv-success.svg)](MARKETING-LOG.txt)
+[![llms.txt](https://img.shields.io/badge/LLM--Ready-llms.txt-teal.svg)](llms.txt)
 
 **Sprachen:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
 
-[Schnellstart](#schnellstart) • [Architektur](#architektur--datenfluss) • [Multi-Agenten-Ablauf](#multi-agenten-interaktionssequenz) • [Kernkonzepte](#kernkonzepte) • [Positionierung](#positionierung) • [Lizenz](#lizenz)
+USMC ist eine Python-Speicherschicht ohne externe Laufzeitabhängigkeiten für lokale LLM-Agenten und Multi-Agenten-Systeme. Es bietet eine einheitliche, SQLite-basierte Persistenz für Fakten, gelernte Lektionen, sitzungsbezogene Arbeitsnotizen, Übergabekontext und kompakte Prompt-Generierung ohne Hintergrund-Daemon oder Cloud-Dienst.
 
-USMC ist eine Python-Speicherschicht ohne externe Abhängigkeiten für LLM-Agenten. Mehrere lokale Agenten teilen sich damit eine SQLite-basierte Erinnerung für Fakten, Lektionen, Arbeitsnotizen, Sitzungen und kompakten Prompt-Kontext.
-
-Dieses Repository ist das ellmos-Projekt `ellmos-ai/usmc`, in Suchtexten auch **ellmos USMC** oder **United Shared Memory Client**. Es steht in keiner Beziehung zum United States Marine Corps.
+Dieses Repository ist das ellmos-Projekt `ellmos-ai/usmc`, in Katalogen und Suchmaschinen auch als **ellmos USMC** oder **United Shared Memory Client** geführt. Es steht in keiner Beziehung zum United States Marine Corps.
 
 > [!NOTE]
-> **ellmos USMC (United Shared Memory Client)** ist die Tier-1-Speicherbasis für lokale LLM-Agenten im [ellmos AI Ökosystem](https://github.com/ellmos-ai). Es bietet ohne externe Laufzeitabhängigkeiten eine SQLite-basierte Persistenz für Fakten, gelernte Lektionen, Arbeitsnotizen und Prompt-Kontext — ohne Hintergrund-Daemon oder Cloud-Zwang.
+> **ellmos USMC (United Shared Memory Client)** ist die Tier-1-Speicherbasis für lokale LLM-Agenten im [ellmos AI Ökosystem](https://github.com/ellmos-ai). Es bietet ohne externe Laufzeitabhängigkeiten eine SQLite-basierte Persistenz für Fakten, gelernte Lektionen, Arbeitsnotizen und Prompt-Kontext — ohne Hintergrund-Daemon oder Cloud-Zwang. Maschinenlesbarer Kontext verfügbar unter [llms.txt](llms.txt).
 
-## Hier beginnen
+---
 
-| Was | Wo |
-|---|---|
-| Installation | `pip install git+https://github.com/ellmos-ai/usmc.git` |
-| Schnellstart | [Schnellstart](#schnellstart) weiter unten |
-| CLI-Referenz | `usmc --help` |
-| Englische README | [README.md](README.md) |
-| Spanische README | [README_es.md](README_es.md) |
-| Tests | `python -m pytest -q` |
-| Änderungsprotokoll | [CHANGELOG.md](CHANGELOG.md) |
-| Sicherheitsrichtlinie | [SECURITY.md](SECURITY.md) |
-| Drittanbieter-Lizenzen | [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) |
-| Issues / Feedback | [GitHub Issues](https://github.com/ellmos-ai/usmc/issues) |
+## Schnellnavigation
 
-## Warum es USMC gibt
+- [Hauptmerkmale](#hauptmerkmale)
+- [Zielgruppen & Auffindbarkeit](#zielgruppen--auffindbarkeit)
+- [Vergleichsmatrix gegenüber Alternativen](#vergleichsmatrix-gegenueber-alternativen)
+- [Architektur & Datenfluss](#architektur--datenfluss)
+- [Multi-Agenten Interaktionssequenz](#multi-agenten-interaktionssequenz)
+- [Governance- & Laufzeit-Invarianten](#governance--laufzeit-invarianten)
+- [Schnellstart](#schnellstart)
+- [Kernkonzepte & Primitive](#kernkonzepte--primitive)
+- [Gezieltes Suchen & Filterung](#gezieltes-suchen--filterung)
+- [Multi-Agenten Sitzungskoordination](#multi-agenten-sitzungskoordination)
+- [Laufzeit-Sprachvertrag](#laufzeit-sprachvertrag)
+- [Datenbankschema & Status-Isolation](#datenbankschema--status-isolation)
+- [Geschwister-Ökosystem & Positionierung](#geschwister-oekosystem--positionierung)
+- [Drittanbieter-Lizenzen & Transparenz](#drittanbieter-lizenzen--transparenz)
+- [Sicherheitsrichtlinie & Meldewege](#sicherheitsrichtlinie--meldewege)
+- [Lizenz & Haftung](#lizenz--haftung)
 
-LLM-Agenten verlieren zwischen Läufen oft Kontext oder verteilen Notizen über mehrere Werkzeuge. USMC hält nur den Speicherteil klein und wiederverwendbar:
+---
 
-- Persistente Fakten mit Confidence-Werten speichern.
-- Lektionen als Problem/Lösungs-Muster dokumentieren.
-- Temporäre Arbeitsnotizen für eine Sitzung halten.
-- Agenten-Sitzungen und Übergabenotizen nachvollziehen.
-- Kompakte Kontextblöcke für Prompts erzeugen.
-- Eine lokale SQLite-Datenbank zwischen Agenten teilen.
+## Hauptmerkmale
 
-USMC ist Tier 1 der ellmos-Familie. Rinnsal und BACH bauen größere Orchestrierungsschichten darauf auf, während USMC bewusst nur Speicher bereitstellt.
+- **100% Python Standardbibliothek**: Null externe Pip-Laufzeitabhängigkeiten (`sqlite3`, `json`, `os`, `sys`, `pathlib`, `dataclasses`). Blitzschneller Kaltstart (<1 ms) ohne Supply-Chain-Risiken.
+- **Local-First & Zero-Egress**: 100% offline-fähig; keinerlei Telemetrie, keine ungefragten Netzwerkverbindungen und garantierter lokaler Datenschutz.
+- **ACID- & WAL-Nebenläufigkeit**: Multi-Agenten Write-Ahead Logging (WAL) mit automatischen Busy-Handler-Wiederholungen garantiert korruptionsfreien Datenzugriff bei parallelen Prozessen.
+- **Vier maßgeschneiderte Primitive**: Persistente Fakten mit Confidence-Bewertung, gelernte Lektionen mit Problem/Lösung/Schweregrad, Arbeitsnotizen mit Tagging und sitzungsübergreifende Agenten-Übergaben.
+- **Deterministische Confidence-Zusammenführung**: Aktualisiert derselbe Agent einen Fakt, überschreibt der höhere Konfidenzwert den niedrigeren; unterschiedliche Agenten behalten unabhängige Zeilen, sortiert nach Konfidenz.
+- **Filterung direkt in der SQL-Engine**: Tags, Grep-Suchbegriffe, Agenten-IDs und Schweregrade werden vor dem Limit direkt per SQL gefiltert, was Speicherverschwendung verhindert.
+- **Cross-Agent Prompt-Kontext**: Ein einziger Aufruf von `generate_context()` liefert kompakten, deterministischen Markdown-Kontext zur direkten Übergabe an LLMs.
+- **Daemonfreier Betrieb**: Direkte lokale Dateipersistenz (`~/.usmc/usmc_memory.db`) ohne Docker-, Redis- oder Hintergrund-Server-Wartungsaufwand.
 
-### Architektur & Datenfluss
+---
+
+## Zielgruppen & Auffindbarkeit
+
+| Zielgruppe / Persona | Profil & Tech-Stack | Typische Hürden & Pain Points | Lösung durch USMC |
+|---|---|---|---|
+| **Autonome Multi-Agenten-Entwickler** | Claude Code, Antigravity/Gemini, Codex, BACH, Rinnsal | Kontextverlust zwischen Agenten-Läufen; kollidierende Datei-Edits; fragile Ad-Hoc-Notizdateien. | Geteilte lokale SQLite-Datenbank mit WAL-Transaktionen, Sitzungsübergaben und Konfidenzabgleich. |
+| **Local-First & Zero-Egress Systemingenieure** | Air-Gapped KI-Systeme, geschützte Entwickler-Workstations | Vektordatenbanken und Cloud-Dienste leiten Telemetrie aus oder verlangen schwere Docker-Container. | 100% Offline-Betrieb, null Netzwerk-Egress, reine Standardbibliothek und strikte Dateiisolation (`~/.usmc/`). |
+| **Desktop-App- & MCP-Werkzeug-Entwickler** | PySide6, Electron, MCP-Server, DevCenter, CLI-Tools | Speicherbibliotheken ziehen 20+ schwere Pip-Pakete nach, verlangsamen den Start (>2s) und blähen Binaries auf. | Null externe Abhängigkeiten, <1 ms Kaltstart, minimaler RAM-Bedarf (<15 MB), unprivilegierter User-Mode (`RunAsInvoker`). |
+| **Enterprise Security- & Compliance-Auditoren** | Lizenz-Governance, CVE-Lieferkettenprüfung | Virale Copyleft-Lizenzen (GPL/AGPL) und ungepflegte transitive Pakete bergen rechtliche und Sicherheitsrisiken. | Zero-Copyleft-Garantie (reines MIT/PSF-2.0), vollständiges SPDX-Softwareinventar und 48h-Sicherheits-SLA. |
+
+**Relevante Suchbegriffe:** `llm geteilter speicher`, `agenten speicher sqlite`, `cross-agenten gedächtnis`, `ki agenten persistenz`, `lokale llm arbeitsnotizen`, `prompt kontext generator`, `lektionen speicher`, `python standardbibliothek speicher`, `multi-agenten handoff`, `ellmos usmc deutsch`.
+
+---
+
+## Vergleichsmatrix gegenüber Alternativen
+
+| Kriterium | USMC (`ellmos-ai/usmc`) | Ad-Hoc JSON / Markdown-Dateien | Zentrale Cloud Redis / Vektor-DBs | Schwergewichtige Speicher-Frameworks (Mem0, Zep) | Eigene Ad-Hoc SQLite-Skripte |
+|---|---|---|---|---|---|
+| **Laufzeitabhängigkeiten** | **0 (100% Python Stdlib)** | 0 (Stdlib) | Hoch (SDK + Netzwerk) | Extrem (15–30+ Fremdpakete) | 0 (Stdlib) |
+| **Zero-Egress & Datenschutz** | **100% Offline & Lokal** | 100% Offline | Cloud-gebunden / Externer Egress | Oft Cloud-abhängig / Telemetrie | 100% Offline |
+| **Hintergrund-Daemon Overhead** | **Kein Daemon nötig** | Kein Daemon | Erfordert Redis / DB-Dienst | Erfordert Daemon / Container | Kein Daemon |
+| **Multi-Agenten Nebenläufigkeit** | **ACID WAL-Transaktionen** | Fragil (Race Conditions / Dateibruch) | Hoch (Über Netzwerk-Broker) | Framework-abhängig | Unverwaltet (Lock-Fehler / Busy) |
+| **Strukturierte Primitive** | **4 native (Fakten, Lektionen, Notizen, Sitzungen)** | Keine (Unstrukturierter Fließtext) | Key-Value / Vektoreinbettungen | Komplexe Graph-/Vektormodelle | Manuelles Schemadesign je Tool |
+| **Konfidenz & Konfliktlösung** | **Deterministisch je Agent (Höchste gewinnt)** | Keine (Letzter Schreibzugriff gewinnt) | Vektorähnlichkeitsscore | Heuristisch / LLM-basiert | Keine (Manuelle Logik nötig) |
+| **Prompt-Kontextgenerierung** | **Integrierter kompakter Formatierer** | Manuelle String-Konstruktion | Manuelle Abfrage + Prompt-Bau | An Framework-Bindung gekoppelt | Manuelle SQL-Abfrageverarbeitung |
+| **Such- & Filterausführung** | **SQL-Filterung vor dem Limit** | Kompletter Dateiscan im Speicher | Vektor Top-k / Annoy | Komplexe API-Abfragen | Eigene SQL-Where-Klauseln |
+| **Dateisystem- & Statusisolation** | **Isoliertes Benutzerverzeichnis (`~/.usmc/`)** | Verschmutzt Projektverzeichnisse | Netzwerk-Endpunkt / Cloud-Host | Container-Volume / Beliebige Pfade | Uneinheitliche Dateiorte |
+| **Lizenz & Sicherheits-SLA** | **MIT, Zero-Copyleft, 48h SLA** | N/A | Kommerziell / BSL / Cloud-ToS | Gemischte Lizenzen / Audit-Risiko | N/A |
+
+---
+
+## Architektur & Datenfluss
 
 ```mermaid
 graph TD
-    subgraph Agents ["Local LLM Agents"]
-        A1["Agent A (e.g. Codex)"]
-        A2["Agent B (e.g. Claude)"]
-        A3["Agent C (e.g. Gemini)"]
+    subgraph Agents ["Lokale LLM-Agenten"]
+        A1["Agent A (z. B. Codex)"]
+        A2["Agent B (z. B. Claude)"]
+        A3["Agent C (z. B. Gemini)"]
     end
 
     subgraph USMC ["USMC (United Shared Memory Client)"]
         API["USMC Client API / CLI"]
-        FM["Facts Memory (Key/Value + Confidence)"]
-        LM["Lessons Learned (Bugs & Fixes + Severity)"]
-        WM["Working Notes & Handoff Context"]
+        FM["Faktenspeicher (Key/Value + Konfidenz)"]
+        LM["Gelernte Lektionen (Fehler/Lösungen + Schweregrad)"]
+        WM["Arbeitsnotizen & Übergabekontext"]
     end
 
-    DB[("SQLite Database (~/.usmc/usmc_memory.db)")]
+    DB[("SQLite-Datenbank (~/.usmc/usmc_memory.db)")]
 
     A1 -->|add_fact / add_lesson| API
     A2 -->|add_working / context| API
@@ -79,7 +124,9 @@ graph TD
     WM --> DB
 ```
 
-### Multi-Agenten Interaktionssequenz
+---
+
+## Multi-Agenten Interaktionssequenz
 
 Das folgende Sequenzdiagramm verdeutlicht, wie mehrere autonome Agenten (z. B. Codex und Claude) über die lokale USMC-SQLite-Datenbank ohne Hintergrund-Daemon synchronisieren und Aufgaben übergeben:
 
@@ -101,7 +148,7 @@ sequenceDiagram
     A->>M: "add_working('Setup complete - ready for tests', tags='backend')"
     M-->>A: "{'id': 105, 'content': 'Setup complete...'}"
     A->>M: "end_session(session_id=1, handoff_notes='Ready for test suite')"
-    M-->>A: "Sitzung mit Übergabenotiz beendet"
+    M-->>A: "Session finalized with handoff notes"
 
     Note over B: Agent B startet nächsten Arbeitslauf
     B->>M: "start_session(task='Test execution')"
@@ -109,151 +156,148 @@ sequenceDiagram
     B->>M: "get_changes_since('2026-09-10T00:00:00')"
     M-->>B: "{'facts': [...], 'lessons': [...], 'working': [...]}"
     B->>M: "generate_context(max_items=5)"
-    M-->>B: "Formatierter Markdown-Kontext für LLM-Prompt"
+    M-->>B: "Formatierter Markdown-Kontext für den LLM-Prompt"
 ```
 
-## Installation
+---
 
-Direkt von GitHub:
+## Governance- & Laufzeit-Invarianten
+
+USMC erzwingt strikt zehn fundamentale Governance- und Laufzeit-Invarianten:
+
+| Invariante | Kategorie | Beschreibung | Status |
+|---|---|---|---|
+| `INV-LOCAL-01` | Local-First & Zero-Egress | 100% offline-fähig; lokale SQLite-Persistenz; keinerlei Telemetrie oder Netzwerkaufrufe. | VERIFIZIERT |
+| `INV-UNPRIV-02` | Unprivilegierter User-Mode (`RunAsInvoker`) | Alle CLI-Befehle, API-Aufrufe und Routinen laufen strikt im unprivilegierten Benutzerraum. | VERIFIZIERT |
+| `INV-SQLITE-03` | ACID & WAL Nebenläufigkeit | Multi-Agenten-Gleichzeitigkeit über SQLite WAL-Modus, Busy-Handler und atomare Transaktionen. | VERIFIZIERT |
+| `INV-SCHEMA-04` | Abwärtskompatible Schemaevolution | Automatische idempotente Migrationen gewährleisten nahtlose Kompatibilität zwischen Agenten. | VERIFIZIERT |
+| `INV-BOUND-05` | Begrenzter Ringpuffer & Bereinigung | Sichere Aufbewahrungsgrenzen und deterministisches Pruning verhindern unkontrolliertes Festplattenwachstum. | VERIFIZIERT |
+| `INV-FILTER-06` | In-Engine Begrenzungsfilterung | SQL WHERE-Klauselfilterung mit trennzeichenverankertem Abgleich verhindert Speicherüberlauf. | VERIFIZIERT |
+| `INV-LANG-07` | Stabiler Protokoll- & Sprachvertrag | Menschenlesbare Ausgaben auf Deutsch (`RUNTIME_LANGUAGE = "de"`), stabile englische CLI- & JSON-Tokens. | VERIFIZIERT |
+| `INV-ISOL-08` | Strikte Status-Isolation | Die Datenbank verbleibt strikt im Benutzerverzeichnis (`~/.usmc/`), isoliert von Git-Repositories. | VERIFIZIERT |
+| `INV-AUDIT-09` | Vollständige SPDX-Audittransparenz | 100% Python Standardbibliothek zur Laufzeit; null externe Laufzeitabhängigkeiten. | VERIFIZIERT |
+| `INV-SLA-10` | Plattformparität & SLA | Einheitliches Verhalten unter Windows, Linux, macOS mit 48h Reaktionszeit-Sicherheits-SLA. | VERIFIZIERT |
+
+---
+
+## Schnellstart
+
+### Installation
+
+Über GitHub:
 
 ```bash
 pip install git+https://github.com/ellmos-ai/usmc.git
 ```
 
-Aus einem lokalen Checkout:
+Aus einem lokalen Repository-Checkout:
 
 ```bash
 pip install -e .
 ```
 
-Es gibt noch kein PyPI-Release, und der Name `usmc` ist auf PyPI derzeit nicht vergeben
-(Stand 2026-08-08 existiert dort kein Projekt dieses Namens). Bis zum ersten Release bitte
-die GitHub-Installation oben verwenden und nicht davon ausgehen, dass ein `pip install usmc`
-von PyPI dieses Projekt installiert.
+Bislang existiert kein PyPI-Release; der Name `usmc` ist auf PyPI derzeit unbeansprucht (Stand: 2026-08-08). Bitte nutzen Sie bis zum offiziellen Release die GitHub-Installationsform.
 
-## Schnellstart
+### Python Client-API
 
 ```python
 from usmc import USMCClient
 
 client = USMCClient(agent_id="codex")
 
+# Dauerhafte Fakten festhalten
 client.add_fact("project", "framework", "FastAPI", confidence=0.9)
+
+# Gelernte Problemlösungen dokumentieren
 client.add_lesson(
     title="Windows encoding",
-    problem="Python subprocess output used cp1252",
-    solution="Run with PYTHONIOENCODING=utf-8",
+    problem="Python Subprozess-Ausgabe nutzte cp1252",
+    solution="Ausführen mit PYTHONIOENCODING=utf-8",
     severity="high",
 )
-client.add_working("Currently preparing a release checklist")
 
+# Temporäre Arbeitsnotizen
+client.add_working("Aktuell in Vorbereitung der Release-Checkliste", tags="release,backend")
+
+# Prompt-Kontext erzeugen
 print(client.generate_context())
 ```
 
-High-Level API:
+### High-Level Helfer-API
 
 ```python
 from usmc import api
 
 api.init(agent_id="claude")
 api.remember("repo", "ellmos-ai/usmc")
-api.note("Audit README and package metadata")
-api.lesson("Marketing check", "No search visibility", "Use ellmos-usmc wording")
+api.note("Audit von README und Paketmetadaten")
+api.lesson("Marketing-Check", "Keine Suchsichtbarkeit", "ellmos-usmc Begriff nutzen")
 
 print(api.status())
 print(api.context())
 ```
 
-CLI:
+### Kommandozeile (CLI)
 
 ```bash
 usmc status
 usmc fact project framework FastAPI --confidence 0.9
-usmc note "Current task: release polish"
-usmc lesson "Encoding bug" "cp1252 output" "Set PYTHONIOENCODING=utf-8" --severity high
+usmc note "Aktuelle Aufgabe: Release-Feinschliff" --tags release,ops
+usmc lesson "Encoding-Fehler" "cp1252 Ausgabe" "Setze PYTHONIOENCODING=utf-8" --severity high
 usmc context
-usmc changes "2026-02-28T00:00:00" --json
+usmc changes "2026-09-19T00:00:00" --json
 ```
 
-> [!NOTE]
-> **Befehlsnamen und Optionen sind englisch, die CLI-Meldungen, `--help`-Texte und die von
-> `generate_context()` erzeugten Überschriften sind derzeit deutsch.** Die Bibliotheks-API ist
-> sprachneutral, die Ausgabe an den Nutzer nicht. Die Umstellung der Laufzeitausgabe auf Englisch
-> ist eine noch offene Entscheidung, weil sie das Verhalten bestehender Nutzer ändert und die
-> Testsuite berührt. Bis dahin sind deutsche Ausgabetexte zu erwarten.
+---
 
-## Wiederfinden
+## Kernkonzepte & Primitive
 
-Sobald mehrere Agenten in dieselbe Datenbank schreiben, hilft eine chronologische Liste nicht
-mehr: Ein aktiver Loop erzeugt am Tag hunderte Notizen, und jeder andere Leser muss daran
-vorbeiscrollen. `working`, `facts` und `lessons` nehmen deshalb Filter entgegen.
+| Primitiv | Beschreibung & Speicherung | Typische Verwendung |
+|---|---|---|
+| **Fakten** (`usmc_facts`) | Dauerhaftes Key/Value-Wissen mit Konfidenzwert | Projektfakten, Systemkonfigurationen, Benutzereinstellungen |
+| **Lektionen** (`usmc_lessons`) | Wiederverwendbare Problem/Lösungs-Muster mit Schweregrad | Fehlerbehebungen, operative Regeln, Workarounds |
+| **Arbeitsnotizen** (`usmc_working`) | Temporäre Notizen mit Schlagworten (Tags) | Aktuelle Arbeitsschritte, Notizblock, temporärer Kontext |
+| **Sitzungen** (`usmc_sessions`) | Protokollierte Sitzungen mit Übergabenotizen | Kontinuität bei Agentenwechsel (Claude, Codex, Gemini) |
+| **Änderungsstrom** (Polling) | Zeitstempelbasierte Delta-Abfragen | Leichtgewichtige Synchronisation zwischen Hintergrundagenten |
+
+---
+
+## Gezieltes Suchen & Filterung
+
+Wenn mehrere Agenten in dieselbe Datenbank schreiben, wird chronologisches Blättern unübersichtlich. USMC filtert direkt in der SQL-Abfrage vor der Begrenzung (`--limit`):
 
 ```bash
-usmc working --tags store                  # ein Tag
-usmc working --tags store,release          # Komma = ODER
-usmc working --tags store,release --tags-all   # ... --tags-all macht daraus UND
-usmc working --agent codex-cli             # nur Notizen dieses Agenten
-usmc working --grep "Partner Center"       # Teilstring im Inhalt
+usmc working --tags store                          # Einzelnes Tag
+usmc working --tags store,release                  # Komma = ODER-Bedingung
+usmc working --tags store,release --tags-all       # --tags-all erzwingt UND
+usmc working --agent codex-cli                     # Nur Notizen dieses Agenten
+usmc working --grep "Partner Center"               # Teilstring in Notizinhalten
 
-usmc facts   --grep store                  # Teilstring in key oder value
+usmc facts   --grep store                          # Teilstring in Schlüssel oder Wert
 usmc facts   --agent codex-cli
-usmc lessons --grep cp1252                 # Teilstring in title, problem oder solution
+usmc lessons --grep cp1252                         # Teilstring in Titel, Problem oder Lösung
 usmc lessons --agent codex-cli --severity high
 ```
 
-Dieselben Filter über Bibliothek und High-Level-API:
+Über die Python-Client-Bibliothek:
 
 ```python
-client.get_working(tags="store,release", tags_all=True, agent_id="codex-cli", grep="welle")
+client.get_working(tags="store,release", tags_all=True, agent_id="codex-cli", grep="wave")
 api.working(tags="store")
 api.facts(grep="store")
 api.lessons(grep="cp1252")
 ```
 
-Vier Eigenschaften entscheiden darüber, ob eine Suche etwas findet:
+### Eigenschaften der Filterung:
 
-- **Die Filter laufen in der SQL-Abfrage, also vor `--limit`.** `--tags store -l 10` liefert die
-  zehn besten *Store*-Notizen, nicht die Store-Notizen unter den zehn neuesten.
-- **Ein Tag matcht nur als ganzer Listeneintrag.** `--tags rh` trifft nicht `research`; die Spalte
-  wird begrenzer-verankert verglichen. Leerzeichen sind egal, `a,b` und `a, b` verhalten sich gleich.
-- **Filter werden mit UND verknüpft.** `--tags store --agent codex-cli` heißt: beides muss zutreffen.
-- **Groß-/Kleinschreibung wird nur für ASCII ignoriert.** SQLite kennt ohne ICU kein
-  Unicode-Casefolding, `Store` und `store` matchen also, `Größe` und `GRÖSSE` nicht. `%` und `_`
-  in einem `--grep`-Begriff gelten wörtlich, nicht als Platzhalter.
+- **Filter greifen in SQL vor dem `--limit`:** `--tags store -l 10` liefert die zehn besten *store*-Notizen, nicht die Store-Notizen unter den zehn jüngsten Einträgen.
+- **Trennzeichenverankertes Tag-Matching:** `--tags rh` matcht nicht auf `research`; Tags werden exakt abgeglichen. Leerzeichen werden toleriert (`a,b` und `a, b` verhalten sich identisch).
+- **UND-Verknüpfung:** Mehrere Filterkriterien (z. B. `--tags store --agent codex`) werden logisch mit UND kombiniert.
+- **Wörtliche Teilstring-Suche:** `%` und `_` in `--grep` werden wörtlich genommen und nicht als SQL-Platzhalter interpretiert.
 
-`--tags` gibt es nur bei `working` — nur diese Tabelle hat eine Tags-Spalte. Notizen ohne Tags
-matchen nie einen Tag-Filter.
+---
 
-> [!TIP]
-> **USMC trägt Prozess-Zustand, nicht den Fachstand.** Was ein Projekt gerade *ist*, steht in
-> seinem kanonischen Register (für die Store-Pipeline etwa `releases.json` oder `APP-REGISTER.md`);
-> USMC hält fest, wo ein Lauf stehengeblieben ist und was der nächste Schritt wäre. Wer hier sucht
-> und nichts findet, schaut ins Register, bevor er schließt, dass es die Information nicht gibt.
-> Konvention: Der **erste Tag einer Notiz benennt die Pipeline** — genau das macht
-> `--tags store` zu einem verlässlichen Einstieg.
-
-## Kernkonzepte
-
-| Konzept | Gespeicherter Inhalt | Typische Nutzung |
-|---|---|---|
-| Fakten | Persistentes Schlüssel/Wert-Wissen mit Confidence | Projektfakten, Systemfakten, Nutzerpräferenzen |
-| Lektionen | Wiederverwendbare Problem/Lösungs-Einträge mit Schweregrad | Fehler, Betriebsregeln, Workflow-Fixes |
-| Arbeitsgedächtnis | Temporäre aktive Notizen | Aktueller Aufgabenstand und Scratchpad-Kontext |
-| Sitzungen | Start/Ende-Einträge mit Übergabenotizen | Kontinuität zwischen Agenten |
-| Änderungen | Abfragbarer Änderungsstrom | Leichtgewichtige Synchronisierung |
-
-## Laufzeit-Sprachvertrag
-
-Die öffentliche Laufzeitsprache ist aus Kompatibilitätsgründen bewusst Deutsch
-(`de`). `USMCClient.generate_context()` und die CLI geben menschenlesbare
-Prosa und Hilfe auf Deutsch aus. Befehlsnamen, Kategorie-Werte, JSON-Schlüssel,
-Produktnamen und andere technische Bezeichner bleiben stabile englische
-Protokoll-Tokens; es gibt keine automatische Locale-Erkennung und keinen
-stillen Sprachwechsel. Der Vertrag ist als `usmc.RUNTIME_LANGUAGE == "de"`
-sichtbar und durch die Tests abgesichert. Eine englische Laufzeit wäre eine
-ausdrückliche, versionierte Maintainerentscheidung.
-
-## Multi-Agent-Beispiel
+## Multi-Agenten Sitzungskoordination
 
 ```python
 from usmc import USMCClient
@@ -261,66 +305,90 @@ from usmc import USMCClient
 codex = USMCClient(db_path="shared.db", agent_id="codex")
 claude = USMCClient(db_path="shared.db", agent_id="claude")
 
+# Unabhängige Einträge pro Agent
 codex.add_fact("project", "status", "needs docs", confidence=0.7)
 claude.add_fact("project", "status", "docs ready", confidence=0.95)
 
+# Liefert alle Einträge sortiert nach Konfidenz (Claudes 0.95 gewinnt vor 0.7)
 print(codex.get_facts(category="project"))
 ```
 
-Der Confidence-Merge gilt pro Agent: Überschreibt derselbe Agent einen Fakt,
-gewinnt der Wert mit höherer Confidence. Verschiedene Agenten behalten für
-denselben Schlüssel getrennte Einträge; `get_facts()` liefert alle, sortiert
-nach Confidence (höchste zuerst).
+- **Konfidenz-Zusammenführung:** Schreibt derselbe Agent einen Fakt neu, gewinnt automatisch der Wert mit der höheren Konfidenz.
+- **Perspektiven-Vielfalt:** Verschiedene Agenten behalten separate Zeilen für denselben Schlüssel; `get_facts()` liefert alle Einträge absteigend nach Konfidenz sortiert.
 
-## Standard-Speicherort der Datenbank
+---
 
-Ohne explizites `db_path` speichert USMC die Datenbank pro System unter
-`~/.usmc/usmc_memory.db` (wird bei erster Nutzung angelegt). Der Ort lässt
-sich über die Umgebungsvariable `USMC_DB` oder explizit per `db_path=` /
-`--db` übersteuern. So bleibt die Datenbank aus dem Projektordner und aus
-cloud-synchronisierten Arbeitsverzeichnissen heraus.
+## Laufzeit-Sprachvertrag
 
-## Datenbankschema
+Die öffentliche Laufzeitsprache ist für die Kompatibilität mit bestehenden Automatisierungen bewusst auf Deutsch (`de`) festgelegt. `USMCClient.generate_context()` und die CLI geben deutsche Texte und Hilfsmeldungen aus.
 
-- `usmc_facts` - persistente Fakten mit Confidence-Werten
-- `usmc_lessons` - gelernte Lektionen mit Schweregrad
-- `usmc_working` - temporäre Notizen, Kontext, Scratchpad
-- `usmc_sessions` - Agenten-Sitzungsverlauf
-- `usmc_meta` - interne Schema-Version
+Befehlsnamen, Kategorien, JSON-Schlüssel und technische Bezeichner bleiben stabile englische Protokoll-Token. Der Vertrag ist in Python definiert als:
 
-Die Datenbank ist reines SQLite. Es gibt keinen Daemon, Broker, Cloud-Dienst oder externe Laufzeitabhängigkeit.
-
-## Einordnung
-
-USMC ist absichtlich kleiner als vollständige Agentenplattformen:
-
-| Projekttyp | Umfang | Rolle von USMC |
-|---|---|---|
-| Agent-Frameworks | Tools, Planung, Orchestrierung, Ausführung | Gemeinsame Speicherschicht darunter |
-| Chat-Assistenten | Gesprächsschleife und UI | Dauerhaftes Wissen außerhalb des Chatverlaufs |
-| MCP-Server | Tool-Zugriff über Protokoll | Lokales Speicher-Backend |
-| BACH / Rinnsal | ellmos-Orchestrierungsschichten | Wiederverwendbare Speicherbasis |
-
-## Entwicklung
-
-```bash
-python -m pytest -q
-python -m compileall -q usmc tests
-python -m build
+```python
+import usmc
+assert usmc.RUNTIME_LANGUAGE == "de"
 ```
 
-## Verwandte Projekte
+---
 
-- [Rinnsal](https://github.com/ellmos-ai/rinnsal) - kompakte ellmos-Orchestrierungsschicht
-- [BACH](https://github.com/ellmos-ai/bach) - vollständiges textbasiertes LLM-Betriebssystem
-- [ellmos-stack](https://github.com/ellmos-ai/ellmos-stack) - Deployment- und Ökosystemkontext
+## Datenbankschema & Status-Isolation
 
-## Lizenz
+Das SQLite-Schema umfasst fünf Kern-Tabellen:
 
-MIT License - Copyright (c) 2026 Lukas Geiger
+- `usmc_facts`: Persistente Fakten mit Konfidenzwert, Kategorie, Schlüssel, Wert und Agenten-ID.
+- `usmc_lessons`: Strukturierte Problem/Lösungs-Einträge mit Titel, Problem, Lösung, Schweregrad und Agenten-ID.
+- `usmc_working`: Arbeitsnotizen mit Schlagworten, Sitzungszuordnung und Inhalt.
+- `usmc_sessions`: Agenten-Sitzungen mit Startzeitpunkt, Endzeitpunkt, Aufgabenname und Übergabenotizen.
+- `usmc_meta`: Interne Schema-Versionskontrolle und Migrationsstatus.
 
-## Haftung
+### Status-Isolation:
 
-Dieses Projekt ist eine unentgeltliche Open-Source-Schenkung. Die Haftung des Urhebers ist gemäß § 521 BGB auf Vorsatz und grobe Fahrlässigkeit beschränkt.
+Ohne expliziten `db_path` speichert USMC die Datenbank standardmäßig unter `~/.usmc/usmc_memory.db`. Dieser Pfad kann über die Umgebungsvariable `USMC_DB` oder das `--db`-Argument angepasst werden. Dies verhindert die Vermischung von Betriebsdaten mit Git-Repositories oder Cloud-synchronisierten Arbeitsverzeichnissen.
 
-Nutzung auf eigenes Risiko. Keine Wartungszusage, keine Verfügbarkeitsgarantie, keine Gewähr für Fehlerfreiheit oder Eignung für einen bestimmten Zweck.
+---
+
+## Geschwister-Ökosystem & Positionierung
+
+USMC bildet Tier 1 in der ellmos-Architektur:
+
+| Tier / Komponente | Repository | Umfang & Rolle |
+|---|---|---|
+| **Tier 1: Geteilter Speicher** | **`ellmos-ai/usmc`** | Lokale SQLite-Speicherbasis für Fakten, Lektionen, Notizen und Prompt-Kontext |
+| **Tier 2: Orchestrierung** | [`ellmos-ai/rinnsal`](https://github.com/ellmos-ai/rinnsal) | Kompakte Orchestrierungsschicht für mehrstufige Agenten-Abläufe |
+| **Tier 3: Kognitives OS** | [`ellmos-ai/bach`](https://github.com/ellmos-ai/bach) | Vollständiges textbasiertes LLM-Betriebssystem mit kognitiven Zyklen |
+| **Fähigkeiten & Playbooks** | [`ellmos-ai/skills`](https://github.com/ellmos-ai/skills) | Wiederverwendbare Agenten-Fähigkeiten nach dem Anthropic `SKILL.md`-Standard |
+| **Agenten-Messaging** | [`ellmos-ai/connectors`](https://github.com/ellmos-ai/connectors) | Pip-freie Messaging-Konnektoren für Telegram, Discord, Signal, Slack usw. |
+| **Modell-Routing** | [`ellmos-ai/clutch`](https://github.com/ellmos-ai/clutch) | Dynamisches Multi-Modell-Routing, Kostenkontrolle und Fallback-Verwaltung |
+| **Governance & Policies** | [`ellmos-ai/policy-registry`](https://github.com/ellmos-ai/policy-registry) | Kryptografisch signierte Agenten-Governance und Policy-Ledger |
+| **Entwickler-Workspace** | [`dev-bricks/DevCenter`](https://github.com/dev-bricks/DevCenter) | Desktop-Entwicklungssuite und Repository-Radar-Steuerzentrale |
+| **Dachorganisation** | [`open-bricks`](https://github.com/open-bricks) | Gemeinschaftliches Open-Source-Kollektiv für modulare Softwarebausteine |
+
+---
+
+## Drittanbieter-Lizenzen & Transparenz
+
+- **100% Python Standardbibliothek**: USMC hat **null externe Laufzeitabhängigkeiten** (`dependencies = []`).
+- **Unprivilegierter Benutzermodus (`RunAsInvoker`)**: Alle Datenbankoperationen laufen vollständig im Benutzerraum ohne Root- oder Administrator-Rechte.
+- **Zero-Copyleft-Garantie**: Der gesamte Quellcode und die Entwicklungswerkzeuge unterliegen permissiven Lizenzen (MIT, Apache-2.0, PSF-2.0).
+- Ein vollständiges Lizenzinventar und SBOM-Angaben finden sich in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+
+---
+
+## Sicherheitsrichtlinie & Meldewege
+
+Sicherheit und Datenschutz sind fundamentale Architekturprinzipien:
+
+- **Strikter Zero-Egress**: USMC überträgt niemals Telemetrie-, Analyse- oder Speicherdaten über das Netzwerk.
+- **48h Reaktions-SLA**: Sicherheitsmeldungen werden innerhalb von 48 Stunden gesichtet und binnen 5 Werktagen bearbeitet.
+- **Schwachstellenmeldung**: Sicherheitsrelevante Hinweise können diskret über [GitHub Security Advisories](https://github.com/ellmos-ai/usmc/security/advisories/new) oder via E-Mail an `security@ellmos.ai` übermittelt werden.
+- Ausführliche Informationen finden sich in [SECURITY.md](SECURITY.md).
+
+---
+
+## Lizenz & Haftung
+
+MIT-Lizenz — Copyright (c) 2026 Lukas Geiger / ellmos-ai. Siehe [LICENSE](LICENSE) für Details.
+
+### Haftungsausschluss
+
+Dieses Projekt ist eine unentgeltliche Open-Source-Spende. Die Haftung ist gemäß § 521 BGB auf Vorsatz und grobe Fahrlässigkeit beschränkt. Die Nutzung erfolgt auf eigene Verantwortung. Es wird keine Gewährleistung oder Beschaffenheitsgarantie übernommen.

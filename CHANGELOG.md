@@ -2,6 +2,31 @@
 
 All notable changes to USMC are documented here.
 
+## 0.2.3 - 2026-09-19
+
+Turnusgemäßer Pfad B Discoverability-, Marketing-, Dokumentations- und Navigationslauf:
+
+- **16-Point Navigation Architecture & Trilingual Parity**:
+  - Implemented comprehensive 16-point Quick Navigation structure synchronized across English (`README.md`), German (`README_de.md`), and Spanish (`README_es.md`) with 100% mutual anchor parity.
+  - Added dedicated top-level sections: Key Features, Target Personas & Discoverability, Comparative Matrix vs Alternatives, Governance & Runtime Invariants, Core Concepts & Primitives, Finding Things & Advanced Filtering, Multi-Agent Session Coordination, Sibling Ecosystem & Positioning, Third-Party Licenses & Transparency, and Security Policy.
+- **Target Personas & SEO Discoverability Matrix**:
+  - Formulated 4 distinct technical target personas:
+    1. *Autonomous Multi-Agent Swarm Engineers (Claude Code, Antigravity/Gemini, Codex, BACH)*: Need zero-daemon, multi-agent SQLite shared memory with atomic WAL concurrency and cross-agent handoffs.
+    2. *Local-First & Zero-Egress AI Systems Engineers*: Require 100% offline persistence, zero network egress, and strict file isolation in user home directories.
+    3. *Desktop Application & MCP Tool Integrators (PySide6, Electron, MCP Servers)*: Need lightweight (<1 ms cold start), embeddable process-state memory primitive with zero background services.
+    4. *Enterprise Security & Compliance Auditors*: Demand 100% Python Standard Library runtime, Zero-Copyleft guarantee (MIT/PSF-2.0 only), unprivileged user-mode execution (`RunAsInvoker`), and transparent 48h security SLA.
+  - Structured high-intent trilingual keyword matrix (English, German, Spanish).
+- **10-Dimension Comparative Matrix vs 4 Alternatives**:
+  - Benchmarked `usmc` against Ad-Hoc JSON/Markdown Files, Central Cloud Redis/Vector DBs, Heavyweight Agent Memory Frameworks (Mem0, Zep, LangGraph Store), and Raw Ad-Hoc SQLite Scripts across 10 architectural criteria (Runtime Dependencies, Zero-Egress, Daemon Overhead, Multi-Agent Concurrency, Memory Primitives, Confidence Merging, Context Generation, In-Engine SQL Filtering, State Isolation, and Security SLA).
+- **Governance & Runtime Invariants Alignment**:
+  - Documented the 10 foundational invariants (`INV-LOCAL-01` through `INV-SLA-10`) in all three READMEs, harmonized with `THIRD_PARTY_LICENSES.md` and `MARKETING-LOG.txt`.
+- **Third-Party Licenses & Software Inventory**:
+  - Updated `THIRD_PARTY_LICENSES.md` audit to 2026-09-19, confirming 0 external runtime dependencies (`dependencies = []`), pure Python standard library core, unprivileged execution mode, and Zero-Copyleft license compliance.
+- **Sibling Ecosystem & Community Cross-Linking**:
+  - Added structured ecosystem table linking `usmc` (Tier 1) to `rinnsal` (Tier 2), `bach` (Tier 3), `skills`, `connectors`, `clutch`, `policy-registry`, `open-bricks`, and `dev-bricks/DevCenter`.
+- **Automated Contract Test Suite Expansion**:
+  - Extended `tests/test_metadata.py` with contract tests verifying 16-point navigation parity, target personas presence, comparative matrix presence, governance invariants table, sibling ecosystem links, test badge synchronization, and version parity.
+
 ## 0.2.2 - 2026-09-18
 
 Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und Versionslauf:

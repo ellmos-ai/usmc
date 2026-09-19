@@ -2,7 +2,7 @@
 
 **Project:** `usmc` (United Shared Memory Client)  
 **License:** [MIT License](LICENSE)  
-**Audit Date:** 2026-09-18  
+**Audit Date:** 2026-09-19
 **Repository:** [ellmos-ai/usmc](https://github.com/ellmos-ai/usmc)  
 **Umbrella Collective:** [open-bricks](https://github.com/open-bricks)  
 

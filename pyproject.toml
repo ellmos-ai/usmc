@@ -56,6 +56,9 @@ usmc = "usmc.cli:main"
 [tool.setuptools.packages.find]
 include = ["usmc*"]
 
+[tool.setuptools.package-data]
+usmc = ["memory_union.contract.json"]
+
 [tool.setuptools.dynamic]
 version = { attr = "usmc.__version__" }
 

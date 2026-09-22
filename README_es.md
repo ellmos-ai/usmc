@@ -345,6 +345,10 @@ El esquema SQLite comprende cinco tablas principales:
 
 Sin una ruta explícita `db_path`, USMC almacena su base de datos en `~/.usmc/usmc_memory.db`. Puede modificar esta ubicación mediante la variable de entorno `USMC_DB` o el argumento `--db`. Esto garantiza que los datos operativos queden fuera de repositorios git o directorios sincronizados en la nube.
 
+### Esquema de memoria compartido BACH/OCEAN (opcional)
+
+`usmc/memory_union.py` contiene el DDL canónico de las tablas de memoria compartidas con BACH (`memory_working`, `memory_facts`, `memory_lessons`, `memory_sessions`, `context_triggers`, `memory_consolidation`, `decay_config`). La forma PRAGMA esperada está fijada en `usmc/memory_union.contract.json`; BACH incorpora ese archivo byte a byte. Con `USMC_MEMORY_UNION=1`, el cliente hace una copia de seguridad de la base de datos (`<db>.pre-memory-union-<marca>.bak`), traslada las filas `usmc_*` con los mismos ID a `memory_*` en una sola transacción y deja `usmc_*` como vistas de solo lectura. Sin la variable no cambia nada. Reversión: restaurar la copia. Columnas desconocidas cancelan la migración sin ningún cambio.
+
 ---
 
 ## Ecosistema hermano y posicionamiento

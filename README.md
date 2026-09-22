@@ -345,6 +345,10 @@ The SQLite schema consists of five core tables:
 
 Without an explicit `db_path`, USMC places its database in `~/.usmc/usmc_memory.db`. Override this path via the `USMC_DB` environment variable or the `--db` CLI flag. This ensures operational state is stored completely outside git repositories and cloud-synchronized workspace trees.
 
+### Shared BACH/OCEAN memory schema (opt-in)
+
+`usmc/memory_union.py` holds the canonical DDL of the memory tables shared with BACH (`memory_working`, `memory_facts`, `memory_lessons`, `memory_sessions`, `context_triggers`, `memory_consolidation`, `decay_config`). The expected PRAGMA shape is pinned in `usmc/memory_union.contract.json`; BACH vendors that file byte-identically. With `USMC_MEMORY_UNION=1` the client backs up a file database (`<db>.pre-memory-union-<timestamp>.bak`), moves the `usmc_*` rows with unchanged IDs into `memory_*` in one transaction and leaves `usmc_*` as read-only views for existing readers. Without the variable nothing changes. Rollback: restore the backup. Columns the migration does not know abort it without any change.
+
 ---
 
 ## Sibling Ecosystem & Positioning

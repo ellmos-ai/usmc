@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Optional, List, Dict
 from datetime import datetime
 
-from . import schema
+from . import memory_union, schema
 
 
 def _like_escape(value: str) -> str:
@@ -108,13 +108,32 @@ class USMCClient:
         self._ensure_db()
 
     def _ensure_db(self) -> None:
-        """Stellt sicher, dass DB und Schema existieren."""
+        """Stellt sicher, dass DB und Schema existieren.
+
+        Mit ``USMC_MEMORY_UNION=1`` wird die DB einmalig auf das gemeinsame
+        BACH/OCEAN-Schema (memory_*) umgestellt; vorher wird eine Datei-DB
+        gesichert. Ohne die Variable bleibt alles bei usmc_*.
+        """
         conn = self._get_conn()
         try:
             schema.migrate(conn)
+            if os.environ.get("USMC_MEMORY_UNION") == "1" and not memory_union.is_union(conn):
+                if not self._is_memory:
+                    self._close_conn(conn)
+                    memory_union.backup_database(self.db_path)
+                    conn = self._get_conn()
+                memory_union.apply_union(conn)
+            self._union = memory_union.is_union(conn)
         finally:
             if not self._is_memory:
                 self._close_conn(conn)
+
+    def _table(self, name: str) -> str:
+        """Schreibziel: memory_* im Vereinigungsschema, sonst usmc_*.
+
+        Gelesen wird immer ueber usmc_* (im Vereinigungsschema Lese-Views).
+        """
+        return f"memory_{name}" if self._union else f"usmc_{name}"
 
     def _get_conn(self) -> sqlite3.Connection:
         """Erstellt DB-Verbindung mit WAL-Mode."""
@@ -236,8 +255,8 @@ class USMCClient:
                     'reason': f'existing confidence higher ({existing[0]:.2f} > {confidence:.2f})'
                 }
 
-            conn.execute("""
-                INSERT INTO usmc_facts
+            conn.execute(f"""
+                INSERT INTO {self._table('facts')}
                     (agent_id, category, key, value, confidence, source, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(agent_id, category, key) DO UPDATE SET
@@ -325,7 +344,7 @@ class USMCClient:
         conn = self._get_conn()
         try:
             cursor = conn.execute(
-                "DELETE FROM usmc_facts "
+                f"DELETE FROM {self._table('facts')} "
                 "WHERE agent_id = ? AND category = ? AND key = ?",
                 (self.agent_id, category, key)
             )
@@ -367,8 +386,8 @@ class USMCClient:
 
         conn = self._get_conn()
         try:
-            cursor = conn.execute("""
-                INSERT INTO usmc_working
+            cursor = conn.execute(f"""
+                INSERT INTO {self._table('working')}
                     (agent_id, type, content, priority, tags, is_active, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, 1, ?, ?)
             """, (self.agent_id, type, content, priority, tags, now, now))
@@ -464,13 +483,13 @@ class USMCClient:
         try:
             if agent_only:
                 cursor = conn.execute(
-                    "UPDATE usmc_working SET is_active = 0, updated_at = ? "
+                    f"UPDATE {self._table('working')} SET is_active = 0, updated_at = ? "
                     "WHERE is_active = 1 AND agent_id = ?",
                     (now, self.agent_id)
                 )
             else:
                 cursor = conn.execute(
-                    "UPDATE usmc_working SET is_active = 0, updated_at = ? "
+                    f"UPDATE {self._table('working')} SET is_active = 0, updated_at = ? "
                     "WHERE is_active = 1",
                     (now,)
                 )
@@ -514,8 +533,8 @@ class USMCClient:
 
         conn = self._get_conn()
         try:
-            cursor = conn.execute("""
-                INSERT INTO usmc_lessons
+            cursor = conn.execute(f"""
+                INSERT INTO {self._table('lessons')}
                     (agent_id, category, severity, title, problem, solution,
                      is_active, confidence, times_shown, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, 1, 1.0, 0, ?, ?)
@@ -615,10 +634,17 @@ class USMCClient:
 
         conn = self._get_conn()
         try:
-            cursor = conn.execute("""
-                INSERT INTO usmc_sessions (agent_id, started_at, current_task)
-                VALUES (?, ?, ?)
-            """, (self.agent_id, now, task))
+            if self._union:
+                cursor = conn.execute(
+                    "INSERT INTO memory_sessions (session_id, agent_id, started_at, current_task) "
+                    "VALUES (?, ?, ?, ?)",
+                    (memory_union.new_session_key(), self.agent_id, now, task),
+                )
+            else:
+                cursor = conn.execute("""
+                    INSERT INTO usmc_sessions (agent_id, started_at, current_task)
+                    VALUES (?, ?, ?)
+                """, (self.agent_id, now, task))
             conn.commit()
 
             return {
@@ -645,8 +671,8 @@ class USMCClient:
 
         conn = self._get_conn()
         try:
-            cursor = conn.execute("""
-                UPDATE usmc_sessions
+            cursor = conn.execute(f"""
+                UPDATE {self._table('sessions')}
                 SET ended_at = ?, handoff_notes = ?
                 WHERE id = ? AND agent_id = ?
             """, (now, handoff_notes, session_id, self.agent_id))

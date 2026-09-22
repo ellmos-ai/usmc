@@ -2,6 +2,10 @@
 
 All notable changes to USMC are documented here.
 
+## Unreleased
+
+- **Shared BACH/OCEAN memory schema (S1, T-20260920-823767362):** new `usmc.memory_union` with the canonical DDL of the memory tables shared with BACH, a pinned PRAGMA contract (`memory_union.contract.json`), and an opt-in migration (`USMC_MEMORY_UNION=1`) from `usmc_*` to `memory_*` with a prior file backup, `usmc_*` read views, provenance triggers installed only after the copy, and fail-closed handling of unknown columns. The client writes to `memory_*` once the union is active; reads keep using `usmc_*`. Tests never open `~/.usmc` (`tests/conftest.py`).
+
 ## 0.2.3 - 2026-09-19
 
 Turnusgemäßer Pfad B Discoverability-, Marketing-, Dokumentations- und Navigationslauf:

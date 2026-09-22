@@ -145,6 +145,7 @@ CREATE TABLE IF NOT EXISTS context_triggers (
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     is_protected INTEGER DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'unknown' CHECK (status IN ('unknown', 'blocked', 'approved')),
     agent_id TEXT NOT NULL DEFAULT 'default',
     namespace TEXT,
     expires_at TEXT,
@@ -199,6 +200,7 @@ CREATE INDEX IF NOT EXISTS idx_memory_lessons_created_by_session ON memory_lesso
 CREATE INDEX IF NOT EXISTS idx_memory_lessons_agent ON memory_lessons(agent_id);
 CREATE INDEX IF NOT EXISTS idx_memory_sessions_agent ON memory_sessions(agent_id);
 CREATE INDEX IF NOT EXISTS idx_context_triggers_agent ON context_triggers(agent_id);
+CREATE INDEX IF NOT EXISTS idx_context_triggers_status ON context_triggers(status);
 CREATE INDEX IF NOT EXISTS idx_consolidation_source ON memory_consolidation(source_table, source_id);
 CREATE INDEX IF NOT EXISTS idx_consolidation_status ON memory_consolidation(status);
 CREATE INDEX IF NOT EXISTS idx_consolidation_weight ON memory_consolidation(weight);
@@ -417,28 +419,31 @@ def _check_clauses(sql: str):
     return sorted(clauses)
 
 
+def describe_table(conn: sqlite3.Connection, table: str) -> Dict:
+    """PRAGMA-Form einer Tabelle; Autoindex-Namen normalisiert."""
+    columns = [
+        [r[1], r[2], r[3], r[4], r[5]]
+        for r in conn.execute(f"PRAGMA table_info({table})")
+    ]
+    indexes = []
+    for r in conn.execute(f"PRAGMA index_list({table})"):
+        name = r[1]
+        cols = [c[2] for c in conn.execute(f"PRAGMA index_info('{name}')")]
+        label = "<auto>" if name.startswith("sqlite_autoindex_") else name
+        indexes.append([label, r[2], cols])
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)
+    ).fetchone()
+    return {
+        "columns": columns,
+        "indexes": sorted(indexes),
+        "checks": _check_clauses(row[0]) if row else [],
+    }
+
+
 def describe_schema(conn: sqlite3.Connection) -> Dict:
-    """PRAGMA-Form der Vereinigungstabellen; Autoindex-Namen normalisiert."""
-    result: Dict = {}
-    for table in UNION_TABLES:
-        columns = [
-            [r[1], r[2], r[3], r[4], r[5]]
-            for r in conn.execute(f"PRAGMA table_info({table})")
-        ]
-        indexes = []
-        for r in conn.execute(f"PRAGMA index_list({table})"):
-            name = r[1]
-            cols = [c[2] for c in conn.execute(f"PRAGMA index_info('{name}')")]
-            label = "<auto>" if name.startswith("sqlite_autoindex_") else name
-            indexes.append([label, r[2], cols])
-        sql = conn.execute(
-            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)
-        ).fetchone()[0]
-        result[table] = {
-            "columns": columns,
-            "indexes": sorted(indexes),
-            "checks": _check_clauses(sql),
-        }
+    """PRAGMA-Form aller Vereinigungstabellen plus Provenienz-Trigger."""
+    result: Dict = {table: describe_table(conn, table) for table in UNION_TABLES}
     result["triggers"] = sorted(
         r[0] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type = 'trigger' "

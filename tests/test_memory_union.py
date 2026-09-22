@@ -14,7 +14,7 @@ from usmc import schema
 from usmc.client import USMCClient
 
 # Gleicher Wert steht im BACH-Test (vendorte Kopie muss byte-identisch sein).
-CONTRACT_SHA256 = "2be2ba726b908ecf2fcf7351dfa39822efd5e8be769e2c74a79df80dad15c139"
+CONTRACT_SHA256 = "d3b5d051924cd19b18c6e891b462d2cbfc46fd69e21feccd9e5439b348f0d851"
 
 V1_ROWS = """
 INSERT INTO usmc_sessions (id, agent_id, started_at, ended_at, current_task, handoff_notes)
@@ -51,7 +51,9 @@ class TestContract(unittest.TestCase):
         self.assertEqual(mu.describe_schema(conn), mu.load_contract()["schema"])
 
     def test_contract_bytes_pinned(self):
-        digest = hashlib.sha256(mu.CONTRACT_PATH.read_bytes()).hexdigest()
+        # CRLF-normalisiert, damit ein autocrlf-Checkout den Pin nicht bricht.
+        raw = mu.CONTRACT_PATH.read_bytes().replace(b"\r\n", b"\n")
+        digest = hashlib.sha256(raw).hexdigest()
         self.assertEqual(digest, CONTRACT_SHA256)
 
     def test_working_types_cover_bach_and_usmc(self):

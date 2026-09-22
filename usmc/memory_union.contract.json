@@ -2,7 +2,9 @@
  "contract": "ocean-memory-union",
  "schema": {
   "context_triggers": {
-   "checks": [],
+   "checks": [
+    "status IN ('unknown', 'blocked', 'approved')"
+   ],
    "columns": [
     [
      "id",
@@ -82,6 +84,13 @@
      0
     ],
     [
+     "status",
+     "TEXT",
+     1,
+     "'unknown'",
+     0
+    ],
+    [
      "agent_id",
      "TEXT",
      1,
@@ -117,6 +126,13 @@
      0,
      [
       "agent_id"
+     ]
+    ],
+    [
+     "idx_context_triggers_status",
+     0,
+     [
+      "status"
      ]
     ]
    ]

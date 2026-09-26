@@ -32,9 +32,9 @@ class TestMetadataContract(unittest.TestCase):
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
-        self.assertIn("Tests-167%20passed", en_text)
-        self.assertIn("Tests-167%20bestanden", de_text)
-        self.assertIn("Tests-167%20aprobados", es_text)
+        self.assertIn("Tests-168%20passed", en_text)
+        self.assertIn("Tests-168%20bestanden", de_text)
+        self.assertIn("Tests-168%20aprobados", es_text)
 
     def test_mermaid_sequence_diagram_present(self):
         for name in ["README.md", "README_de.md", "README_es.md"]:

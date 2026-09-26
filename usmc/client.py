@@ -799,10 +799,11 @@ class USMCClient:
         Returns:
             Liste von Lesson-Dicts
 
-        Raises:
-            LessonV2UnionUnsupportedError: im Union-Modus (siehe Klassen-Docstring)
+        Reines Lesen -- bleibt im Union-Modus unversperrt (usmc_lessons ist
+        auch dort real und lesbar, siehe memory_union.apply_union). Nur die
+        v2-SCHREIB-/Feedback-/Zustellpfade sind gesperrt, siehe Klassen-
+        Docstring von LessonV2UnionUnsupportedError.
         """
-        self._require_lesson_v2_unlocked()
         conn = self._get_conn()
         try:
             conditions = ["is_active = 1"]
@@ -849,10 +850,8 @@ class USMCClient:
     def get_lesson(self, lesson_id: int) -> Optional[Dict]:
         """Holt genau eine Lesson mit Provenienz- und Signalzustand.
 
-        Raises:
-            LessonV2UnionUnsupportedError: im Union-Modus (siehe Klassen-Docstring)
+        Reines Lesen -- bleibt im Union-Modus unversperrt, siehe get_lessons().
         """
-        self._require_lesson_v2_unlocked()
         conn = self._get_conn()
         try:
             row = conn.execute(

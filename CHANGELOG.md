@@ -2,7 +2,7 @@
 
 All notable changes to USMC are documented here.
 
-## Unreleased
+## 0.3.0 - 2026-09-26
 
 - **Repository Hygiene, CI Lifecycle Workflows, Lock Defense & NOTICE Attribution (Pfad A, 2026-09-26):**
   - **Version Freeze Compliance (T-20260920-167562623):** Version `0.2.3` preserved unchanged across all manifests and code constants.

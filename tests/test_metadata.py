@@ -55,7 +55,7 @@ class TestMetadataContract(unittest.TestCase):
         self.assertTrue(path.exists())
         text = path.read_text(encoding="utf-8")
         self.assertIn("Last-checked: 2026-09-26", text)
-        self.assertIn("0.2.3", text)
+        self.assertIn("0.3.0", text)
         self.assertIn("README_es.md", text)
         self.assertIn("NOTICE", text)
         self.assertIn("THIRD_PARTY_LICENSES.md", text)
@@ -134,11 +134,12 @@ class TestMetadataContract(unittest.TestCase):
             self.assertIn(inv, tpl)
 
     def test_version_consistency(self):
-        self.assertEqual(usmc.__version__, "0.2.3")
+        self.assertEqual(usmc.__version__, "0.3.0")
         changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("## 0.3.0 - 2026-09-26", changelog)
         self.assertIn("## 0.2.3 - 2026-09-19", changelog)
         llms = (ROOT / "llms.txt").read_text(encoding="utf-8")
-        self.assertIn("Source version is `0.2.3`", llms)
+        self.assertIn("Source version is `0.3.0`", llms)
 
     def test_pyproject_toml_guardrails(self):
         pyproj = (ROOT / "pyproject.toml").read_text(encoding="utf-8")

@@ -40,6 +40,15 @@ def _v1_db() -> sqlite3.Connection:
     return conn
 
 
+def _v1_db_with_fresh_provenance_session() -> sqlite3.Connection:
+    conn = _v1_db()
+    conn.execute(
+        "UPDATE usmc_sessions SET started_at = datetime('now', '-1 minute') WHERE id = 7"
+    )
+    conn.commit()
+    return conn
+
+
 def _union_v1_state(conn: sqlite3.Connection) -> None:
     """Zustand nach Vertrag v1: memory_lessons ohne v2-Spalten, usmc_lessons
     samt Nebentabellen noch real, usmc_meta.memory_union = 1."""
@@ -56,6 +65,31 @@ def _union_v1_state(conn: sqlite3.Connection) -> None:
 
 def _names(conn, kind):
     return {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type = ?", (kind,))}
+
+
+def _provenance_db(*sessions) -> sqlite3.Connection:
+    conn = sqlite3.connect(":memory:")
+    mu.create_union_schema(conn)
+    for session_id, key, started_modifier, agent_id in sessions:
+        conn.execute(
+            """INSERT INTO memory_sessions (id, session_id, started_at, agent_id)
+               VALUES (?, ?, datetime('now', ?), ?)""",
+            (session_id, key, started_modifier, agent_id),
+        )
+    conn.commit()
+    return conn
+
+
+def _insert_working_and_read_provenance(conn: sqlite3.Connection, agent_id: str):
+    conn.execute(
+        "INSERT INTO memory_working (type, content, agent_id) VALUES ('note', ?, ?)",
+        (f"note-{agent_id}", agent_id),
+    )
+    return conn.execute(
+        "SELECT created_by_session_id, updated_by_session_id "
+        "FROM memory_working WHERE content = ?",
+        (f"note-{agent_id}",),
+    ).fetchone()
 
 
 class TestContract(unittest.TestCase):
@@ -108,7 +142,7 @@ class TestApplyUnion(unittest.TestCase):
         self.assertEqual(mu.describe_schema(conn), mu.load_contract()["schema"])
 
     def test_history_keeps_null_provenance(self):
-        conn = _v1_db()
+        conn = _v1_db_with_fresh_provenance_session()
         mu.apply_union(conn)
         stamped = conn.execute(
             "SELECT COUNT(*) FROM memory_working WHERE created_by_session_id IS NOT NULL"
@@ -222,6 +256,63 @@ VALUES (9, 21, 'f-1', 1, 'h', 'codex', 't0');
         conn.execute("BEGIN")
         with self.assertRaises(mu.UnionMigrationError):
             mu.apply_union(conn)
+
+
+class TestProvenanceTriggers(unittest.TestCase):
+    def test_fresh_open_session_stamps_new_row(self):
+        conn = _provenance_db((1, "fresh-session", "-1 minute", "agent-a"))
+        self.addCleanup(conn.close)
+
+        self.assertEqual(
+            _insert_working_and_read_provenance(conn, "agent-a"),
+            ("fresh-session", "fresh-session"),
+        )
+
+    def test_stale_open_session_leaves_new_row_unstamped(self):
+        conn = _provenance_db((1, "stale-session", "-48 hours", "agent-a"))
+        self.addCleanup(conn.close)
+
+        self.assertEqual(_insert_working_and_read_provenance(conn, "agent-a"), (None, None))
+
+    def test_fresh_matching_agent_wins_over_younger_other_agent(self):
+        conn = _provenance_db(
+            (1, "younger-other", "-1 minute", "agent-other"),
+            (2, "older-match", "-10 minutes", "agent-target"),
+        )
+        self.addCleanup(conn.close)
+
+        self.assertEqual(
+            _insert_working_and_read_provenance(conn, "agent-target"),
+            ("older-match", "older-match"),
+        )
+
+    def test_fresh_other_agent_wins_over_stale_matching_agent(self):
+        conn = _provenance_db(
+            (1, "fresh-other", "-1 minute", "agent-other"),
+            (2, "stale-match", "-48 hours", "agent-target"),
+        )
+        self.addCleanup(conn.close)
+
+        self.assertEqual(
+            _insert_working_and_read_provenance(conn, "agent-target"),
+            ("fresh-other", "fresh-other"),
+        )
+
+    def test_install_provenance_triggers_is_idempotent(self):
+        conn = sqlite3.connect(":memory:")
+        self.addCleanup(conn.close)
+        mu.create_union_schema(conn, triggers=False)
+
+        mu.install_provenance_triggers(conn)
+        mu.install_provenance_triggers(conn)
+
+        self.assertEqual(
+            conn.execute(
+                "SELECT COUNT(*) FROM sqlite_master "
+                "WHERE type = 'trigger' AND name LIKE 'trg_memory_%_session_provenance_%'"
+            ).fetchone()[0],
+            len(mu.PROVENANCE_TABLES) * 2,
+        )
 
 
 class TestClientUnionMode(unittest.TestCase):

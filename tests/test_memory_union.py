@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Vereinigungsschema BACH = OCEAN (S1): nur Temp-DBs, nie ~/.usmc."""
+"""Vereinigungsschema BACH = OCEAN (S1, Vertrag v2 aus S2): nur Temp-DBs, nie ~/.usmc."""
 
 import hashlib
 import os
@@ -14,7 +14,7 @@ from usmc import schema
 from usmc.client import USMCClient
 
 # Gleicher Wert steht im BACH-Test (vendorte Kopie muss byte-identisch sein).
-CONTRACT_SHA256 = "d3b5d051924cd19b18c6e891b462d2cbfc46fd69e21feccd9e5439b348f0d851"
+CONTRACT_SHA256 = "9eab5303103de3fbd2cdc8eb39e4d246dd50d19ded949764a88a952a75f06739"
 
 V1_ROWS = """
 INSERT INTO usmc_sessions (id, agent_id, started_at, ended_at, current_task, handoff_notes)
@@ -38,6 +38,20 @@ def _v1_db() -> sqlite3.Connection:
     conn.executescript(V1_ROWS)
     conn.commit()
     return conn
+
+
+def _union_v1_state(conn: sqlite3.Connection) -> None:
+    """Zustand nach Vertrag v1: memory_lessons ohne v2-Spalten, usmc_lessons
+    samt Nebentabellen noch real, usmc_meta.memory_union = 1."""
+    v2 = set(mu._LESSON_V2_COLUMN_NAMES)
+    ddl = mu.TABLE_DDL["memory_lessons"]
+    lines = [line for line in ddl.splitlines() if line.strip().split(" ")[0] not in v2]
+    conn.execute("\n".join(lines).replace("visibility TEXT,", "visibility TEXT"))
+    for table in ("memory_sessions", "memory_working", "memory_facts"):
+        conn.execute(mu.TABLE_DDL[table])
+    conn.execute("CREATE TABLE IF NOT EXISTS usmc_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
+    conn.execute("INSERT OR REPLACE INTO usmc_meta VALUES ('memory_union', '1')")
+    conn.commit()
 
 
 def _names(conn, kind):
@@ -66,15 +80,16 @@ class TestApplyUnion(unittest.TestCase):
     def test_v1_rows_move_with_ids_and_compat_views(self):
         conn = _v1_db()
         copied = mu.apply_union(conn)
-        # usmc_lessons trägt seit S3 immer Lesson-Schema v2 (schema.init_db()
-        # legt die v2-Spalten direkt an) und wird darum bewusst NICHT
-        # konvertiert -- siehe apply_union()-Docstring, T-20260922-668077756.
-        self.assertEqual(copied, {"usmc_facts": 2, "usmc_working": 2, "usmc_sessions": 2})
-        self.assertTrue(mu.is_union(conn))
+        self.assertEqual(copied, {
+            "usmc_facts": 2, "usmc_working": 2, "usmc_lessons": 1, "usmc_sessions": 2,
+            "usmc_lesson_feedback": 0, "usmc_lesson_delivery_batches": 0,
+            "usmc_lesson_deliveries": 0,
+        })
+        self.assertEqual(mu.union_version(conn), mu.UNION_VERSION)
         self.assertEqual(
-            _names(conn, "view"), {"usmc_facts", "usmc_working", "usmc_sessions"}
+            _names(conn, "view"), {"usmc_facts", "usmc_working", "usmc_lessons", "usmc_sessions"}
         )
-        self.assertIn("usmc_lessons", _names(conn, "table"))  # bleibt reale Tabelle
+        self.assertFalse({n for n in _names(conn, "table") if n.startswith("usmc_lesson")})
         self.assertEqual(
             conn.execute("SELECT agent_id, value FROM usmc_facts WHERE id = 4").fetchone(),
             ("claude-code", "v2"),
@@ -86,9 +101,9 @@ class TestApplyUnion(unittest.TestCase):
         self.assertEqual(
             conn.execute("SELECT type FROM usmc_working WHERE id = 11").fetchone(), ("handoff",)
         )
-        # Die Lesson-Zeile aus V1_ROWS bleibt unangetastet in usmc_lessons.
         self.assertEqual(
-            conn.execute("SELECT title FROM usmc_lessons WHERE id = 21").fetchone(), ("T",)
+            conn.execute("SELECT title, source_kind FROM memory_lessons WHERE id = 21").fetchone(),
+            ("T", "legacy"),
         )
         self.assertEqual(mu.describe_schema(conn), mu.load_contract()["schema"])
 
@@ -121,9 +136,6 @@ class TestApplyUnion(unittest.TestCase):
         self.assertEqual(conn.execute("SELECT COUNT(*) FROM usmc_working").fetchone()[0], 2)
 
     def test_unmapped_columns_abort_without_mutation(self):
-        # Eine echte, unerwartete Spalte (kein bekanntes Lesson-v2-Feld) muss
-        # weiterhin die gesamte Migration abbrechen -- die Lesson-v2-Ausnahme
-        # in apply_union() gilt nur fuer die bekannten LESSON_V2_COLUMNS.
         conn = _v1_db()
         conn.execute("ALTER TABLE usmc_facts ADD COLUMN mystery_field TEXT")
         conn.commit()
@@ -132,20 +144,70 @@ class TestApplyUnion(unittest.TestCase):
         self.assertIn("mystery_field", str(ctx.exception))
         self._assert_unchanged(conn)
 
-    def test_lesson_v2_columns_are_skipped_not_aborted(self):
-        """Regression T-20260922-668077756: bekannte Lesson-v2-Spalten (S3)
-        duerfen die Vereinigung NICHT abbrechen -- usmc_lessons wird
-        stattdessen uebersprungen (bleibt reale Tabelle), facts/working/
-        sessions konvertieren normal."""
+    def test_lesson_v2_rows_and_side_tables_move_with_ids(self):
         conn = _v1_db()
+        conn.executescript("""
+UPDATE usmc_lessons SET source_key = 'src', episode_key = 'ep', editorial_status = 'approved',
+       helpful_count = 1 WHERE id = 21;
+INSERT INTO usmc_lesson_delivery_batches VALUES ('d-1', 7, 'sess', 'explicit', 'h', 'codex', 't0');
+INSERT INTO usmc_lesson_deliveries (id, lesson_id, delivery_key, session_key, delivery_mode,
+    context, feedback_prompt, payload_hash, agent_id, created_at)
+VALUES (5, 21, 'd-1', 'sess', 'explicit', NULL, 'hilfreich?', 'h', 'codex', 't0');
+INSERT INTO usmc_lesson_feedback (id, lesson_id, feedback_key, helpful, payload_hash, agent_id, created_at)
+VALUES (9, 21, 'f-1', 1, 'h', 'codex', 't0');
+""")
         copied = mu.apply_union(conn)
-        self.assertNotIn("usmc_lessons", copied)
-        self.assertEqual(set(copied), {"usmc_facts", "usmc_working", "usmc_sessions"})
-        self.assertTrue(mu.is_union(conn))
-        self.assertEqual(mu._object_type(conn, "usmc_lessons"), "table")
         self.assertEqual(
-            conn.execute("SELECT COUNT(*) FROM usmc_lessons").fetchone()[0], 1
+            (copied["usmc_lesson_feedback"], copied["usmc_lesson_delivery_batches"],
+             copied["usmc_lesson_deliveries"]), (1, 1, 1),
         )
+        self.assertEqual(
+            conn.execute(
+                "SELECT source_key, episode_key, editorial_status, helpful_count "
+                "FROM memory_lessons WHERE id = 21"
+            ).fetchone(),
+            ("src", "ep", "approved", 1),
+        )
+        self.assertEqual(conn.execute("SELECT lesson_id FROM memory_lesson_feedback WHERE id = 9").fetchone(), (21,))
+        self.assertEqual(conn.execute("SELECT lesson_id FROM memory_lesson_deliveries WHERE id = 5").fetchone(), (21,))
+        self.assertEqual(
+            conn.execute("SELECT session_id FROM memory_lesson_delivery_batches").fetchone(), (7,)
+        )
+        self.assertEqual(conn.execute("PRAGMA foreign_key_check").fetchall(), [])
+
+    def test_union_v1_database_is_upgraded_to_current_contract(self):
+        conn = _v1_db()
+        _union_v1_state(conn)
+        copied = mu.apply_union(conn)
+        self.assertEqual(copied["usmc_lessons"], 1)
+        self.assertEqual(mu.union_version(conn), mu.UNION_VERSION)
+        self.assertEqual(mu.describe_schema(conn), mu.load_contract()["schema"])
+        self.assertEqual(
+            conn.execute("SELECT title FROM memory_lessons WHERE id = 21").fetchone(), ("T",)
+        )
+
+    def test_rows_on_both_sides_abort_without_mutation(self):
+        conn = _v1_db()
+        _union_v1_state(conn)
+        conn.execute(
+            "INSERT INTO memory_lessons (id, category, title, solution) VALUES (99, 'g', 'X', 'Y')"
+        )
+        conn.commit()
+        with self.assertRaises(mu.UnionMigrationError) as ctx:
+            mu.apply_union(conn)
+        self.assertIn("target-not-empty memory_lessons", str(ctx.exception))
+        self.assertEqual(mu.union_version(conn), 1)
+        self.assertEqual(mu._object_type(conn, "usmc_lessons"), "table")
+
+    def test_lesson_v2_column_list_matches_usmc_schema(self):
+        # Das Modul ist fuer BACH eigenstaendig; die Spaltenliste darf nicht driften.
+        self.assertEqual(
+            tuple(mu._LESSON_V2_COLUMN_NAMES), tuple(name for name, _ in schema.LESSON_V2_COLUMNS)
+        )
+        union = {r[1]: (r[2], r[3], r[4]) for r in _pragma(mu.TABLE_DDL["memory_lessons"], "memory_lessons")}
+        legacy = {r[1]: (r[2], r[3], r[4]) for r in _pragma(schema.SCHEMA_SQL, "usmc_lessons")}
+        for name in mu._LESSON_V2_COLUMN_NAMES:
+            self.assertEqual(union[name], legacy[name], name)
 
     def test_constraint_violation_rolls_back_everything(self):
         conn = _v1_db()
@@ -202,12 +264,9 @@ class TestClientUnionMode(unittest.TestCase):
         conn.close()
 
 
-class TestLessonV2UnionLock(unittest.TestCase):
-    """T-20260922-668077756: Lesson-Schema v2 (S3) bleibt auf usmc_* beschraenkt
-    und ist im Union-Modus per Policy gesperrt -- die alte, ungeschluesselte
-    add_lesson()-Nutzung (S1) bleibt dabei unions-faehig (siehe
-    TestClientUnionMode.test_opt_in_backs_up_then_client_writes_union_tables,
-    die genau diesen unkeyed Fall bereits als Regressionsschutz abdeckt)."""
+class TestLessonV2InUnionMode(unittest.TestCase):
+    """S2: Lesson-Schema v2 ist Teil des gemeinsamen Vertrags und laeuft im
+    Union-Modus vollstaendig auf memory_lessons und den Nebentabellen."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -218,73 +277,71 @@ class TestLessonV2UnionLock(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_keyed_add_lesson_is_locked_in_union_mode(self):
-        from usmc.client import LessonV2UnionUnsupportedError
-        with self.assertRaises(LessonV2UnionUnsupportedError):
-            self.client.add_lesson(
-                "T", "P", "S", source_key="hook:codex", episode_key="ep-1",
-            )
-
-    def test_get_lessons_stays_unlocked_in_union_mode(self):
-        """Regression T-20260922-668077756 Nachbesserung: reines Lesen darf im
-        Union-Modus nicht mit LessonV2UnionUnsupportedError abbrechen -- sonst
-        bricht usmc lessons/context und jeder SessionStart-Kontext-Hook."""
-        self.client.add_lesson("T", "P", "S")
-        lessons = self.client.get_lessons()
-        self.assertEqual(len(lessons), 1)
-        self.assertEqual(lessons[0]["title"], "T")
-
-    def test_get_lesson_stays_unlocked_in_union_mode(self):
-        result = self.client.add_lesson("T", "P", "S")
-        lesson = self.client.get_lesson(result["id"])
-        self.assertIsNotNone(lesson)
-        self.assertEqual(lesson["title"], "T")
-
-    def test_generate_context_stays_unlocked_in_union_mode(self):
-        """generate_context() ruft get_lessons() intern auf (delivery_eligible_only=True)
-        -- muss also ebenfalls unversperrt bleiben."""
-        self.client.add_lesson("T", "P", "S")
-        context = self.client.generate_context()
-        self.assertIsInstance(context, str)
-
-    def test_set_lesson_editorial_status_is_locked_in_union_mode(self):
-        from usmc.client import LessonV2UnionUnsupportedError
-        with self.assertRaises(LessonV2UnionUnsupportedError):
-            self.client.set_lesson_editorial_status(1, "approved")
-
-    def test_record_lesson_feedback_is_locked_in_union_mode(self):
-        from usmc.client import LessonV2UnionUnsupportedError
-        with self.assertRaises(LessonV2UnionUnsupportedError):
-            self.client.record_lesson_feedback(1, "fb-1", helpful=True)
-
-    def test_deliver_lessons_is_locked_in_union_mode(self):
-        from usmc.client import LessonV2UnionUnsupportedError
-        with self.assertRaises(LessonV2UnionUnsupportedError):
-            self.client.deliver_lessons("sess", "deliv-1", context="irgendwas")
-
-    def test_start_session_with_lesson_delivery_is_locked_in_union_mode(self):
-        from usmc.client import LessonV2UnionUnsupportedError
-        with self.assertRaises(LessonV2UnionUnsupportedError):
-            self.client.start_session(
-                "aufgabe", lesson_context="irgendwas", delivery_key="deliv-1",
-            )
-
-    def test_plain_add_lesson_stays_unlocked_in_union_mode(self):
-        """Regression: KEIN v2-Feld -> darf im Union-Modus nicht gesperrt sein."""
-        result = self.client.add_lesson("T", "P", "S")
-        self.assertTrue(result["created"])
+    def _count(self, table):
         conn = sqlite3.connect(self.db)
-        self.assertEqual(
-            conn.execute("SELECT title FROM usmc_lessons WHERE id = ?", (result["id"],)).fetchone(),
-            ("T",),
+        try:
+            return conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+        finally:
+            conn.close()
+
+    def test_keyed_lesson_feedback_and_delivery_use_union_tables(self):
+        lesson = self.client.add_lesson("T", "P", "S", source_key="hook:codex", episode_key="ep-1")
+        again = self.client.add_lesson("T", "P", "S", source_key="hook:codex", episode_key="ep-1")
+        self.assertEqual((lesson["created"], again["created"], again["id"]), (True, False, lesson["id"]))
+        self.client.set_lesson_editorial_status(lesson["id"], "approved")
+        delivered = self.client.deliver_lessons("sess", "deliv-1", lesson_ids=[lesson["id"]])
+        self.assertEqual([item["id"] for item in delivered], [lesson["id"]])
+        feedback = self.client.record_lesson_feedback(
+            lesson["id"], "fb-1", helpful=True, delivery_key="deliv-1"
         )
+        self.assertEqual(feedback["helpful_count"], 1)
+        self.assertEqual(
+            [self._count(t) for t in ("memory_lessons", "memory_lesson_feedback",
+                                      "memory_lesson_delivery_batches", "memory_lesson_deliveries")],
+            [1, 1, 1, 1],
+        )
+        conn = sqlite3.connect(self.db)
+        self.assertFalse({n for n in _names(conn, "table") if n.startswith("usmc_lesson")})
         conn.close()
 
-    def test_start_session_without_lessons_stays_unlocked_in_union_mode(self):
-        """Regression: SessionStart ohne Lesson-Zustellung bleibt unions-faehig."""
-        session = self.client.start_session("aufgabe")
-        self.assertIn("id", session)
-        self.assertNotIn("lessons", session)
+    def test_session_start_delivery_creates_union_session(self):
+        lesson = self.client.add_lesson("T", "P", "S", source_key="s", episode_key="e")
+        self.client.set_lesson_editorial_status(lesson["id"], "approved")
+        session = self.client.start_session(
+            "aufgabe", lesson_ids=[lesson["id"]], delivery_key="deliv-2"
+        )
+        self.assertEqual([item["id"] for item in session["lessons"]], [lesson["id"]])
+        conn = sqlite3.connect(self.db)
+        key = conn.execute("SELECT session_id FROM memory_sessions WHERE id = ?", (session["id"],)).fetchone()
+        conn.close()
+        self.assertTrue(key[0].startswith("usmc-"))
+
+    def test_reads_and_context_work(self):
+        self.client.add_lesson("T", "P", "S")
+        self.assertEqual([item["title"] for item in self.client.get_lessons()], ["T"])
+        self.assertIsInstance(self.client.generate_context(), str)
+        self.assertEqual(self.client.get_status()["lessons_count"], 1)
+
+    def test_union_v1_file_is_upgraded_on_open_with_backup(self):
+        tmp = Path(self.tmp.name) / "v1.db"
+        conn = sqlite3.connect(tmp)
+        schema.init_db(conn)
+        conn.executescript(V1_ROWS)
+        _union_v1_state(conn)
+        conn.close()
+        with mock.patch.dict(os.environ, {"USMC_MEMORY_UNION": ""}):
+            client = USMCClient(db_path=tmp, agent_id="codex")
+        self.assertEqual([item["id"] for item in client.get_lessons()], [21])
+        self.assertEqual(len(list(Path(self.tmp.name).glob("v1.db.pre-memory-union-*.bak"))), 1)
+
+
+def _pragma(ddl, table):
+    conn = sqlite3.connect(":memory:")
+    try:
+        conn.executescript(ddl)
+        return conn.execute(f"PRAGMA table_info({table})").fetchall()
+    finally:
+        conn.close()
 
 
 if __name__ == "__main__":

@@ -2,6 +2,10 @@
 
 All notable changes to USMC are documented here.
 
+## Unreleased
+
+- **Lesson contract v2 joins the shared BACH/OCEAN memory contract (S2a, T-20260920-823767362):** union contract version 2. `memory_lessons` carries the lesson-v2 columns (provenance, idempotency, feedback counters, delivery), and `memory_lesson_feedback`, `memory_lesson_delivery_batches` and `memory_lesson_deliveries` are part of the pinned contract. `apply_union()` now moves `usmc_lessons` and its three side tables with unchanged IDs (children dropped before parents, foreign keys intact) and upgrades a database on contract v1 in place; rows on both sides abort without mutation. The client addresses every lesson table through `_table()`, so keyed lessons, editorial status, feedback and delivery (including SessionStart delivery) work in union mode; the policy lock `LessonV2UnionUnsupportedError` is removed. `memory_union.py` is self-contained again (no package imports) so BACH can vendor it byte-identically. Opt-in stays `USMC_MEMORY_UNION=1`; no live database is switched by this change.
+
 ## 0.3.0 - 2026-09-26
 
 - **Repository Hygiene, CI Lifecycle Workflows, Lock Defense & NOTICE Attribution (Pfad A, 2026-09-26):**

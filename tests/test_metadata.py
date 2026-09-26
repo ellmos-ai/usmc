@@ -32,9 +32,9 @@ class TestMetadataContract(unittest.TestCase):
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
-        self.assertIn("Tests-126%20passed", en_text)
-        self.assertIn("Tests-126%20bestanden", de_text)
-        self.assertIn("Tests-126%20aprobados", es_text)
+        self.assertIn("Tests-170%20passed", en_text)
+        self.assertIn("Tests-170%20bestanden", de_text)
+        self.assertIn("Tests-170%20aprobados", es_text)
         self.assertIn("Verified-2026--09--26", en_text)
         self.assertIn("Gepr%C3%BCft-2026--09--26", de_text)
         self.assertIn("Verificado-2026--09--26", es_text)

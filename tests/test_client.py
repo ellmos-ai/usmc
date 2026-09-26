@@ -159,7 +159,7 @@ class TestUSMCClient(unittest.TestCase):
 
     def test_generate_context_empty(self):
         ctx = self.client.generate_context()
-        self.assertEqual(ctx, "Kein Kontext verfuegbar.")
+        self.assertEqual(ctx, "Kein Kontext verfügbar.")
 
     def test_generate_context_with_data(self):
         self.client.add_fact("system", "os", "Windows 11", confidence=0.9)

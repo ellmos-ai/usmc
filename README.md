@@ -7,7 +7,7 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Version: 0.2.3](https://img.shields.io/badge/Version-0.2.3-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-126%20passed-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-170%20passed-brightgreen.svg)](tests)
 [![Verified: 2026-09-26](https://img.shields.io/badge/Verified-2026--09--26-blue.svg)](CHANGELOG.md)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Dependencies](https://img.shields.io/badge/Dependencies-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
@@ -250,6 +250,101 @@ usmc changes "2026-09-19T00:00:00" --json
 ```
 
 ---
+
+## Idempotent Lessons (schema v2)
+
+The original `add_lesson(title, problem, solution, ...)` call remains append-only. A lesson enters
+the provenance-aware v2 contract only when both `source_key` and `episode_key` are supplied. That
+pair is unique across the database and identifies one immutable intake payload. An identical
+retry returns the original row; a different semantic, provenance or protection payload fails
+closed without changing it. Content changes need a new `episode_key`, while editorial changes use
+the review surface. The current editorial status, counters, delivery state and calculated/current
+weight are deliberately outside the immutable intake hash. New keyed lessons start with a
+deliberately low weight of `0.20`. Before a keyed retry, policy evaluation or delivery (including
+replay), the client verifies that the current immutable row still matches its stored v2 hash;
+direct tampering fails closed and is never accepted as a new baseline.
+
+```python
+lesson = client.add_lesson(
+    "Windows encoding",
+    "A subprocess returned cp1252",
+    "Set PYTHONIOENCODING=utf-8",
+    source_key="hook:codex",
+    episode_key="session-42:encoding",
+    event_anchor="tool-result:17",
+    evidence_class="verified",
+    privacy_scope="local",
+)
+
+client.set_lesson_editorial_status(lesson["id"], "approved")
+delivered = client.deliver_lessons(
+    session_key="session-43",
+    delivery_key="session-43:start",
+    context="Windows subprocess encoding",
+    limit=3,
+)
+client.record_lesson_feedback(
+    lesson["id"],
+    feedback_key="session-43:lesson-1",
+    helpful=True,
+    delivery_key="session-43:start",
+)
+```
+
+Feedback stores helpful/unhelpful use, independent repetition and delivery failure as separate,
+idempotent signals. A `feedback_key` is globally exactly-once; reusing it for another lesson or
+payload fails closed. An independent repetition can therefore remain useful evidence while also
+being marked as a possible delivery failure. Delivery is synchronous and request-driven: without
+an explicit context or selected lesson IDs, nothing is shown; one request returns at most three
+approved (or legacy), local/private and non-sensitive lessons, each with the short question
+`War diese Lesson hilfreich? (ja/nein)`. Retrying the same `delivery_key` replays only its stored
+delivery rows in their original order, without reselection or another `times_shown` increment.
+SessionStart persists the session and its delivery in one SQLite transaction.
+
+The direct-promotion surface is policy evaluation only. `evaluate_lesson_promotion()` accepts only
+verified, fully provenanced agent lessons from local/private sources. User preferences, policy
+content, conflicts, sensitive sources and any skill/workflow mutation always require review. The
+product gate defaults to off, and the method never publishes or mutates a skill, workflow or
+editorial status.
+
+Equivalent CLI paths are available:
+
+```bash
+usmc lesson "Encoding" "cp1252" "Use UTF-8" \
+  --source-key hook:codex --episode-key session-42:encoding \
+  --event-anchor tool-result:17 --evidence-class verified --json
+usmc lesson-review 1 approved
+usmc lesson-deliver --session-key session-43 --delivery-key session-43:start \
+  --context "Windows encoding" --json
+usmc lesson-feedback 1 --feedback-key session-43:lesson-1 \
+  --helpful yes --delivery-key session-43:start --json
+usmc lesson-policy 1
+```
+
+Opening a v1 database with the new client performs an additive, transactional migration to v2.
+The migration is retry-safe, verifies required v2 columns/tables/indexes even when the stored
+version already says v2, and preserves every old column and row. Unsafe global feedback-key
+duplicates stop the transaction with a clear error instead of being deleted. Old clients can
+continue to read and append lessons because all v2 fields have compatible defaults; rollback means
+running the old client against the expanded database, not contracting or deleting the schema.
+
+**Shared-schema (`USMC_MEMORY_UNION=1`) databases:** unlike facts/working/sessions, lessons are
+**not yet split** into the shared schema at all -- `usmc_lessons` is never converted by
+`apply_union()` and stays the single, real, writable table for lessons in both modes, so
+`memory_lessons` stays empty even after a database has been switched to union mode. Migrating
+lessons into `memory_*` (including lesson-v2) is a separate, not-yet-implemented step tracked as
+an S2 requirement of T-20260920-823767362.
+
+Reading lessons (`get_lessons`, `get_lesson`, and `generate_context()`, which calls `get_lessons`
+internally) works unchanged in both modes, since `usmc_lessons` is always readable. Only the
+**v2 write/mutation entry points** -- the keyed `add_lesson()` (with `source_key`/`episode_key`
+or any other v2-only field), `set_lesson_editorial_status`, `record_lesson_feedback`,
+`deliver_lessons`, and `start_session()` when it would deliver lessons -- raise
+`LessonV2UnionUnsupportedError` on a shared-schema database, since the shared BACH/OCEAN contract
+does not know the v2 columns yet. Plain `add_lesson()` without any v2 field keeps working
+unchanged in either mode and, like every other lesson write, lands on `usmc_lessons` -- not
+`memory_lessons` -- regardless of union mode. This is a deliberate policy lock on the v2
+mutation surface, not a data-loss risk.
 
 ## Core Concepts & Primitives
 

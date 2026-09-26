@@ -7,7 +7,7 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Version: 0.2.3](https://img.shields.io/badge/Version-0.2.3-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-126%20bestanden-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-170%20bestanden-brightgreen.svg)](tests)
 [![Geprüft: 2026-09-26](https://img.shields.io/badge/Gepr%C3%BCft-2026--09--26-blue.svg)](CHANGELOG.md)
 [![Plattformen](https://img.shields.io/badge/Plattformen-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Abhängigkeiten](https://img.shields.io/badge/Abh%C3%A4ngigkeiten-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
@@ -250,6 +250,107 @@ usmc changes "2026-09-19T00:00:00" --json
 ```
 
 ---
+
+## Idempotente Lektionen (Schema v2)
+
+Der bisherige Aufruf `add_lesson(title, problem, solution, ...)` bleibt append-only. Eine Lektion
+nutzt den provenance-fähigen v2-Vertrag erst, wenn `source_key` und `episode_key` gemeinsam
+gesetzt sind. Dieses Paar ist datenbankweit eindeutig und bezeichnet genau einen unveränderlichen
+Aufnahme-Payload. Ein identischer Retry liefert die ursprüngliche Zeile; ein abweichender Inhalt,
+Provenienz- oder Schutzwert scheitert ohne Mutation. Inhaltliche Änderungen benötigen einen neuen
+`episode_key`, redaktionelle Änderungen den Reviewpfad. Aktueller Redaktionsstatus, Zähler,
+Zustellstatus und berechnetes/aktuelles Gewicht gehören bewusst nicht zum unveränderlichen
+Aufnahme-Hash. Neue geschlüsselte Lektionen starten mit dem niedrigen Gewicht `0.20`. Vor einem
+geschlüsselten Retry, einer Policy-Auswertung oder Zustellung (einschließlich Replay) prüft der
+Client, ob die aktuellen unveränderlichen Zeilenwerte weiterhin zum gespeicherten v2-Hash passen.
+Direkte Manipulationen scheitern geschlossen und werden nie als neue Basis übernommen.
+
+```python
+lesson = client.add_lesson(
+    "Windows-Kodierung",
+    "Ein Subprozess lieferte cp1252",
+    "PYTHONIOENCODING=utf-8 setzen",
+    source_key="hook:codex",
+    episode_key="session-42:encoding",
+    event_anchor="tool-result:17",
+    evidence_class="verified",
+    privacy_scope="local",
+)
+
+client.set_lesson_editorial_status(lesson["id"], "approved")
+delivered = client.deliver_lessons(
+    session_key="session-43",
+    delivery_key="session-43:start",
+    context="Windows Subprozess Kodierung",
+    limit=3,
+)
+client.record_lesson_feedback(
+    lesson["id"],
+    feedback_key="session-43:lesson-1",
+    helpful=True,
+    delivery_key="session-43:start",
+)
+```
+
+Feedback speichert hilfreiche oder nicht hilfreiche Nutzung, unabhängige Wiederholung und
+Zustellfehler als getrennte, idempotente Signale. Ein `feedback_key` gilt global genau einmal;
+seine Wiederverwendung für eine andere Lektion oder einen anderen Payload scheitert. Eine
+unabhängige Wiederholung kann damit
+weiterhin Evidenz sein und zugleich als möglicher Zustellfehler markiert werden. Die Zustellung
+ist synchron und an eine konkrete Anfrage gebunden: Ohne expliziten Kontext oder ausgewählte
+Lesson-IDs wird nichts angezeigt. Eine Anfrage liefert höchstens drei freigegebene (oder alte),
+lokale/private und nicht sensible Lektionen, jeweils mit der kurzen Frage
+`War diese Lesson hilfreich? (ja/nein)`. Ein Retry desselben `delivery_key` rekonstruiert nur die
+zuerst persistierten Zustellzeilen in stabiler Reihenfolge, ohne Neuselektion oder erneutes
+Hochzählen von `times_shown`. SessionStart speichert Session und Zustellung in einer SQLite-
+Transaktion.
+
+Die Direct-Promotion-Oberfläche wertet ausschließlich eine Policy aus. Nur verifizierte,
+vollständig provenienzbelegte Agenten-Lektionen aus lokalen/privaten Quellen können geeignet
+sein. Nutzerpräferenzen, Policy-Inhalte, Konflikte, sensible Quellen sowie jede Skill- oder
+Workflow-Mutation erfordern immer Review. Das Produktiv-Gate ist standardmäßig aus; die Methode
+publiziert nichts und verändert weder Skills, Workflows noch Redaktionsstatus.
+
+Dieselben Wege gibt es in der CLI:
+
+```bash
+usmc lesson "Kodierung" "cp1252" "UTF-8 verwenden" \
+  --source-key hook:codex --episode-key session-42:encoding \
+  --event-anchor tool-result:17 --evidence-class verified --json
+usmc lesson-review 1 approved
+usmc lesson-deliver --session-key session-43 --delivery-key session-43:start \
+  --context "Windows-Kodierung" --json
+usmc lesson-feedback 1 --feedback-key session-43:lesson-1 \
+  --helpful yes --delivery-key session-43:start --json
+usmc lesson-policy 1
+```
+
+Beim Öffnen einer v1-Datenbank führt der neue Client eine additive, transaktionale Migration auf
+v2 aus. Sie ist retry-sicher, prüft erforderliche v2-Spalten, -Tabellen und -Indizes auch bei
+bereits gespeicherter Version 2 und erhält jede alte Spalte und Zeile. Unsichere globale
+Duplikate eines `feedback_key` brechen die Transaktion mit klarer Fehlermeldung ab, statt Daten zu
+löschen. Alte Clients können weiterhin lesen und Lektionen anhängen, weil alle v2-Felder
+kompatible Standardwerte besitzen. Rollback bedeutet, den alten Client gegen die erweiterte
+Datenbank zu betreiben — nicht das Schema zu verkleinern oder Daten zu löschen.
+
+**Datenbanken im gemeinsamen Schema (`USMC_MEMORY_UNION=1`):** Anders als facts/working/sessions
+sind Lektionen **noch gar nicht** in das gemeinsame Schema aufgeteilt -- `usmc_lessons` wird von
+`apply_union()` nie konvertiert und bleibt in beiden Modi die einzige, reale, schreibbare Tabelle
+für Lektionen; `memory_lessons` bleibt daher auch nach einer Umstellung auf den Union-Modus leer.
+Der Umzug der Lektionen nach `memory_*` (inklusive Lesson-v2) ist ein separater, hier noch nicht
+umgesetzter Schritt und als S2-Pflichtpunkt von T-20260920-823767362 vorgemerkt.
+
+Lesen (`get_lessons`, `get_lesson` sowie `generate_context()`, das intern `get_lessons` aufruft)
+funktioniert in beiden Modi unverändert, weil `usmc_lessons` immer lesbar ist. Gesperrt sind nur
+die **v2-Schreib-/Mutationspfade** -- das geschlüsselte `add_lesson()` (mit `source_key`/
+`episode_key` oder einem anderen reinen v2-Feld), `set_lesson_editorial_status`,
+`record_lesson_feedback`, `deliver_lessons` sowie `start_session()`, sobald es Lektionen
+zustellen würde -- die werfen auf einer Datenbank im gemeinsamen Schema
+`LessonV2UnionUnsupportedError`, weil der gemeinsame BACH/OCEAN-Vertrag die v2-Spalten noch nicht
+kennt. Das einfache `add_lesson()` ohne v2-Feld funktioniert unverändert in beiden Modi und landet
+wie jeder andere Lektions-Schreibzugriff auf `usmc_lessons` -- nicht auf `memory_lessons` --,
+unabhängig vom Union-Modus. Das ist eine bewusste Policy-Sperre auf der v2-Mutationsfläche, kein
+Risiko für Datenverlust.
 
 ## Kernkonzepte & Primitive
 

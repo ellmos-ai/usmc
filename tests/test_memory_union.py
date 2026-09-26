@@ -66,11 +66,15 @@ class TestApplyUnion(unittest.TestCase):
     def test_v1_rows_move_with_ids_and_compat_views(self):
         conn = _v1_db()
         copied = mu.apply_union(conn)
-        self.assertEqual(copied, {"usmc_facts": 2, "usmc_working": 2, "usmc_lessons": 1, "usmc_sessions": 2})
+        # usmc_lessons trägt seit S3 immer Lesson-Schema v2 (schema.init_db()
+        # legt die v2-Spalten direkt an) und wird darum bewusst NICHT
+        # konvertiert -- siehe apply_union()-Docstring, T-20260922-668077756.
+        self.assertEqual(copied, {"usmc_facts": 2, "usmc_working": 2, "usmc_sessions": 2})
         self.assertTrue(mu.is_union(conn))
         self.assertEqual(
-            _names(conn, "view"), {"usmc_facts", "usmc_working", "usmc_lessons", "usmc_sessions"}
+            _names(conn, "view"), {"usmc_facts", "usmc_working", "usmc_sessions"}
         )
+        self.assertIn("usmc_lessons", _names(conn, "table"))  # bleibt reale Tabelle
         self.assertEqual(
             conn.execute("SELECT agent_id, value FROM usmc_facts WHERE id = 4").fetchone(),
             ("claude-code", "v2"),
@@ -81,6 +85,10 @@ class TestApplyUnion(unittest.TestCase):
         )
         self.assertEqual(
             conn.execute("SELECT type FROM usmc_working WHERE id = 11").fetchone(), ("handoff",)
+        )
+        # Die Lesson-Zeile aus V1_ROWS bleibt unangetastet in usmc_lessons.
+        self.assertEqual(
+            conn.execute("SELECT title FROM usmc_lessons WHERE id = 21").fetchone(), ("T",)
         )
         self.assertEqual(mu.describe_schema(conn), mu.load_contract()["schema"])
 
@@ -113,13 +121,31 @@ class TestApplyUnion(unittest.TestCase):
         self.assertEqual(conn.execute("SELECT COUNT(*) FROM usmc_working").fetchone()[0], 2)
 
     def test_unmapped_columns_abort_without_mutation(self):
+        # Eine echte, unerwartete Spalte (kein bekanntes Lesson-v2-Feld) muss
+        # weiterhin die gesamte Migration abbrechen -- die Lesson-v2-Ausnahme
+        # in apply_union() gilt nur fuer die bekannten LESSON_V2_COLUMNS.
         conn = _v1_db()
-        conn.execute("ALTER TABLE usmc_lessons ADD COLUMN source_key TEXT")
+        conn.execute("ALTER TABLE usmc_facts ADD COLUMN mystery_field TEXT")
         conn.commit()
         with self.assertRaises(mu.UnionMigrationError) as ctx:
             mu.apply_union(conn)
-        self.assertIn("source_key", str(ctx.exception))
+        self.assertIn("mystery_field", str(ctx.exception))
         self._assert_unchanged(conn)
+
+    def test_lesson_v2_columns_are_skipped_not_aborted(self):
+        """Regression T-20260922-668077756: bekannte Lesson-v2-Spalten (S3)
+        duerfen die Vereinigung NICHT abbrechen -- usmc_lessons wird
+        stattdessen uebersprungen (bleibt reale Tabelle), facts/working/
+        sessions konvertieren normal."""
+        conn = _v1_db()
+        copied = mu.apply_union(conn)
+        self.assertNotIn("usmc_lessons", copied)
+        self.assertEqual(set(copied), {"usmc_facts", "usmc_working", "usmc_sessions"})
+        self.assertTrue(mu.is_union(conn))
+        self.assertEqual(mu._object_type(conn, "usmc_lessons"), "table")
+        self.assertEqual(
+            conn.execute("SELECT COUNT(*) FROM usmc_lessons").fetchone()[0], 1
+        )
 
     def test_constraint_violation_rolls_back_everything(self):
         conn = _v1_db()
@@ -174,6 +200,91 @@ class TestClientUnionMode(unittest.TestCase):
         ).fetchone()
         self.assertTrue(row[0].startswith("usmc-") and row[1] == "RESUME: weiter")
         conn.close()
+
+
+class TestLessonV2UnionLock(unittest.TestCase):
+    """T-20260922-668077756: Lesson-Schema v2 (S3) bleibt auf usmc_* beschraenkt
+    und ist im Union-Modus per Policy gesperrt -- die alte, ungeschluesselte
+    add_lesson()-Nutzung (S1) bleibt dabei unions-faehig (siehe
+    TestClientUnionMode.test_opt_in_backs_up_then_client_writes_union_tables,
+    die genau diesen unkeyed Fall bereits als Regressionsschutz abdeckt)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.db = Path(self.tmp.name) / "usmc_memory.db"
+        with mock.patch.dict(os.environ, {"USMC_MEMORY_UNION": "1"}):
+            self.client = USMCClient(db_path=self.db, agent_id="codex")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_keyed_add_lesson_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.add_lesson(
+                "T", "P", "S", source_key="hook:codex", episode_key="ep-1",
+            )
+
+    def test_get_lessons_stays_unlocked_in_union_mode(self):
+        """Regression T-20260922-668077756 Nachbesserung: reines Lesen darf im
+        Union-Modus nicht mit LessonV2UnionUnsupportedError abbrechen -- sonst
+        bricht usmc lessons/context und jeder SessionStart-Kontext-Hook."""
+        self.client.add_lesson("T", "P", "S")
+        lessons = self.client.get_lessons()
+        self.assertEqual(len(lessons), 1)
+        self.assertEqual(lessons[0]["title"], "T")
+
+    def test_get_lesson_stays_unlocked_in_union_mode(self):
+        result = self.client.add_lesson("T", "P", "S")
+        lesson = self.client.get_lesson(result["id"])
+        self.assertIsNotNone(lesson)
+        self.assertEqual(lesson["title"], "T")
+
+    def test_generate_context_stays_unlocked_in_union_mode(self):
+        """generate_context() ruft get_lessons() intern auf (delivery_eligible_only=True)
+        -- muss also ebenfalls unversperrt bleiben."""
+        self.client.add_lesson("T", "P", "S")
+        context = self.client.generate_context()
+        self.assertIsInstance(context, str)
+
+    def test_set_lesson_editorial_status_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.set_lesson_editorial_status(1, "approved")
+
+    def test_record_lesson_feedback_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.record_lesson_feedback(1, "fb-1", helpful=True)
+
+    def test_deliver_lessons_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.deliver_lessons("sess", "deliv-1", context="irgendwas")
+
+    def test_start_session_with_lesson_delivery_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.start_session(
+                "aufgabe", lesson_context="irgendwas", delivery_key="deliv-1",
+            )
+
+    def test_plain_add_lesson_stays_unlocked_in_union_mode(self):
+        """Regression: KEIN v2-Feld -> darf im Union-Modus nicht gesperrt sein."""
+        result = self.client.add_lesson("T", "P", "S")
+        self.assertTrue(result["created"])
+        conn = sqlite3.connect(self.db)
+        self.assertEqual(
+            conn.execute("SELECT title FROM usmc_lessons WHERE id = ?", (result["id"],)).fetchone(),
+            ("T",),
+        )
+        conn.close()
+
+    def test_start_session_without_lessons_stays_unlocked_in_union_mode(self):
+        """Regression: SessionStart ohne Lesson-Zustellung bleibt unions-faehig."""
+        session = self.client.start_session("aufgabe")
+        self.assertIn("id", session)
+        self.assertNotIn("lessons", session)
 
 
 if __name__ == "__main__":

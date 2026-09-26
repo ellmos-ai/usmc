@@ -7,7 +7,7 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Version: 0.2.3](https://img.shields.io/badge/Version-0.2.3-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-126%20bestanden-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-170%20bestanden-brightgreen.svg)](tests)
 [![Geprüft: 2026-09-26](https://img.shields.io/badge/Gepr%C3%BCft-2026--09--26-blue.svg)](CHANGELOG.md)
 [![Plattformen](https://img.shields.io/badge/Plattformen-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Abhängigkeiten](https://img.shields.io/badge/Abh%C3%A4ngigkeiten-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)

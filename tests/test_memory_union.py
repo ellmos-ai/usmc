@@ -225,15 +225,27 @@ class TestLessonV2UnionLock(unittest.TestCase):
                 "T", "P", "S", source_key="hook:codex", episode_key="ep-1",
             )
 
-    def test_get_lessons_is_locked_in_union_mode(self):
-        from usmc.client import LessonV2UnionUnsupportedError
-        with self.assertRaises(LessonV2UnionUnsupportedError):
-            self.client.get_lessons()
+    def test_get_lessons_stays_unlocked_in_union_mode(self):
+        """Regression T-20260922-668077756 Nachbesserung: reines Lesen darf im
+        Union-Modus nicht mit LessonV2UnionUnsupportedError abbrechen -- sonst
+        bricht usmc lessons/context und jeder SessionStart-Kontext-Hook."""
+        self.client.add_lesson("T", "P", "S")
+        lessons = self.client.get_lessons()
+        self.assertEqual(len(lessons), 1)
+        self.assertEqual(lessons[0]["title"], "T")
 
-    def test_get_lesson_is_locked_in_union_mode(self):
-        from usmc.client import LessonV2UnionUnsupportedError
-        with self.assertRaises(LessonV2UnionUnsupportedError):
-            self.client.get_lesson(1)
+    def test_get_lesson_stays_unlocked_in_union_mode(self):
+        result = self.client.add_lesson("T", "P", "S")
+        lesson = self.client.get_lesson(result["id"])
+        self.assertIsNotNone(lesson)
+        self.assertEqual(lesson["title"], "T")
+
+    def test_generate_context_stays_unlocked_in_union_mode(self):
+        """generate_context() ruft get_lessons() intern auf (delivery_eligible_only=True)
+        -- muss also ebenfalls unversperrt bleiben."""
+        self.client.add_lesson("T", "P", "S")
+        context = self.client.generate_context()
+        self.assertIsInstance(context, str)
 
     def test_set_lesson_editorial_status_is_locked_in_union_mode(self):
         from usmc.client import LessonV2UnionUnsupportedError

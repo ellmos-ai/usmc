@@ -333,14 +333,24 @@ löschen. Alte Clients können weiterhin lesen und Lektionen anhängen, weil all
 kompatible Standardwerte besitzen. Rollback bedeutet, den alten Client gegen die erweiterte
 Datenbank zu betreiben — nicht das Schema zu verkleinern oder Daten zu löschen.
 
-**Datenbanken im gemeinsamen Schema (`USMC_MEMORY_UNION=1`):** Lesson-Schema v2 ist bewusst auf
-`usmc_*` beschränkt und noch nicht Teil des gemeinsamen BACH/OCEAN-Vertrags. `add_lesson()` ohne
-`source_key`/`episode_key` (und ohne sonstige v2-Felder) funktioniert unverändert in beiden
-Modi; die geschlüsselte v2-API (`add_lesson` mit Schlüssel, `get_lessons`, `get_lesson`,
-`set_lesson_editorial_status`, `record_lesson_feedback`, `deliver_lessons`) wirft auf einer
-Datenbank im gemeinsamen Schema `LessonV2UnionUnsupportedError`. `usmc_lessons` selbst wird von
-`apply_union()` nie konvertiert — bleibt eine reale, schreibbare Tabelle —, die Sperre ist also
-eine bewusste Policy-Entscheidung, kein Risiko für Datenverlust.
+**Datenbanken im gemeinsamen Schema (`USMC_MEMORY_UNION=1`):** Anders als facts/working/sessions
+sind Lektionen **noch gar nicht** in das gemeinsame Schema aufgeteilt -- `usmc_lessons` wird von
+`apply_union()` nie konvertiert und bleibt in beiden Modi die einzige, reale, schreibbare Tabelle
+für Lektionen; `memory_lessons` bleibt daher auch nach einer Umstellung auf den Union-Modus leer.
+Der Umzug der Lektionen nach `memory_*` (inklusive Lesson-v2) ist ein separater, hier noch nicht
+umgesetzter Schritt und als S2-Pflichtpunkt von T-20260920-823767362 vorgemerkt.
+
+Lesen (`get_lessons`, `get_lesson` sowie `generate_context()`, das intern `get_lessons` aufruft)
+funktioniert in beiden Modi unverändert, weil `usmc_lessons` immer lesbar ist. Gesperrt sind nur
+die **v2-Schreib-/Mutationspfade** -- das geschlüsselte `add_lesson()` (mit `source_key`/
+`episode_key` oder einem anderen reinen v2-Feld), `set_lesson_editorial_status`,
+`record_lesson_feedback`, `deliver_lessons` sowie `start_session()`, sobald es Lektionen
+zustellen würde -- die werfen auf einer Datenbank im gemeinsamen Schema
+`LessonV2UnionUnsupportedError`, weil der gemeinsame BACH/OCEAN-Vertrag die v2-Spalten noch nicht
+kennt. Das einfache `add_lesson()` ohne v2-Feld funktioniert unverändert in beiden Modi und landet
+wie jeder andere Lektions-Schreibzugriff auf `usmc_lessons` -- nicht auf `memory_lessons` --,
+unabhängig vom Union-Modus. Das ist eine bewusste Policy-Sperre auf der v2-Mutationsfläche, kein
+Risiko für Datenverlust.
 
 ## Kernkonzepte & Primitive
 

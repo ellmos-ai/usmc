@@ -328,14 +328,23 @@ duplicates stop the transaction with a clear error instead of being deleted. Old
 continue to read and append lessons because all v2 fields have compatible defaults; rollback means
 running the old client against the expanded database, not contracting or deleting the schema.
 
-**Shared-schema (`USMC_MEMORY_UNION=1`) databases:** lesson schema v2 is scoped to `usmc_*` only
-and is not part of the shared BACH/OCEAN contract yet. `add_lesson()` without `source_key`/
-`episode_key` (and without any other v2-only field) keeps working unchanged in either mode; the
-keyed v2 API (`add_lesson` with a key, `get_lessons`, `get_lesson`,
-`set_lesson_editorial_status`, `record_lesson_feedback`, `deliver_lessons`) raises
-`LessonV2UnionUnsupportedError` on a shared-schema database. `usmc_lessons` itself is never
-converted by `apply_union()` -- it stays a real, writable table -- so this is a deliberate policy
-lock, not a data-loss risk.
+**Shared-schema (`USMC_MEMORY_UNION=1`) databases:** unlike facts/working/sessions, lessons are
+**not yet split** into the shared schema at all -- `usmc_lessons` is never converted by
+`apply_union()` and stays the single, real, writable table for lessons in both modes, so
+`memory_lessons` stays empty even after a database has been switched to union mode. Migrating
+lessons into `memory_*` (including lesson-v2) is a separate, not-yet-implemented step tracked as
+an S2 requirement of T-20260920-823767362.
+
+Reading lessons (`get_lessons`, `get_lesson`, and `generate_context()`, which calls `get_lessons`
+internally) works unchanged in both modes, since `usmc_lessons` is always readable. Only the
+**v2 write/mutation entry points** -- the keyed `add_lesson()` (with `source_key`/`episode_key`
+or any other v2-only field), `set_lesson_editorial_status`, `record_lesson_feedback`,
+`deliver_lessons`, and `start_session()` when it would deliver lessons -- raise
+`LessonV2UnionUnsupportedError` on a shared-schema database, since the shared BACH/OCEAN contract
+does not know the v2 columns yet. Plain `add_lesson()` without any v2 field keeps working
+unchanged in either mode and, like every other lesson write, lands on `usmc_lessons` -- not
+`memory_lessons` -- regardless of union mode. This is a deliberate policy lock on the v2
+mutation surface, not a data-loss risk.
 
 ## Core Concepts & Primitives
 

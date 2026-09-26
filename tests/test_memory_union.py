@@ -6,6 +6,7 @@ import os
 import sqlite3
 import tempfile
 import unittest
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest import mock
 
@@ -273,6 +274,38 @@ class TestProvenanceTriggers(unittest.TestCase):
         self.addCleanup(conn.close)
 
         self.assertEqual(_insert_working_and_read_provenance(conn, "agent-a"), (None, None))
+
+    def test_iso_t_format_fixture_at_cutoff_is_correctly_treated_as_stale(self):
+        # Reproduziert den Bug aus dem Review von usmc#11: eine mit der echten
+        # Anwendungs-Schreibweise (datetime.now().isoformat(), lokale Zeit, "T"-
+        # Separator) erzeugte Session, die etwas mehr als _SESSION_STALENESS_HOURS
+        # alt ist, MUSS als stale gelten (NULL-Provenienz). Vor dem Fix vergleicht
+        # der Trigger diesen Zeitstempel als reinen Text gegen SQLites UTC-
+        # datetime('now', ...) mit Leerzeichen-Separator -- "T" > " " plus ein
+        # moeglicher UTC/Lokalzeit-Versatz lassen die Session faelschlich frisch
+        # erscheinen (reales Fenster bis zu ~48h statt 24h). Dieser Test ist ohne
+        # den Fix ROT.
+        stale_started_at = (
+            datetime.now() - timedelta(hours=mu._SESSION_STALENESS_HOURS + 6)
+        ).isoformat()
+        conn = sqlite3.connect(":memory:")
+        self.addCleanup(conn.close)
+        mu.create_union_schema(conn)
+        conn.execute(
+            "INSERT INTO memory_sessions (id, session_id, started_at, agent_id) "
+            "VALUES (1, 'iso-t-stale', ?, 'agent-a')",
+            (stale_started_at,),
+        )
+        conn.commit()
+
+        conn.execute(
+            "INSERT INTO memory_working (type, content, agent_id) "
+            "VALUES ('note', 'iso-t-check', 'agent-a')"
+        )
+        row = conn.execute(
+            "SELECT created_by_session_id FROM memory_working WHERE content = 'iso-t-check'"
+        ).fetchone()
+        self.assertEqual(row, (None,))
 
     def test_fresh_matching_agent_wins_over_younger_other_agent(self):
         conn = _provenance_db(

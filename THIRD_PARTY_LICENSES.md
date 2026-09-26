@@ -1,10 +1,12 @@
 # Third-Party Licenses & Software Inventory
 
-**Project:** `usmc` (United Shared Memory Client)  
-**License:** [MIT License](LICENSE)  
-**Audit Date:** 2026-09-19
-**Repository:** [ellmos-ai/usmc](https://github.com/ellmos-ai/usmc)  
-**Umbrella Collective:** [open-bricks](https://github.com/open-bricks)  
+**Project:** `usmc` (United Shared Memory Client)<br>
+**License:** [MIT License](LICENSE)<br>
+**Attribution:** [NOTICE](NOTICE)<br>
+**Inventory:** [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt)<br>
+**Audit Date:** 2026-09-26<br>
+**Repository:** [ellmos-ai/usmc](https://github.com/ellmos-ai/usmc)<br>
+**Umbrella Collective:** [open-bricks](https://github.com/open-bricks)
 
 ---
 

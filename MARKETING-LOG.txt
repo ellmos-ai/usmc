@@ -133,3 +133,60 @@ Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und Versionslauf:
 - Bytecode Compilation: python -m compileall usmc tests passed with 0 errors.
 - Git Hygiene: git diff --check passed with 0 whitespace issues.
 ================================================================================
+
+================================================================================
+PATH A REPOSITORY HYGIENE, CI LIFECYCLE WORKFLOWS & SBOM AUDIT: usmc
+================================================================================
+Date: 2026-09-26
+Path: Pfad A (Repository Hygiene, CI Hardening & Level 1 SBOM Audit)
+Version: 0.2.3 (Version-Freeze per T-20260920-167562623)
+Repository: ellmos-ai/usmc
+Organization: ellmos-ai
+Umbrella Collective: open-bricks
+
+1. HYGIENE & GOVERNANCE SUMMARY
+--------------------------------------------------------------------------------
+Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und SBOM-Revisionslauf:
+  - Version-Freeze-Disziplin (T-20260920-167562623):
+    Version 0.2.3 bleibt strikt unangetastet. Kein eigenmächtiges Bumpen; Veröffentlichung
+    bleibt separatem Release-Vorgang vorbehalten.
+  - Kanonische Open-Source NOTICE Datei:
+    Root NOTICE Datei erstellt mit Attribution an Copyright (c) 2026 Lukas Geiger,
+    ellmos-ai Multi-Agenten-Infrastruktur, open-bricks Umbrella Collective, MIT-Lizenz
+    und Querverweisen auf LICENSE, THIRD_PARTY_LICENSES.md und THIRD_PARTY_LICENSES.txt.
+  - Level 1 SBOM Software-Inventar (THIRD_PARTY_LICENSES.txt & THIRD_PARTY_LICENSES.md):
+    Re-Audit Stand 2026-09-26 bestätigt zero externe Laufzeit-Abhängigkeiten (dependencies = []),
+    100% Python Standard-Bibliothek (argparse, dataclasses, datetime, json, os, pathlib,
+    sqlite3, sys, typing), unprivilegierten RunAsInvoker User-Mode, Zero-Copyleft-Garantie
+    und Einhaltung aller 10 Governance- und Laufzeitinvarianten (INV-LOCAL-01 bis INV-SLA-10).
+  - CI/CD Lifecycle Workflow Härtung:
+    - .github/workflows/auto-assign.yml: Concurrency (cancel-in-progress: true), timeout-minutes: 5
+      und Least-Privilege Permissions (issues: write, pull-requests: write).
+    - .github/workflows/label-sync.yml: Concurrency (cancel-in-progress: true) und timeout-minutes: 5.
+    - .github/workflows/ci.yml: Multi-Python Matrix (3.10-3.14), Concurrency und 15m Timeout verifiziert.
+  - Multi-Host Cloud-Sync & Lock-Verteidigung (.gitignore):
+    Gehärtet gegen Multi-Host-Tokens (*-IDEAPAD*, *_WORKSTATION*, *_WORKSTATION-LG*,
+    *-WORKSTATION.*, *-WORKSTATION-LG.*), kanonische Locks (LOCK.user.*, LOCK.until.*,
+    LOCK.condition.*, .automation-lock), Test-Caches (.pytest_temp/, .pytest_tmp*/, .tox/)
+    und Editor-Swap-Dateien (Desktop.ini, *.swp, *.swo).
+  - PEP 621 Standardisierung (pyproject.toml):
+    license-files Whitelist um NOTICE und THIRD_PARTY_LICENSES.txt erweitert, Notice URL
+    in [project.urls] registriert, [tool.pytest.ini_options] mit norecursedirs (.pytest_temp,
+    .hypothesis, .turbo, .tox) und addopts = "-ra -v --basetemp=.pytest_temp" gehärtet.
+  - Dokumentations- & Kontext-Parität:
+    README.md, README_de.md und README_es.md mit Attribution-NOTICE-blue.svg Badge und
+    Geprüft-2026--09--26 aktualisiert; alle 16 bilateralen Navigationsanker exakt beibehalten.
+    llms.txt Stand 2026-09-26 mit NOTICE und THIRD_PARTY_LICENSES.txt synchronisiert.
+  - Vertragstestsuite-Erweiterung:
+    tests/test_metadata.py erweitert um test_notice_attribution, test_level1_sbom_inventory,
+    auto-assign/label-sync Workflow-Härtungstests, pyproject Guardrails und synchronisierte
+    Test-Badges (126 passed, 58 subtests). tests/test_repository_hygiene.py um kanonische
+    Locks, IDEAPAD- und Swap-Dateien erweitert.
+
+2. QUALITY GATES & VERIFICATION
+--------------------------------------------------------------------------------
+- Test Suite: 126 passed, 58 subtests passed (100% grün) via pytest in 28.10s.
+- Ruff Linting: ruff check . passed clean mit 0 Fehlern.
+- Bytecode Compilation: python -m compileall -q usmc tests passed mit 0 Fehlern.
+- Git Hygiene: git diff --check clean mit 0 Whitespace-Fehlern.
+================================================================================

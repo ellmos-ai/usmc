@@ -1,0 +1,53 @@
+# Third-Party Licenses & Software Inventory
+
+Project: usmc (United Shared Memory Client)
+Audited: 2026-09-26 against Level 1 SBOM and runtime invariants.
+License: MIT License (see LICENSE and NOTICE)
+Repository: https://github.com/ellmos-ai/usmc
+Umbrella Collective: open-bricks (https://github.com/open-bricks)
+
+## Project License
+
+USMC is licensed under the MIT License. See `LICENSE` and `NOTICE`.
+
+## Core Runtime
+
+The base package declares zero external runtime dependencies (`dependencies = []`).
+The entire runtime execution relies strictly on the official Python Standard Library.
+
+| Package / Module | Scope | Version Spec | License | Purpose |
+|---|---|---|---|---|
+| Python Standard Library | Runtime | >=3.10 | PSF-2.0 | Core runtime: argparse, dataclasses, datetime, json, os, pathlib, sqlite3, sys, typing |
+
+All state persistence is handled entirely via Python's built-in `sqlite3` driver.
+Zero third-party telemetry, analytics, cloud synchronization, or remote networking services are packaged or contacted.
+
+## Direct Build and Development Dependencies
+
+The following tools are utilized exclusively for offline automated testing, code quality auditing, packaging, and linting:
+
+| Package | Declared Use | Constraint | License | Source |
+|---|---|---|---|---|
+| pytest | Development test runner | >=7.0 | MIT | https://pytest.org/ |
+| ruff | Development linter | >=0.6 | MIT / Apache-2.0 | https://github.com/astral-sh/ruff |
+| setuptools | Build backend | >=77.0 | MIT | https://github.com/pypa/setuptools |
+| wheel | Packaging format | >=0.40 | MIT | https://github.com/pypa/wheel |
+
+## Zero-Copyleft Guarantee & Unprivileged Execution
+
+- Zero-Copyleft Guarantee: All runtime code and development dependencies are governed strictly by permissive, business-friendly open-source licenses (MIT, Apache-2.0, PSF-2.0). The codebase contains zero GPL, AGPL, or viral copyleft components.
+- Unprivileged User-Mode Operation (RunAsInvoker): All CLI commands, memory ingestion, SQLite transactions, and state queries execute purely within unprivileged user space. No administrative rights, root elevation, sudo, or UAC prompts are ever required.
+
+## Governance & Runtime Invariants
+
+USMC strictly enforces ten foundational governance and runtime invariants:
+- INV-LOCAL-01: Local-First & Zero-Egress (100% offline-ready; local SQLite ~/.usmc/usmc.db; zero telemetry)
+- INV-UNPRIV-02: Unprivileged User Mode (RunAsInvoker; executes in unprivileged user space)
+- INV-SQLITE-03: ACID & WAL Concurrency (resilient multi-agent concurrency via SQLite WAL mode)
+- INV-SCHEMA-04: Backward-Compatible Schema Evolution (automated idempotent migration)
+- INV-BOUND-05: Bounded Ring Buffer & Pruning (safe retention limits prevent uncontrolled expansion)
+- INV-FILTER-06: In-Engine Delimiter Filtering (SQL WHERE clause filtering with delimiter-anchored matching)
+- INV-LANG-07: Stable Protocol & Language Contract (human prose localized to German; stable English tokens)
+- INV-ISOL-08: Strict State Isolation (memory databases reside in user directories, isolated from git repos)
+- INV-AUDIT-09: Complete SPDX Audit Transparency (100% Python stdlib at runtime; zero copyleft risks)
+- INV-SLA-10: Cross-Platform Parity & SLA (Windows, Linux, macOS with 48h response / 5-day triage security SLA)

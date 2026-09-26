@@ -4,10 +4,11 @@
 
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
 [![Licencia: MIT](https://img.shields.io/badge/Licencia-MIT-green.svg)](LICENSE)
+[![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Versión: 0.2.3](https://img.shields.io/badge/Versi%C3%B3n-0.2.3-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-113%20aprobados-brightgreen.svg)](tests)
-[![Verificado: 2026-09-19](https://img.shields.io/badge/Verificado-2026--09--19-blue.svg)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-126%20aprobados-brightgreen.svg)](tests)
+[![Verificado: 2026-09-26](https://img.shields.io/badge/Verificado-2026--09--26-blue.svg)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/Plataformas-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Dependencias](https://img.shields.io/badge/Dependencias-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
 [![Local-First](https://img.shields.io/badge/Local--First-Zero--Egress-blueviolet.svg)](THIRD_PARTY_LICENSES.md)

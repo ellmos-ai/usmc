@@ -56,17 +56,24 @@ tokens.json
 # Logs
 *.log
 
-# OS
+# OS & Editor
 .DS_Store
 Thumbs.db
 desktop.ini
+Desktop.ini
+*.swp
+*.swo
 
 # Multi-Host, Locks & Cloud-Sync Hygiene
 LOCK
 LOCK.*
 *.lock
 LOCK*.txt
+LOCK.user.*
+LOCK.until.*
+LOCK.condition.*
 LOCK.permissions.json
+.automation-lock
 uv.lock
 !package-lock.json
 *-conflict-*
@@ -84,8 +91,13 @@ uv.lock
 *-LAPTOP*
 *-WORKSTATION*
 *-WORKSTATION-LG*
+*_WORKSTATION*
+*_WORKSTATION-LG*
+*-WORKSTATION.*
+*-WORKSTATION-LG.*
 *-Mac Studio*
 *-MacBook*
+*-IDEAPAD*
 *.orig
 *.rej
 *.tmp
@@ -100,6 +112,9 @@ uv.lock
 # Local Runtime State & Test Caches
 local-state/
 state/
+.pytest_temp/
+.pytest_tmp*/
+.tox/
 .turbo/
 .hypothesis/
 .nyc_output/

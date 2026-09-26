@@ -32,9 +32,14 @@ class TestMetadataContract(unittest.TestCase):
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
-        self.assertIn("Tests-113%20passed", en_text)
-        self.assertIn("Tests-113%20bestanden", de_text)
-        self.assertIn("Tests-113%20aprobados", es_text)
+        self.assertIn("Tests-126%20passed", en_text)
+        self.assertIn("Tests-126%20bestanden", de_text)
+        self.assertIn("Tests-126%20aprobados", es_text)
+        self.assertIn("Verified-2026--09--26", en_text)
+        self.assertIn("Gepr%C3%BCft-2026--09--26", de_text)
+        self.assertIn("Verificado-2026--09--26", es_text)
+        for text in [en_text, de_text, es_text]:
+            self.assertIn("Attribution-NOTICE-blue.svg", text)
 
     def test_mermaid_sequence_diagram_present(self):
         for name in ["README.md", "README_de.md", "README_es.md"]:
@@ -49,16 +54,20 @@ class TestMetadataContract(unittest.TestCase):
         path = ROOT / "llms.txt"
         self.assertTrue(path.exists())
         text = path.read_text(encoding="utf-8")
-        self.assertIn("Last-checked: 2026-09-19", text)
+        self.assertIn("Last-checked: 2026-09-26", text)
         self.assertIn("0.2.3", text)
         self.assertIn("README_es.md", text)
+        self.assertIn("NOTICE", text)
         self.assertIn("THIRD_PARTY_LICENSES.md", text)
+        self.assertIn("THIRD_PARTY_LICENSES.txt", text)
         self.assertIn("SECURITY.md", text)
         self.assertIn("MARKETING-LOG.txt", text)
 
     def test_hygiene_and_governance_files_exist(self):
         for name in [
+            "NOTICE",
             "THIRD_PARTY_LICENSES.md",
+            "THIRD_PARTY_LICENSES.txt",
             "MARKETING-LOG.txt",
             "SECURITY.md",
             "CHANGELOG.md",
@@ -85,6 +94,18 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("timeout-minutes: 5", welcome)
         self.assertIn("concurrency:", welcome)
         self.assertIn("cancel-in-progress: true", welcome)
+
+        auto_assign = (workflows / "auto-assign.yml").read_text(encoding="utf-8")
+        self.assertIn("concurrency:", auto_assign)
+        self.assertIn("cancel-in-progress: true", auto_assign)
+        self.assertIn("timeout-minutes: 5", auto_assign)
+        self.assertIn("issues: write", auto_assign)
+        self.assertIn("pull-requests: write", auto_assign)
+
+        label_sync = (workflows / "label-sync.yml").read_text(encoding="utf-8")
+        self.assertIn("concurrency:", label_sync)
+        self.assertIn("cancel-in-progress: true", label_sync)
+        self.assertIn("timeout-minutes: 5", label_sync)
 
         ci = (workflows / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("timeout-minutes: 15", ci)
@@ -121,10 +142,28 @@ class TestMetadataContract(unittest.TestCase):
 
     def test_pyproject_toml_guardrails(self):
         pyproj = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-        self.assertIn('license-files = ["LICENSE", "THIRD_PARTY_LICENSES.md"]', pyproj)
+        self.assertIn('license-files = ["LICENSE", "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]', pyproj)
+        self.assertIn('Notice = "https://github.com/ellmos-ai/usmc/blob/main/NOTICE"', pyproj)
         self.assertIn('minversion = "7.0"', pyproj)
-        self.assertIn("norecursedirs =", pyproj)
+        self.assertIn(".pytest_temp", pyproj)
+        self.assertIn("--basetemp=.pytest_temp", pyproj)
         self.assertIn("[tool.ruff]", pyproj)
+
+    def test_notice_attribution(self):
+        notice = (ROOT / "NOTICE").read_text(encoding="utf-8")
+        self.assertIn("usmc (United Shared Memory Client)", notice)
+        self.assertIn("Copyright (c) 2026 Lukas Geiger", notice)
+        self.assertIn("ellmos-ai", notice)
+        self.assertIn("open-bricks", notice)
+        self.assertIn("MIT License", notice)
+
+    def test_level1_sbom_inventory(self):
+        sbom = (ROOT / "THIRD_PARTY_LICENSES.txt").read_text(encoding="utf-8")
+        self.assertIn("Audited: 2026-09-26", sbom)
+        self.assertIn("RunAsInvoker", sbom)
+        self.assertIn("dependencies = []", sbom)
+        self.assertIn("Python Standard Library", sbom)
+        self.assertIn("NOTICE", sbom)
 
     def test_sixteen_point_navigation_parity(self):
         en_text = (ROOT / "README.md").read_text(encoding="utf-8")

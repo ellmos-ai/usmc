@@ -4,6 +4,27 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- **Repository Hygiene, CI Lifecycle Workflows, Lock Defense & NOTICE Attribution (Pfad A, 2026-09-26):**
+  - **Version Freeze Compliance (T-20260920-167562623):** Version `0.2.3` preserved unchanged across all manifests and code constants.
+  - **Canonical Open-Source NOTICE Attribution:** Added root `NOTICE` attribution file documenting copyright (c) 2026 Lukas Geiger, ellmos-ai infrastructure, open-bricks umbrella ecosystem, and cross-references to `LICENSE`, `THIRD_PARTY_LICENSES.md`, and `THIRD_PARTY_LICENSES.txt`.
+  - **Level 1 SBOM Software Inventory (`THIRD_PARTY_LICENSES.txt` & `THIRD_PARTY_LICENSES.md`):** Re-audited software inventory Stand 2026-09-26, certifying unprivileged user-mode execution (`RunAsInvoker`), zero external runtime dependencies (`dependencies = []`), 100% Python Standard Library runtime, and full compliance with 10 runtime invariants (`INV-LOCAL-01` through `INV-SLA-10`).
+  - **CI/CD Lifecycle Workflow Hardening:**
+    - Hardened `.github/workflows/auto-assign.yml` with top-level concurrency (`cancel-in-progress: true`), `timeout-minutes: 5`, and least-privilege permissions (`issues: write`, `pull-requests: write`).
+    - Hardened `.github/workflows/label-sync.yml` with top-level concurrency (`cancel-in-progress: true`) and `timeout-minutes: 5`.
+  - **Multi-Host Cloud-Sync & Lock Defense (`.gitignore`):**
+    - Reinforced canonical locks (`LOCK.user.*`, `LOCK.until.*`, `LOCK.condition.*`, `.automation-lock`, `LOCK.permissions.json`).
+    - Added multi-host sync guard patterns (`*-IDEAPAD*`, `*_WORKSTATION*`, `*_WORKSTATION-LG*`, `*-WORKSTATION.*`, `*-WORKSTATION-LG.*`).
+    - Added test & cache dirs (`.pytest_temp/`, `.pytest_tmp*/`, `.tox/`) and editor swap patterns (`Desktop.ini`, `*.swp`, `*.swo`).
+  - **PEP 621 Standardisierung (`pyproject.toml`):**
+    - Expanded `license-files` whitelist to include `NOTICE` and `THIRD_PARTY_LICENSES.txt`.
+    - Added `Notice` URL to `[project.urls]`.
+    - Hardened `[tool.pytest.ini_options]` with `norecursedirs` (`.pytest_temp`, `.hypothesis`, `.turbo`, `.tox`) and `addopts = "-ra -v --basetemp=.pytest_temp"`.
+  - **Documentation & LLM Context Parity:**
+    - Added `Attribution-NOTICE-blue.svg` badge and updated verified date to `2026-09-26` across `README.md`, `README_de.md`, and `README_es.md` while preserving all 16 navigation anchors.
+    - Updated `llms.txt` Stand 2026-09-26 with links to `NOTICE` and `THIRD_PARTY_LICENSES.txt`.
+  - **Contract Test Suite Expansion:**
+    - Extended `tests/test_metadata.py` with `test_notice_attribution`, `test_level1_sbom_inventory`, auto-assign/label-sync workflow hardening tests, pyproject guardrails, and updated test badge synchronization (126 passed, 58 subtests).
+    - Extended `tests/test_repository_hygiene.py` with canonical lock, IDEAPAD, and swap file ignore contract tests.
 - **Shared BACH/OCEAN memory schema (S1, T-20260920-823767362):** new `usmc.memory_union` with the canonical DDL of the memory tables shared with BACH, a pinned PRAGMA contract (`memory_union.contract.json`), and an opt-in migration (`USMC_MEMORY_UNION=1`) from `usmc_*` to `memory_*` with a prior file backup, `usmc_*` read views, provenance triggers installed only after the copy, and fail-closed handling of unknown columns. The client writes to `memory_*` once the union is active; reads keep using `usmc_*`. Tests never open `~/.usmc` (`tests/conftest.py`).
 
 ## 0.2.3 - 2026-09-19

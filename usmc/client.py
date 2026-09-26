@@ -19,7 +19,6 @@ License: MIT
 
 import os
 import sqlite3
-import json
 import re
 from pathlib import Path
 from typing import Optional, List, Dict, Iterable

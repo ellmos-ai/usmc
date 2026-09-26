@@ -12,6 +12,15 @@ from usmc import USMCClient, api
 from usmc import schema
 
 
+# Diese Tests pruefen das usmc_*-Altschema per rohem SQL (Manipulation, ALTER,
+# DROP). Im Union-Modus sind die Tabellen Views oder entfallen; die Client-Flows
+# deckt dort test_memory_union.TestLessonV2InUnionMode ab.
+legacy_schema_sql = unittest.skipIf(
+    os.environ.get("USMC_MEMORY_UNION") == "1",
+    "rohes SQL gegen usmc_*; im Union-Modus Views/entfallen",
+)
+
+
 V1_SQL = """
 CREATE TABLE usmc_facts (
     id INTEGER PRIMARY KEY AUTOINCREMENT, category TEXT NOT NULL,
@@ -74,6 +83,7 @@ class TestLessonMigration(TempDbCase):
         conn.commit()
         conn.close()
 
+    @legacy_schema_sql
     def test_v1_database_migrates_additively_and_old_path_stays_usable(self):
         self._create_v1()
 
@@ -125,6 +135,7 @@ class TestLessonMigration(TempDbCase):
         conn.close()
         self.assertEqual(client.get_lessons()[0]["title"], "Alt")
 
+    @legacy_schema_sql
     def test_partial_v1_migration_is_retry_safe(self):
         self._create_v1()
         conn = sqlite3.connect(self.db_path)
@@ -146,6 +157,7 @@ class TestLessonMigration(TempDbCase):
         self.assertIn("delivery_failure_count", columns)
         self.assertEqual(client.get_lessons()[0]["title"], "Alt")
 
+    @legacy_schema_sql
     def test_partial_v2_repairs_all_columns_and_named_indexes(self):
         USMCClient(self.db_path, "partial-v2")
         conn = sqlite3.connect(self.db_path)
@@ -208,6 +220,7 @@ class TestLessonMigration(TempDbCase):
         self.assertEqual(schema.get_schema_version(conn), 2)
         conn.close()
 
+    @legacy_schema_sql
     def test_partial_v2_backfills_keyed_lesson_payload_hash(self):
         client = USMCClient(self.db_path, "payload-backfill")
         lesson = client.add_lesson(
@@ -247,6 +260,7 @@ class TestLessonMigration(TempDbCase):
         self.assertFalse(retry["created"])
         self.assertTrue(retry["sensitive_source"])
 
+    @legacy_schema_sql
     def test_fb5_upgrade_backfill_ignores_later_editorial_state(self):
         client = USMCClient(self.db_path, "fb5-upgrade")
         lesson = client.add_lesson(
@@ -275,6 +289,7 @@ class TestLessonMigration(TempDbCase):
         self.assertFalse(retry["created"])
         self.assertEqual(retry["editorial_status"], "approved")
 
+    @legacy_schema_sql
     def test_global_feedback_duplicates_fail_migration_and_roll_back(self):
         client = USMCClient(self.db_path, "duplicate-fixture")
         first = client.add_lesson("Erste", "P", "S")
@@ -398,6 +413,7 @@ class TestIdempotentLessonIntake(TempDbCase):
         self.assertEqual(len(set(ids)), 1)
         self.assertEqual(len(self.client.get_lessons(grep="Parallel")), 1)
 
+    @legacy_schema_sql
     def test_current_weight_is_not_part_of_immutable_intake_hash(self):
         first = self.client.add_lesson(
             "Gewichtung", "P", "S",
@@ -438,6 +454,7 @@ class TestIdempotentLessonIntake(TempDbCase):
             1,
         )
 
+    @legacy_schema_sql
     def test_tampered_immutable_row_fails_retry_promotion_and_delivery(self):
         first = self.client.add_lesson(
             "Integrität", "Problem", "Original",
@@ -504,6 +521,7 @@ class TestIdempotentLessonIntake(TempDbCase):
         )
         conn.close()
 
+    @legacy_schema_sql
     def test_aborted_insert_can_be_retried_without_duplicate(self):
         conn = sqlite3.connect(self.db_path)
         conn.execute("""
@@ -624,6 +642,7 @@ class TestLessonFeedbackAndDelivery(TempDbCase):
         self.assertEqual(created.count(True), 1)
         self.assertEqual(self.client.get_lesson(self.lesson["id"])["helpful_count"], 1)
 
+    @legacy_schema_sql
     def test_feedback_transaction_rolls_back_and_retries_cleanly(self):
         conn = sqlite3.connect(self.db_path)
         conn.execute("""
@@ -663,6 +682,7 @@ class TestLessonFeedbackAndDelivery(TempDbCase):
                 "session", "delivery", context="anderer Kontext"
             )
 
+    @legacy_schema_sql
     def test_delivery_retry_replays_first_batch_without_reselection(self):
         self.client.set_lesson_editorial_status(self.lesson["id"], "approved")
         first = self.client.deliver_lessons(
@@ -693,6 +713,7 @@ class TestLessonFeedbackAndDelivery(TempDbCase):
         )
         conn.close()
 
+    @legacy_schema_sql
     def test_delivery_replay_rejects_tampered_persisted_lesson(self):
         self.client.set_lesson_editorial_status(self.lesson["id"], "approved")
         self.client.deliver_lessons(
@@ -734,6 +755,7 @@ class TestLessonFeedbackAndDelivery(TempDbCase):
         self.assertEqual(created.count(True), 1)
         self.assertEqual(self.client.get_lesson(self.lesson["id"])["times_shown"], 1)
 
+    @legacy_schema_sql
     def test_aborted_delivery_rolls_back_batch_and_retries_cleanly(self):
         self.client.set_lesson_editorial_status(self.lesson["id"], "approved")
         conn = sqlite3.connect(self.db_path)
@@ -851,6 +873,7 @@ class TestLessonPolicyAndSessionStart(TempDbCase):
         with self.assertRaises(ValueError):
             self.client.deliver_lessons("s", "d", context="Lesson", limit=4)
 
+    @legacy_schema_sql
     def test_session_start_delivery_is_atomic_and_retry_returns_same_session(self):
         lesson = self._lesson("atomic-success")
         self.client.set_lesson_editorial_status(lesson["id"], "approved")
@@ -890,6 +913,7 @@ class TestLessonPolicyAndSessionStart(TempDbCase):
         conn.close()
         self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
 
+    @legacy_schema_sql
     def test_session_start_replay_rejects_tampered_lesson(self):
         lesson = self._lesson("atomic-replay-tamper")
         self.client.set_lesson_editorial_status(lesson["id"], "approved")
@@ -927,6 +951,7 @@ class TestLessonPolicyAndSessionStart(TempDbCase):
         self.assertEqual(started["id"], 1)
         self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
 
+    @legacy_schema_sql
     def test_session_start_delivery_failure_rolls_back_and_retries_cleanly(self):
         lesson = self._lesson("atomic-failure")
         self.client.set_lesson_editorial_status(lesson["id"], "approved")
@@ -967,6 +992,7 @@ class TestLessonPolicyAndSessionStart(TempDbCase):
         self.assertEqual(len(retried["lessons"]), 1)
         self.assertEqual(self.client.get_lesson(lesson["id"])["times_shown"], 1)
 
+    @legacy_schema_sql
     def test_session_start_rejects_standalone_delivery_key_without_session_row(self):
         lesson = self._lesson("atomic-collision")
         self.client.set_lesson_editorial_status(lesson["id"], "approved")

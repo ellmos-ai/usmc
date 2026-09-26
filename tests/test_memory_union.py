@@ -202,5 +202,78 @@ class TestClientUnionMode(unittest.TestCase):
         conn.close()
 
 
+class TestLessonV2UnionLock(unittest.TestCase):
+    """T-20260922-668077756: Lesson-Schema v2 (S3) bleibt auf usmc_* beschraenkt
+    und ist im Union-Modus per Policy gesperrt -- die alte, ungeschluesselte
+    add_lesson()-Nutzung (S1) bleibt dabei unions-faehig (siehe
+    TestClientUnionMode.test_opt_in_backs_up_then_client_writes_union_tables,
+    die genau diesen unkeyed Fall bereits als Regressionsschutz abdeckt)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.db = Path(self.tmp.name) / "usmc_memory.db"
+        with mock.patch.dict(os.environ, {"USMC_MEMORY_UNION": "1"}):
+            self.client = USMCClient(db_path=self.db, agent_id="codex")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_keyed_add_lesson_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.add_lesson(
+                "T", "P", "S", source_key="hook:codex", episode_key="ep-1",
+            )
+
+    def test_get_lessons_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.get_lessons()
+
+    def test_get_lesson_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.get_lesson(1)
+
+    def test_set_lesson_editorial_status_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.set_lesson_editorial_status(1, "approved")
+
+    def test_record_lesson_feedback_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.record_lesson_feedback(1, "fb-1", helpful=True)
+
+    def test_deliver_lessons_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.deliver_lessons("sess", "deliv-1", context="irgendwas")
+
+    def test_start_session_with_lesson_delivery_is_locked_in_union_mode(self):
+        from usmc.client import LessonV2UnionUnsupportedError
+        with self.assertRaises(LessonV2UnionUnsupportedError):
+            self.client.start_session(
+                "aufgabe", lesson_context="irgendwas", delivery_key="deliv-1",
+            )
+
+    def test_plain_add_lesson_stays_unlocked_in_union_mode(self):
+        """Regression: KEIN v2-Feld -> darf im Union-Modus nicht gesperrt sein."""
+        result = self.client.add_lesson("T", "P", "S")
+        self.assertTrue(result["created"])
+        conn = sqlite3.connect(self.db)
+        self.assertEqual(
+            conn.execute("SELECT title FROM usmc_lessons WHERE id = ?", (result["id"],)).fetchone(),
+            ("T",),
+        )
+        conn.close()
+
+    def test_start_session_without_lessons_stays_unlocked_in_union_mode(self):
+        """Regression: SessionStart ohne Lesson-Zustellung bleibt unions-faehig."""
+        session = self.client.start_session("aufgabe")
+        self.assertIn("id", session)
+        self.assertNotIn("lessons", session)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -6,7 +6,6 @@ import sqlite3
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 from threading import Barrier
 
 from usmc import USMCClient, api

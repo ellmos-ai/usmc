@@ -114,22 +114,6 @@ def default_db_path() -> str:
     return str(Path.home() / ".usmc" / "usmc_memory.db")
 
 
-class LessonV2UnionUnsupportedError(RuntimeError):
-    """Lesson-Schema v2 (Provenienz/Idempotenz/Feedback/Zustellung, S3) ist im
-    Union-Modus (USMC_MEMORY_UNION=1) per Policy gesperrt.
-
-    ``usmc_lessons`` wird von ``memory_union.apply_union()`` bewusst NIE in
-    die Vereinigung aufgenommen (bleibt reale, schreibbare usmc_*-Tabelle,
-    auch wenn facts/working/sessions bereits auf memory_* laufen) -- das
-    gemeinsame BACH/OCEAN-Vertragsschema (``memory_union.contract.json``,
-    byte-identisch mit BACH) kennt die v2-Spalten nicht, und Lesson-v2 dort
-    aufzunehmen ist eine eigene, hier bewusst nicht umgesetzte Stufe
-    (T-20260922-668077756). Die Sperre ist daher eine Architekturentscheidung,
-    keine technische Notwendigkeit: sie haelt Union-Datenbanken bewusst frei
-    von v2-Semantik, bis dieser Vertrag spezifiziert ist.
-    """
-
-
 class USMCClient:
     """
     Cross-Agent Memory Client mit eigener SQLite-DB.
@@ -182,12 +166,18 @@ class USMCClient:
 
         Mit ``USMC_MEMORY_UNION=1`` wird die DB einmalig auf das gemeinsame
         BACH/OCEAN-Schema (memory_*) umgestellt; vorher wird eine Datei-DB
-        gesichert. Ohne die Variable bleibt alles bei usmc_*.
+        gesichert. Ohne die Variable bleibt alles bei usmc_*. Eine DB auf
+        Vertrag v1 wird immer auf den aktuellen Vertrag hochgezogen (sie hat
+        sich fuer die Vereinigung schon entschieden).
         """
         conn = self._get_conn()
         try:
-            schema.migrate(conn)
-            if os.environ.get("USMC_MEMORY_UNION") == "1" and not memory_union.is_union(conn):
+            version = memory_union.union_version(conn)
+            if version < memory_union.UNION_VERSION:
+                # Auf Vertrag v2 sind usmc_lessons & Co. Views/entfallen.
+                schema.migrate(conn)
+            wanted = os.environ.get("USMC_MEMORY_UNION") == "1" or version > 0
+            if wanted and version < memory_union.UNION_VERSION:
                 if not self._is_memory:
                     self._close_conn(conn)
                     memory_union.backup_database(self.db_path)
@@ -205,15 +195,17 @@ class USMCClient:
         """
         return f"memory_{name}" if self._union else f"usmc_{name}"
 
-    def _require_lesson_v2_unlocked(self) -> None:
-        """Wirft LessonV2UnionUnsupportedError, wenn die DB im Union-Modus laeuft."""
+    def _insert_session(self, conn: sqlite3.Connection, now: str, task: Optional[str]):
         if self._union:
-            raise LessonV2UnionUnsupportedError(
-                "Lesson-Schema v2 (Provenienz/Idempotenz/Feedback/Zustellung) ist "
-                "im Union-Modus per Policy gesperrt -- das gemeinsame BACH/OCEAN-"
-                "Vertragsschema kennt die v2-Spalten nicht. Aufnahme in den "
-                "Union-Vertrag ist eine spaetere, eigene Stufe (T-20260922-668077756)."
+            return conn.execute(
+                "INSERT INTO memory_sessions (session_id, agent_id, started_at, current_task) "
+                "VALUES (?, ?, ?, ?)",
+                (memory_union.new_session_key(), self.agent_id, now, task),
             )
+        return conn.execute(
+            "INSERT INTO usmc_sessions (agent_id, started_at, current_task) VALUES (?, ?, ?)",
+            (self.agent_id, now, task),
+        )
 
     def _get_conn(self) -> sqlite3.Connection:
         """Erstellt DB-Verbindung mit WAL-Mode."""
@@ -628,8 +620,6 @@ class USMCClient:
 
         Raises:
             ValueError: Bei ungueltiger Severity
-            LessonV2UnionUnsupportedError: v2-Felder (source_key/episode_key
-                oder eines der Provenienz-/Feedback-Felder) im Union-Modus
         """
         if severity not in self.VALID_SEVERITIES:
             raise ValueError(f"severity muss einer von {self.VALID_SEVERITIES} sein")
@@ -637,21 +627,6 @@ class USMCClient:
         source_key = source_key.strip() if source_key is not None else None
         episode_key = episode_key.strip() if episode_key is not None else None
         keyed = source_key is not None or episode_key is not None
-        v2_requested = keyed or any(value is not None for value in (
-            source_hash, event_anchor, editorial_status, evidence_class,
-            privacy_scope, source_kind, weight, sensitive_source,
-            user_preference, policy_relevant, conflict_flag, mutates_skill,
-            mutates_workflow,
-        ))
-        # Lesson-v2 (Provenienz/Idempotenz/Feedback/Zustellung) bleibt im
-        # Union-Modus gesperrt (Policy-Entscheidung, siehe
-        # _require_lesson_v2_unlocked): usmc_lessons wird von apply_union()
-        # bewusst NIE konvertiert (bleibt reale usmc_*-Tabelle, siehe
-        # memory_union.apply_union), technisch bliebe Schreiben also moeglich
-        # -- die Sperre haelt die BACH/OCEAN-Vereinigung dennoch bewusst frei
-        # von v2-Semantik, solange dafuer kein eigener Vertrag spezifiziert ist.
-        if self._union and v2_requested:
-            self._require_lesson_v2_unlocked()
         resolved_source_kind = source_kind or ("agent" if keyed else "legacy")
         resolved_editorial = editorial_status or ("review" if keyed else "legacy")
         resolved_evidence = evidence_class or "unknown"
@@ -712,16 +687,11 @@ class USMCClient:
 
         conn = self._get_conn()
         try:
-            # Hartcodiertes usmc_lessons ist hier bewusst korrekt (nicht
-            # self._table()): "S3-v2 nur auf usmc_*" (T-20260922-668077756).
-            # usmc_lessons bleibt auch im Union-Modus real/schreibbar (siehe
-            # memory_union.apply_union) -- der v2-Zweig oben wirft vorher,
-            # wenn v2-Felder UND Union-Modus zusammentreffen.
             conn.execute("BEGIN IMMEDIATE")
             existing = None
             if keyed:
                 existing_row = conn.execute(
-                    f"SELECT {_LESSON_SELECT} FROM usmc_lessons "
+                    f"SELECT {_LESSON_SELECT} FROM {self._table('lessons')} "
                     "WHERE source_key = ? AND episode_key = ?",
                     (source_key, episode_key),
                 ).fetchone()
@@ -742,8 +712,8 @@ class USMCClient:
                 result["upserted"] = True
                 return result
 
-            sql = """
-                INSERT INTO usmc_lessons
+            sql = f"""
+                INSERT INTO {self._table('lessons')}
                     (agent_id, category, severity, title, problem, solution,
                      is_active, confidence, times_shown, source_kind, source_key,
                      episode_key, source_hash, event_anchor, editorial_status,
@@ -763,7 +733,7 @@ class USMCClient:
             cursor = conn.execute(sql, params)
             lesson_id = cursor.lastrowid
             row = conn.execute(
-                f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE id = ?",
+                f"SELECT {_LESSON_SELECT} FROM {self._table('lessons')} WHERE id = ?",
                 (lesson_id,),
             ).fetchone()
             conn.commit()
@@ -798,11 +768,6 @@ class USMCClient:
 
         Returns:
             Liste von Lesson-Dicts
-
-        Reines Lesen -- bleibt im Union-Modus unversperrt (usmc_lessons ist
-        auch dort real und lesbar, siehe memory_union.apply_union). Nur die
-        v2-SCHREIB-/Feedback-/Zustellpfade sind gesperrt, siehe Klassen-
-        Docstring von LessonV2UnionUnsupportedError.
         """
         conn = self._get_conn()
         try:
@@ -832,7 +797,7 @@ class USMCClient:
 
             rows = conn.execute(f"""
                 SELECT {_LESSON_SELECT}
-                FROM usmc_lessons
+                FROM {self._table('lessons')}
                 WHERE {where}
                 ORDER BY
                     CASE severity
@@ -855,7 +820,7 @@ class USMCClient:
         conn = self._get_conn()
         try:
             row = conn.execute(
-                f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE id = ?",
+                f"SELECT {_LESSON_SELECT} FROM {self._table('lessons')} WHERE id = ?",
                 (lesson_id,),
             ).fetchone()
             return _lesson_dict(row) if row else None
@@ -863,19 +828,14 @@ class USMCClient:
             self._close_conn(conn)
 
     def set_lesson_editorial_status(self, lesson_id: int, status: str) -> Dict:
-        """Setzt den pruefbaren Redaktionsstatus, ohne etwas zu publizieren.
-
-        Raises:
-            LessonV2UnionUnsupportedError: im Union-Modus (siehe Klassen-Docstring)
-        """
-        self._require_lesson_v2_unlocked()
+        """Setzt den pruefbaren Redaktionsstatus, ohne etwas zu publizieren."""
         if status not in VALID_EDITORIAL_STATUSES or status == "legacy":
             raise ValueError("status muss draft, review, approved oder rejected sein")
         now = datetime.now().isoformat()
         conn = self._get_conn()
         try:
             cursor = conn.execute(
-                "UPDATE usmc_lessons SET editorial_status = ?, updated_at = ? "
+                f"UPDATE {self._table('lessons')} SET editorial_status = ?, updated_at = ? "
                 "WHERE id = ?",
                 (status, now, lesson_id),
             )
@@ -904,11 +864,7 @@ class USMCClient:
         Eine unabhaengige Wiederholung kann zusammen mit ``delivery_failed``
         erfasst werden. Sie bleibt dennoch ein eigenes Signal; es gibt keine
         automatische Gleichsetzung von Wiederholung und Zustellfehler.
-
-        Raises:
-            LessonV2UnionUnsupportedError: im Union-Modus (siehe Klassen-Docstring)
         """
-        self._require_lesson_v2_unlocked()
         feedback_key = feedback_key.strip()
         if not feedback_key:
             raise ValueError("feedback_key darf nicht leer sein")
@@ -932,19 +888,19 @@ class USMCClient:
         try:
             conn.execute("BEGIN IMMEDIATE")
             if not conn.execute(
-                "SELECT 1 FROM usmc_lessons WHERE id = ? AND is_active = 1",
+                f"SELECT 1 FROM {self._table('lessons')} WHERE id = ? AND is_active = 1",
                 (lesson_id,),
             ).fetchone():
                 raise ValueError(f"Lesson {lesson_id} nicht gefunden")
             if delivery_key and not conn.execute(
-                "SELECT 1 FROM usmc_lesson_deliveries "
+                f"SELECT 1 FROM {self._table('lesson_deliveries')} "
                 "WHERE lesson_id = ? AND delivery_key = ?",
                 (lesson_id, delivery_key),
             ).fetchone():
                 raise ValueError("delivery_key gehört nicht zu dieser Lesson")
 
             existing = conn.execute(
-                "SELECT id, lesson_id, payload_hash FROM usmc_lesson_feedback "
+                f"SELECT id, lesson_id, payload_hash FROM {self._table('lesson_feedback')} "
                 "WHERE feedback_key = ?",
                 (feedback_key,),
             ).fetchone()
@@ -957,8 +913,8 @@ class USMCClient:
                 )
             created = existing is None
             if created:
-                cursor = conn.execute("""
-                    INSERT INTO usmc_lesson_feedback
+                cursor = conn.execute(f"""
+                    INSERT INTO {self._table('lesson_feedback')}
                         (lesson_id, feedback_key, helpful, independent_repeat,
                          delivery_failed, delivery_key, event_anchor, payload_hash,
                          agent_id, created_at)
@@ -973,29 +929,29 @@ class USMCClient:
             else:
                 feedback_id = existing[0]
 
-            conn.execute("""
-                UPDATE usmc_lessons SET
+            conn.execute(f"""
+                UPDATE {self._table('lessons')} SET
                     helpful_count = (
-                        SELECT COUNT(*) FROM usmc_lesson_feedback
+                        SELECT COUNT(*) FROM {self._table('lesson_feedback')}
                         WHERE lesson_id = ? AND helpful = 1
                     ),
                     unhelpful_count = (
-                        SELECT COUNT(*) FROM usmc_lesson_feedback
+                        SELECT COUNT(*) FROM {self._table('lesson_feedback')}
                         WHERE lesson_id = ? AND helpful = 0
                     ),
                     independent_repeat_count = (
-                        SELECT COUNT(*) FROM usmc_lesson_feedback
+                        SELECT COUNT(*) FROM {self._table('lesson_feedback')}
                         WHERE lesson_id = ? AND independent_repeat = 1
                     ),
                     delivery_failure_count = (
-                        SELECT COUNT(*) FROM usmc_lesson_feedback
+                        SELECT COUNT(*) FROM {self._table('lesson_feedback')}
                         WHERE lesson_id = ? AND delivery_failed = 1
                     ),
                     updated_at = ?
                 WHERE id = ?
             """, (lesson_id, lesson_id, lesson_id, lesson_id, now, lesson_id))
             row = conn.execute(
-                f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE id = ?",
+                f"SELECT {_LESSON_SELECT} FROM {self._table('lessons')} WHERE id = ?",
                 (lesson_id,),
             ).fetchone()
             conn.commit()
@@ -1080,8 +1036,8 @@ class USMCClient:
         lesson_select = ", ".join(f"l.{field}" for field in _LESSON_FIELDS)
         rows = conn.execute(
             f"SELECT {lesson_select}, d.session_key, d.delivery_mode, "
-            "d.feedback_prompt FROM usmc_lesson_deliveries d "
-            "JOIN usmc_lessons l ON l.id = d.lesson_id "
+            f"d.feedback_prompt FROM {self._table('lesson_deliveries')} d "
+            f"JOIN {self._table('lessons')} l ON l.id = d.lesson_id "
             "WHERE d.delivery_key = ? ORDER BY d.id ASC",
             (delivery_key,),
         ).fetchall()
@@ -1109,7 +1065,7 @@ class USMCClient:
     ) -> List[Dict]:
         delivery_key = prepared["delivery_key"]
         batch = conn.execute(
-            "SELECT request_hash, session_id FROM usmc_lesson_delivery_batches "
+            f"SELECT request_hash, session_id FROM {self._table('lesson_delivery_batches')} "
             "WHERE delivery_key = ?",
             (delivery_key,),
         ).fetchone()
@@ -1125,8 +1081,8 @@ class USMCClient:
             return self._replay_delivery_batch(conn, delivery_key)
 
         now = datetime.now().isoformat()
-        conn.execute("""
-            INSERT INTO usmc_lesson_delivery_batches
+        conn.execute(f"""
+            INSERT INTO {self._table('lesson_delivery_batches')}
                 (delivery_key, session_id, session_key, delivery_mode,
                  request_hash, agent_id, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1145,7 +1101,7 @@ class USMCClient:
         if selected_ids:
             placeholders = ",".join("?" for _ in selected_ids)
             rows = conn.execute(
-                f"SELECT {_LESSON_SELECT} FROM usmc_lessons "
+                f"SELECT {_LESSON_SELECT} FROM {self._table('lessons')} "
                 f"WHERE {base_where} AND id IN ({placeholders})",
                 selected_ids,
             ).fetchall()
@@ -1153,7 +1109,7 @@ class USMCClient:
             candidates = [by_id[item] for item in selected_ids if item in by_id]
         else:
             rows = conn.execute(
-                f"SELECT {_LESSON_SELECT} FROM usmc_lessons WHERE {base_where}"
+                f"SELECT {_LESSON_SELECT} FROM {self._table('lessons')} WHERE {base_where}"
             ).fetchall()
             candidates = [_lesson_dict(row) for row in rows]
             terms = [
@@ -1190,8 +1146,8 @@ class USMCClient:
                 "mode": prepared["mode"],
                 "context": context,
             })
-            conn.execute("""
-                INSERT INTO usmc_lesson_deliveries
+            conn.execute(f"""
+                INSERT INTO {self._table('lesson_deliveries')}
                     (lesson_id, delivery_key, session_key, delivery_mode,
                      context, feedback_prompt, payload_hash, agent_id, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -1201,7 +1157,7 @@ class USMCClient:
                 self.agent_id, now,
             ))
             conn.execute(
-                "UPDATE usmc_lessons SET times_shown = times_shown + 1, "
+                f"UPDATE {self._table('lessons')} SET times_shown = times_shown + 1, "
                 "last_delivered_at = ?, updated_at = ? WHERE id = ?",
                 (now, now, lesson["id"]),
             )
@@ -1226,12 +1182,7 @@ class USMCClient:
         lesson_ids: Optional[Iterable[int]] = None,
         limit: int = MAX_SESSION_LESSONS,
     ) -> List[Dict]:
-        """Liefert höchstens drei freigegebene Lessons exakt einmal aus.
-
-        Raises:
-            LessonV2UnionUnsupportedError: im Union-Modus (siehe Klassen-Docstring)
-        """
-        self._require_lesson_v2_unlocked()
+        """Liefert höchstens drei freigegebene Lessons exakt einmal aus."""
         prepared = self._prepare_delivery_request(
             session_key, delivery_key, context, lesson_ids, limit
         )
@@ -1278,26 +1229,11 @@ class USMCClient:
         wants_lessons = bool(selected_ids or (lesson_context and lesson_context.strip()))
         if wants_lessons and not delivery_key:
             raise ValueError("delivery_key ist bei SessionStart-Zustellung Pflicht")
-        # Lesson-Zustellung bei SessionStart nutzt dieselbe usmc_lesson*-
-        # Maschinerie wie deliver_lessons() und ist im Union-Modus daher
-        # ebenso gesperrt (siehe _require_lesson_v2_unlocked).
-        if wants_lessons and self._union:
-            self._require_lesson_v2_unlocked()
         now = datetime.now().isoformat()
         conn = self._get_conn()
         try:
             if not wants_lessons:
-                if self._union:
-                    cursor = conn.execute(
-                        "INSERT INTO memory_sessions (session_id, agent_id, started_at, current_task) "
-                        "VALUES (?, ?, ?, ?)",
-                        (memory_union.new_session_key(), self.agent_id, now, task),
-                    )
-                else:
-                    cursor = conn.execute("""
-                        INSERT INTO usmc_sessions (agent_id, started_at, current_task)
-                        VALUES (?, ?, ?)
-                    """, (self.agent_id, now, task))
+                cursor = self._insert_session(conn, now, task)
                 conn.commit()
                 return {
                     'id': cursor.lastrowid,
@@ -1318,7 +1254,7 @@ class USMCClient:
             conn.execute("BEGIN IMMEDIATE")
             batch = conn.execute(
                 "SELECT request_hash, session_id "
-                "FROM usmc_lesson_delivery_batches WHERE delivery_key = ?",
+                f"FROM {self._table('lesson_delivery_batches')} WHERE delivery_key = ?",
                 (prepared["delivery_key"],),
             ).fetchone()
             if batch:
@@ -1351,11 +1287,7 @@ class USMCClient:
                     "lessons": lessons,
                 }
 
-            cursor = conn.execute("""
-                INSERT INTO usmc_sessions (agent_id, started_at, current_task)
-                VALUES (?, ?, ?)
-            """, (self.agent_id, now, task))
-            session_id = cursor.lastrowid
+            session_id = self._insert_session(conn, now, task).lastrowid
             lessons = self._deliver_lessons_in_transaction(
                 conn, prepared, session_id=session_id
             )
@@ -1471,7 +1403,7 @@ class USMCClient:
 
             lessons = conn.execute(f"""
                 SELECT {_LESSON_SELECT}
-                FROM usmc_lessons WHERE updated_at > ? AND is_active = 1
+                FROM {self._table('lessons')} WHERE updated_at > ? AND is_active = 1
                 ORDER BY updated_at ASC
             """, (since,)).fetchall()
 
@@ -1507,14 +1439,14 @@ class USMCClient:
                 "SELECT COUNT(*) FROM usmc_working WHERE is_active = 1"
             ).fetchone()[0]
             lessons = conn.execute(
-                "SELECT COUNT(*) FROM usmc_lessons WHERE is_active = 1"
+                f"SELECT COUNT(*) FROM {self._table('lessons')} WHERE is_active = 1"
             ).fetchone()[0]
             sessions = conn.execute("SELECT COUNT(*) FROM usmc_sessions").fetchone()[0]
             feedback = conn.execute(
-                "SELECT COUNT(*) FROM usmc_lesson_feedback"
+                f"SELECT COUNT(*) FROM {self._table('lesson_feedback')}"
             ).fetchone()[0]
             deliveries = conn.execute(
-                "SELECT COUNT(*) FROM usmc_lesson_deliveries"
+                f"SELECT COUNT(*) FROM {self._table('lesson_deliveries')}"
             ).fetchone()[0]
             confident = conn.execute(
                 "SELECT COUNT(*) FROM usmc_facts WHERE confidence >= 0.8"

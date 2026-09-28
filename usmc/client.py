@@ -3,12 +3,12 @@
 USMCClient - United Shared Memory Client
 =========================================
 
-Standalone Cross-Agent Memory Sharing mit eigener SQLite-DB.
-Kein Zugriff auf bach.db -- voellig unabhaengig.
-Die menschenlesbare Kontextausgabe bleibt aus Kompatibilitaetsgruenden
-bewusst Deutsch; siehe ``usmc.RUNTIME_LANGUAGE``.
+Standalone cross-agent memory sharing with dedicated SQLite DB.
+No dependency or access to bach.db -- fully independent.
+Human-readable context prompt output deliberately remains German
+for backwards compatibility; see ``usmc.RUNTIME_LANGUAGE``.
 
-Methoden:
+Methods:
     add_fact(), get_facts(), add_lesson(), get_lessons(),
     add_working(), get_working(), start_session(), end_session(),
     generate_context(), get_changes_since()
@@ -81,19 +81,19 @@ def _assert_keyed_lesson_integrity(lesson: Dict) -> None:
 
 
 def _like_escape(value: str) -> str:
-    """Maskiert LIKE-Platzhalter, damit ein Suchbegriff woertlich gilt.
+    """Escapes LIKE wildcards so a search term is matched literally.
 
-    Ohne Maskierung waeren '%' und '_' im Suchbegriff Wildcards -- '_' wuerde
-    also jedes beliebige Zeichen treffen. Passend dazu setzen alle Abfragen
+    Without escaping, '%' and '_' in search terms act as wildcards where
+    '_' matches any single character. Queries using this helper set
     ``ESCAPE '\\'``.
     """
     return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def _split_tags(tags) -> List[str]:
-    """Normalisiert eine Tag-Angabe zu einer Liste.
+    """Normalizes tag specification into a list of strings.
 
-    Akzeptiert 'a,b', 'a, b' oder ['a', 'b']; leere Teile fallen weg.
+    Accepts 'a,b', 'a, b', or ['a', 'b']; empty parts are discarded.
     """
     if tags is None:
         return []
@@ -102,11 +102,11 @@ def _split_tags(tags) -> List[str]:
 
 
 def default_db_path() -> str:
-    """Per-System lokaler Default-DB-Pfad (NICHT cwd/OneDrive).
+    """Per-system local default DB path (NOT cwd/OneDrive).
 
-    Default: ``~/.usmc/usmc_memory.db``; Override via Env ``USMC_DB``.
-    Legt selbst NICHTS an — das Verzeichnis wird erst beim tatsaechlichen
-    Verbinden durch USMCClient erstellt (kein Import-Seiteneffekt).
+    Default: ``~/.usmc/usmc_memory.db``; override via env ``USMC_DB``.
+    Does NOT create directories on import -- the parent folder is created
+    only upon connection by USMCClient (no import side-effects).
     """
     env = os.environ.get("USMC_DB")
     if env:
@@ -116,12 +116,12 @@ def default_db_path() -> str:
 
 class USMCClient:
     """
-    Cross-Agent Memory Client mit eigener SQLite-DB.
+    Cross-agent memory client with dedicated SQLite DB.
 
-    Verwendung:
+    Usage:
         client = USMCClient()  # ~/.usmc/usmc_memory.db (Override: Env USMC_DB)
         client.add_fact("system", "os", "Windows 11", confidence=0.95)
-        client.add_working("Aktueller Task: USMC implementieren")
+        client.add_working("Current task: implement USMC")
         facts = client.get_facts()
         context = client.generate_context()
 
@@ -142,14 +142,13 @@ class USMCClient:
         agent_id: str = "default"
     ):
         """
-        Initialisiert den USMC Client.
+        Initializes the USMC Client.
 
         Args:
-            db_path: Pfad zur USMC-Datenbank (wird erstellt falls nicht
-                vorhanden). Default: ``default_db_path()`` — per-System
-                lokal unter ``~/.usmc/usmc_memory.db``, Override via
-                Env ``USMC_DB``.
-            agent_id: Agent-Kennung fuer Multi-Agent-Tracking
+            db_path: Path to USMC database (created if non-existent).
+                Default: ``default_db_path()`` — per-system local database at
+                ``~/.usmc/usmc_memory.db``, override via env ``USMC_DB``.
+            agent_id: Agent identifier for multi-agent tracking.
         """
         if db_path is None:
             db_path = default_db_path()
@@ -162,13 +161,12 @@ class USMCClient:
         self._ensure_db()
 
     def _ensure_db(self) -> None:
-        """Stellt sicher, dass DB und Schema existieren.
+        """Ensures database and schema exist.
 
-        Mit ``USMC_MEMORY_UNION=1`` wird die DB einmalig auf das gemeinsame
-        BACH/OCEAN-Schema (memory_*) umgestellt; vorher wird eine Datei-DB
-        gesichert. Ohne die Variable bleibt alles bei usmc_*. Eine DB auf
-        Vertrag v1 wird immer auf den aktuellen Vertrag hochgezogen (sie hat
-        sich fuer die Vereinigung schon entschieden).
+        With ``USMC_MEMORY_UNION=1``, the DB is migrated once to the shared
+        BACH/OCEAN schema (memory_*); file databases are backed up prior to migration.
+        Without the variable, schema remains at usmc_*. A database on v1 contract
+        is always upgraded to the latest contract.
         """
         conn = self._get_conn()
         try:
@@ -189,9 +187,9 @@ class USMCClient:
                 self._close_conn(conn)
 
     def _table(self, name: str) -> str:
-        """Schreibziel: memory_* im Vereinigungsschema, sonst usmc_*.
+        """Write target: memory_* in union schema, otherwise usmc_*.
 
-        Gelesen wird immer ueber usmc_* (im Vereinigungsschema Lese-Views).
+        Reads always go through usmc_* (which are read views in union schema).
         """
         return f"memory_{name}" if self._union else f"usmc_{name}"
 
@@ -208,7 +206,7 @@ class USMCClient:
         )
 
     def _get_conn(self) -> sqlite3.Connection:
-        """Erstellt DB-Verbindung mit WAL-Mode."""
+        """Creates DB connection with WAL mode."""
         if self._is_memory:
             if self._shared_conn is None:
                 self._shared_conn = sqlite3.connect(':memory:')
@@ -221,12 +219,12 @@ class USMCClient:
         return conn
 
     def _close_conn(self, conn: sqlite3.Connection) -> None:
-        """Schliesst Connection (ausser bei :memory: DB)."""
+        """Closes connection (except for :memory: DB)."""
         if not self._is_memory:
             conn.close()
 
     def _source(self) -> str:
-        """Bestimmt Source-String fuer Write-Operationen."""
+        """Determines source string for write operations."""
         return f"agent:{self.agent_id}"
 
     # ═══════════════════════════════════════════════════════════════
@@ -235,22 +233,21 @@ class USMCClient:
 
     @staticmethod
     def _tag_filter(tags, match_all: bool = False):
-        """Baut eine begrenzer-verankerte Bedingung fuer die tags-Spalte.
+        """Constructs a delimiter-anchored condition for the tags column.
 
-        Ein nacktes ``tags LIKE '%rh%'`` traefe auch 'research' oder
-        'rhythm'. Deshalb wird die Spalte beidseitig mit Kommas umschlossen
-        und der Tag inklusive seiner Kommas gesucht -- ein Tag matcht damit
-        nur als ganzer Listeneintrag. Leerzeichen in der Spalte werden vorher
-        entfernt, damit 'a, b' und 'a,b' gleich behandelt werden.
+        A plain ``tags LIKE '%rh%'`` would also match 'research' or
+        'rhythm'. Wrapping both the column and the search term with commas ensures
+        tags match only as complete elements. Whitespace is stripped so
+        'a, b' and 'a,b' behave identically.
 
         Args:
-            tags: Tag-Angabe ('a,b' oder Liste)
-            match_all: True = alle Tags muessen vorkommen (UND),
-                False = mindestens einer (ODER, default)
+            tags: Tag specification ('a,b' or list).
+            match_all: True = all tags must match (AND),
+                False = at least one tag must match (OR, default).
 
         Returns:
-            (sql_fragment, params) oder (None, []) wenn nichts zu filtern ist.
-            NULL-Tags matchen nie (Konkatenation mit NULL ergibt NULL).
+            (sql_fragment, params) or (None, []) if nothing to filter.
+            NULL tags never match (concatenation with NULL yields NULL).
         """
         terms = _split_tags(tags)
         if not terms:
@@ -261,13 +258,13 @@ class USMCClient:
 
     @staticmethod
     def _grep_filter(grep: Optional[str], columns):
-        """Baut eine LIKE-Bedingung ueber mehrere Spalten (ODER-verknuepft).
+        """Constructs a LIKE condition across multiple columns (OR-combined).
 
-        Gross-/Kleinschreibung wird von SQLites LIKE fuer ASCII ignoriert;
-        Umlaute werden unterschieden (SQLite kennt ohne ICU kein Unicode-Casefolding).
+        Case-insensitivity is standard SQLite ASCII behavior; non-ASCII umlauts
+        are distinguished unless ICU is compiled in.
 
         Returns:
-            (sql_fragment, params) oder (None, []) wenn nichts zu filtern ist.
+            (sql_fragment, params) or (None, []) if nothing to filter.
         """
         if not grep or not grep.strip():
             return None, []
@@ -287,21 +284,21 @@ class USMCClient:
         confidence: float = 1.0
     ) -> Dict:
         """
-        Fuegt Fakt hinzu oder aktualisiert ihn (confidence_merge).
+        Adds or updates a fact (confidence_merge).
 
-        Ueberschreibt nur wenn neue confidence >= bestehende.
+        Overwrites only if new confidence >= existing confidence.
 
         Args:
-            category: Kategorie (user, project, system, domain)
-            key: Fakt-Schluessel
-            value: Fakt-Wert
-            confidence: Konfidenz 0.0-1.0 (default: 1.0)
+            category: Category (user, project, system, domain).
+            key: Fact key.
+            value: Fact value.
+            confidence: Confidence score 0.0-1.0 (default: 1.0).
 
         Returns:
-            Dict mit Fakt-Daten + 'merged' (bool)
+            Dict containing fact data and 'merged' (bool).
 
         Raises:
-            ValueError: Bei ungueltiger Kategorie oder Konfidenz
+            ValueError: If category or confidence is invalid.
         """
         if category not in self.VALID_CATEGORIES:
             raise ValueError(f"category muss einer von {self.VALID_CATEGORIES} sein")
@@ -355,16 +352,16 @@ class USMCClient:
         grep: Optional[str] = None
     ) -> List[Dict]:
         """
-        Holt Facts aus der DB.
+        Retrieves facts from database.
 
         Args:
-            category: Filter nach Kategorie (optional)
-            min_confidence: Minimale Konfidenz (0.0-1.0)
-            agent_id: Filter nach Agent (optional, default: alle Agents)
-            grep: Volltext-Teilstring ueber key und value (optional)
+            category: Filter by category (optional).
+            min_confidence: Minimum confidence threshold (0.0-1.0).
+            agent_id: Filter by agent (optional, default: all agents).
+            grep: Fulltext substring search over key and value (optional).
 
         Returns:
-            Liste von Fakt-Dicts
+            List of fact dicts.
         """
         conn = self._get_conn()
         try:
@@ -404,14 +401,14 @@ class USMCClient:
 
     def delete_fact(self, key: str, category: str = "project") -> bool:
         """
-        Loescht einen Fakt dieses Agents.
+        Deletes a fact for this agent.
 
         Args:
-            key: Fakt-Schluessel
-            category: Kategorie (default: project)
+            key: Fact key.
+            category: Category (default: project).
 
         Returns:
-            True wenn geloescht, False wenn nicht gefunden
+            True if deleted, False if not found.
         """
         conn = self._get_conn()
         try:
@@ -437,19 +434,19 @@ class USMCClient:
         tags: Optional[str] = None
     ) -> Dict:
         """
-        Fuegt eine Working-Memory-Notiz hinzu.
+        Adds an active working memory note.
 
         Args:
-            content: Notiz-Inhalt
-            type: Typ ('note', 'context', 'scratchpad', 'loop')
-            priority: Prioritaet (hoeher = wichtiger)
-            tags: Komma-separierte Tags
+            content: Note content.
+            type: Note type ('note', 'context', 'scratchpad', 'loop').
+            priority: Priority (higher = more important).
+            tags: Comma-separated tags.
 
         Returns:
-            Dict mit Notiz-Daten inkl. 'id'
+            Dict containing note data including 'id'.
 
         Raises:
-            ValueError: Bei ungueltigem Typ
+            ValueError: On invalid note type.
         """
         if type not in self.VALID_WORKING_TYPES:
             raise ValueError(f"type muss einer von {self.VALID_WORKING_TYPES} sein")
@@ -483,21 +480,20 @@ class USMCClient:
         grep: Optional[str] = None
     ) -> List[Dict]:
         """
-        Holt aktive Working-Memory-Notizen.
+        Retrieves active working memory notes.
 
-        Alle Filter wirken in der WHERE-Klausel, also VOR dem Limit: bei
-        ``limit=10`` werden die 10 besten Treffer *des Filters* geliefert,
-        nicht der Filter auf die letzten 10 Notizen angewendet.
+        All filters apply in the WHERE clause prior to the LIMIT: with
+        ``limit=10``, the top 10 matching notes for the filter are returned.
 
         Args:
-            limit: Maximale Anzahl (hoechste Prioritaet, dann neueste zuerst)
-            agent_id: Filter nach Agent (optional, default: alle)
-            tags: Tag-Filter ('a,b' oder Liste); default ODER-verknuepft
-            tags_all: True = alle angegebenen Tags muessen vorkommen (UND)
-            grep: Volltext-Teilstring ueber content (optional)
+            limit: Maximum count (highest priority, newest first).
+            agent_id: Filter by agent (optional, default: all).
+            tags: Tag filter ('a,b' or list); default OR-combined.
+            tags_all: True = all tags must match (AND).
+            grep: Fulltext substring filter across content (optional).
 
         Returns:
-            Liste von Notiz-Dicts
+            List of note dicts.
         """
         conn = self._get_conn()
         try:
@@ -542,13 +538,13 @@ class USMCClient:
 
     def clear_working(self, agent_only: bool = True) -> int:
         """
-        Deaktiviert Working-Memory-Eintraege (Soft-Delete).
+        Deactivates working memory entries (soft-delete).
 
         Args:
-            agent_only: Nur eigene Notizen deaktivieren (default: True)
+            agent_only: Only deactivate own notes (default: True).
 
         Returns:
-            Anzahl deaktivierter Eintraege
+            Count of deactivated entries.
         """
         now = datetime.now().isoformat()
         conn = self._get_conn()
@@ -598,28 +594,28 @@ class USMCClient:
         mutates_workflow: Optional[bool] = None,
     ) -> Dict:
         """
-        Fuegt eine Lesson hinzu oder nimmt sie idempotent auf.
+        Adds a lesson or ingests it idempotently.
 
-        Der alte, ungeschluesselte Aufruf bleibt append-only und startet mit
-        confidence 1.0. Werden ``source_key`` und ``episode_key`` gemeinsam
-        gesetzt, gilt der v2-Vertrag: genau ein unveränderlicher Intake-Payload
-        mit niedriger Anfangsgewichtung (0.20). Ein identischer Retry liest die
-        bestehende Zeile; ein abweichender Payload scheitert ohne Mutation.
+        Legacy unkeyed calls remain append-only starting with confidence 1.0.
+        When ``source_key`` and ``episode_key`` are provided together, the v2
+        contract applies: exactly one immutable intake payload with lower initial
+        weight (0.20). An identical retry returns the existing row; a diverging
+        payload fails closed without mutation.
 
         Args:
-            title: Kurztitel
-            problem: Problem-Beschreibung
-            solution: Loesung
-            severity: Schweregrad ('critical', 'high', 'medium', 'low')
-            category: Kategorie (z.B. 'bug', 'workflow', 'tool', 'general')
-            source_key: Stabiler Quellenschluessel (nur gemeinsam mit episode_key)
-            episode_key: Stabile Episode innerhalb der Quelle
+            title: Short title.
+            problem: Problem description.
+            solution: Solution description.
+            severity: Severity level ('critical', 'high', 'medium', 'low').
+            category: Category (e.g. 'bug', 'workflow', 'tool', 'general').
+            source_key: Stable source key (required with episode_key).
+            episode_key: Stable episode key within source.
 
         Returns:
-            Dict mit Lesson-Daten, ``created`` und berechnetem ``weight``
+            Dict containing lesson data, ``created`` flag, and computed ``weight``.
 
         Raises:
-            ValueError: Bei ungueltiger Severity
+            ValueError: On invalid severity or contract violation.
         """
         if severity not in self.VALID_SEVERITIES:
             raise ValueError(f"severity muss einer von {self.VALID_SEVERITIES} sein")
@@ -756,18 +752,18 @@ class USMCClient:
         delivery_eligible_only: bool = False,
     ) -> List[Dict]:
         """
-        Holt Lessons Learned.
+        Retrieves lessons learned.
 
         Args:
-            limit: Maximale Anzahl
-            severity: Filter nach Severity (optional)
-            agent_id: Filter nach Agent (optional, default: alle)
-            grep: Volltext-Teilstring ueber title, problem und solution (optional)
-            delivery_eligible_only: Nur redaktionell freigegebene, lokale/private,
-                nicht sensible Lessons. Legacy-Zeilen bleiben kompatibel sichtbar.
+            limit: Maximum count.
+            severity: Filter by severity (optional).
+            agent_id: Filter by agent (optional, default: all).
+            grep: Fulltext substring search over title, problem, and solution (optional).
+            delivery_eligible_only: Only editorially approved, local/private,
+                non-sensitive lessons. Legacy rows remain visible for compatibility.
 
         Returns:
-            Liste von Lesson-Dicts
+            List of lesson dicts.
         """
         conn = self._get_conn()
         try:
@@ -813,9 +809,9 @@ class USMCClient:
             self._close_conn(conn)
 
     def get_lesson(self, lesson_id: int) -> Optional[Dict]:
-        """Holt genau eine Lesson mit Provenienz- und Signalzustand.
+        """Retrieve a single lesson with provenance and signal state.
 
-        Reines Lesen -- bleibt im Union-Modus unversperrt, siehe get_lessons().
+        Read-only query -- unblocked in union mode, see get_lessons().
         """
         conn = self._get_conn()
         try:
@@ -828,7 +824,7 @@ class USMCClient:
             self._close_conn(conn)
 
     def set_lesson_editorial_status(self, lesson_id: int, status: str) -> Dict:
-        """Setzt den pruefbaren Redaktionsstatus, ohne etwas zu publizieren."""
+        """Set verifiable editorial status without publishing."""
         if status not in VALID_EDITORIAL_STATUSES or status == "legacy":
             raise ValueError("status muss draft, review, approved oder rejected sein")
         now = datetime.now().isoformat()
@@ -859,11 +855,11 @@ class USMCClient:
         delivery_key: Optional[str] = None,
         event_anchor: Optional[str] = None,
     ) -> Dict:
-        """Speichert Feedback exakt einmal und aktualisiert getrennte Zaehler.
+        """Record feedback exactly once and update decoupled counters.
 
-        Eine unabhaengige Wiederholung kann zusammen mit ``delivery_failed``
-        erfasst werden. Sie bleibt dennoch ein eigenes Signal; es gibt keine
-        automatische Gleichsetzung von Wiederholung und Zustellfehler.
+        An independent repetition can be recorded alongside ``delivery_failed``.
+        It remains an independent signal; there is no automatic equivalence
+        between repetition and delivery failure.
         """
         feedback_key = feedback_key.strip()
         if not feedback_key:
@@ -980,7 +976,7 @@ class USMCClient:
     def evaluate_lesson_promotion(
         self, lesson_id: int, *, direct_promotion_enabled: bool = False
     ) -> Dict:
-        """Wertet nur die Promotion-Policy aus; keine Publikation/Mutation."""
+        """Evaluates promotion policy only; no publication or mutation."""
         lesson = self.get_lesson(lesson_id)
         if lesson is None:
             raise ValueError(f"Lesson {lesson_id} nicht gefunden")
@@ -1182,7 +1178,7 @@ class USMCClient:
         lesson_ids: Optional[Iterable[int]] = None,
         limit: int = MAX_SESSION_LESSONS,
     ) -> List[Dict]:
-        """Liefert höchstens drei freigegebene Lessons exakt einmal aus."""
+        """Delivers up to three approved lessons exactly once."""
         prepared = self._prepare_delivery_request(
             session_key, delivery_key, context, lesson_ids, limit
         )
@@ -1214,16 +1210,16 @@ class USMCClient:
         lesson_session_key: Optional[str] = None,
     ) -> Dict:
         """
-        Startet eine neue Agent-Session.
+        Starts a new agent session.
 
         Args:
-            task: Optionale Task-Beschreibung
-            lesson_context: Expliziter Kontext fuer eine begrenzte Zustellung
-            lesson_ids: Explizit ausgewaehlte Lesson-IDs
-            delivery_key: Stabile Idempotenz-ID; Pflicht bei Zustellung
+            task: Optional task description.
+            lesson_context: Explicit context for targeted lesson delivery.
+            lesson_ids: Explicitly selected lesson IDs.
+            delivery_key: Stable idempotency ID; required when delivering lessons.
 
         Returns:
-            Dict mit Session-Daten inkl. 'id'
+            Dict containing session data including 'id'.
         """
         selected_ids = list(lesson_ids or [])
         wants_lessons = bool(selected_ids or (lesson_context and lesson_context.strip()))
@@ -1307,14 +1303,14 @@ class USMCClient:
 
     def end_session(self, session_id: int, handoff_notes: Optional[str] = None) -> bool:
         """
-        Beendet eine Session.
+        Ends an active session.
 
         Args:
-            session_id: Session-ID
-            handoff_notes: Notizen fuer die naechste Session
+            session_id: Session ID.
+            handoff_notes: Notes for the next session.
 
         Returns:
-            True wenn erfolgreich
+            True if successful.
         """
         now = datetime.now().isoformat()
 
@@ -1336,13 +1332,13 @@ class USMCClient:
 
     def generate_context(self, max_items: int = 5) -> str:
         """
-        Generiert kompakten Kontext fuer LLM-Prompts.
+        Generates compact context for LLM prompts.
 
         Args:
-            max_items: Maximale Items pro Kategorie
+            max_items: Maximum items per category.
 
         Returns:
-            Formatierter Kontext-String (Markdown)
+            Formatted context string (Markdown).
         """
         parts = []
 
@@ -1379,13 +1375,13 @@ class USMCClient:
 
     def get_changes_since(self, since: str) -> Dict[str, list]:
         """
-        Holt alle Aenderungen seit einem Zeitstempel.
+        Retrieves all changes since a given timestamp.
 
         Args:
-            since: ISO-Zeitstempel (z.B. '2026-02-28T00:00:00')
+            since: ISO timestamp (e.g. '2026-02-28T00:00:00').
 
         Returns:
-            Dict mit 'facts', 'working', 'lessons', 'sync_timestamp'
+            Dict containing 'facts', 'working', 'lessons', 'sync_timestamp'.
         """
         conn = self._get_conn()
         try:
@@ -1431,7 +1427,7 @@ class USMCClient:
     # ═══════════════════════════════════════════════════════════════
 
     def get_status(self) -> Dict:
-        """Gibt Memory-Statistiken zurueck."""
+        """Returns memory statistics."""
         conn = self._get_conn()
         try:
             facts = conn.execute("SELECT COUNT(*) FROM usmc_facts").fetchone()[0]

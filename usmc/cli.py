@@ -3,28 +3,28 @@
 USMC Command-Line Interface
 ============================
 
-CLI fuer USMC Memory-Operationen. Die menschenlesbare Laufzeitprosa ist
-bewusst Deutsch (``RUNTIME_LANGUAGE = "de"``); Befehlsnamen, Kategorie-
-werte und JSON-Schluessel bleiben stabile englische Protokoll-Tokens.
+CLI for USMC memory operations. Human-readable runtime output remains
+deliberately German (``RUNTIME_LANGUAGE = "de"``); command names, category
+values, and JSON keys are stable English protocol tokens.
 
-Verwendung:
+Usage:
     usmc status
     usmc fact system os "Windows 11"
     usmc facts --category system
-    usmc note "Aktueller Task: Feature X"
+    usmc note "Current task: feature X"
     usmc working
     usmc lesson "Bug-Title" "Problem" "Solution" --severity high
     usmc lessons
     usmc context
     usmc clear
 
-Gezielt suchen statt scrollen (working/facts/lessons):
-    usmc working --tags store              # ODER-Verknuepfung bei 'a,b'
+Targeted search instead of scrolling (working/facts/lessons):
+    usmc working --tags store              # OR conjunction with 'a,b'
     usmc working --tags store,welle --tags-all
-    usmc working --agent codex-cli         # Filter, NICHT die Schreib-Identitaet
+    usmc working --agent codex-cli         # filter, NOT writer identity
     usmc working --grep "Partner Center"
 
-Die Filter laufen in der Datenbankabfrage, also vor --limit.
+Filters execute directly in the database query before --limit.
 
 Author: Lukas Geiger
 License: MIT
@@ -40,15 +40,15 @@ from .client import USMCClient, default_db_path  # noqa: F401 (Re-Export)
 
 
 def get_client(args) -> USMCClient:
-    """Erstellt Client basierend auf CLI-Args."""
+    """Creates client based on CLI args."""
     return USMCClient(
-        db_path=args.db,  # None -> default_db_path() im Client
+        db_path=args.db,  # None -> default_db_path() in client
         agent_id=args.agent or "cli"
     )
 
 
 def cmd_status(args) -> int:
-    """Zeigt Memory-Statistiken."""
+    """Shows memory statistics."""
     client = get_client(args)
     status = client.get_status()
 
@@ -64,7 +64,7 @@ def cmd_status(args) -> int:
 
 
 def cmd_fact(args) -> int:
-    """Speichert einen Fakt."""
+    """Stores a fact."""
     client = get_client(args)
     result = client.add_fact(
         category=args.category,
@@ -81,11 +81,10 @@ def cmd_fact(args) -> int:
 
 
 def _print_empty(args, message: str, names) -> int:
-    """Meldet ein leeres Ergebnis -- als JSON-Array, wenn --json gesetzt ist.
+    """Reports an empty result -- as JSON array if --json is set.
 
-    Mit Filtern ist "leer" der Normalfall statt der Ausnahme, und der typische
-    Aufrufer ist ein Programm: eine deutsche Prosazeile im --json-Modus wuerde
-    dessen Parser brechen.
+    With filters, 'empty' is normal rather than an exception, and callers
+    may be automated programs: a prose line in --json mode would break parsing.
     """
     if args.json:
         print("[]")
@@ -97,7 +96,7 @@ def _print_empty(args, message: str, names) -> int:
 
 
 def cmd_facts(args) -> int:
-    """Listet Fakten auf."""
+    """Lists facts."""
     client = get_client(args)
     facts = client.get_facts(
         category=args.category,
@@ -125,7 +124,7 @@ def cmd_facts(args) -> int:
 
 
 def cmd_note(args) -> int:
-    """Speichert eine Notiz."""
+    """Stores a note."""
     client = get_client(args)
     result = client.add_working(
         content=args.content,
@@ -138,7 +137,7 @@ def cmd_note(args) -> int:
 
 
 def cmd_working(args) -> int:
-    """Listet Working Memory auf."""
+    """Lists working memory entries."""
     client = get_client(args)
     notes = client.get_working(
         limit=args.limit,
@@ -166,7 +165,7 @@ def cmd_working(args) -> int:
 
 
 def cmd_clear(args) -> int:
-    """Loescht Working Memory."""
+    """Clears working memory."""
     client = get_client(args)
     count = client.clear_working(agent_only=not args.all)
     print(f"[OK] {count} Einträge deaktiviert.")
@@ -174,7 +173,7 @@ def cmd_clear(args) -> int:
 
 
 def cmd_lesson(args) -> int:
-    """Speichert eine Lesson Learned."""
+    """Stores a lesson learned."""
     client = get_client(args)
     result = client.add_lesson(
         title=args.title,
@@ -207,7 +206,7 @@ def cmd_lesson(args) -> int:
 
 
 def cmd_lesson_feedback(args) -> int:
-    """Speichert eine idempotente Lesson-Rückmeldung."""
+    """Stores idempotent feedback for a lesson."""
     helpful = None if args.helpful is None else args.helpful == "yes"
     result = get_client(args).record_lesson_feedback(
         lesson_id=args.lesson_id,
@@ -227,7 +226,7 @@ def cmd_lesson_feedback(args) -> int:
 
 
 def cmd_lesson_review(args) -> int:
-    """Setzt den Redaktionsstatus einer Lesson."""
+    """Sets editorial review status of a lesson."""
     result = get_client(args).set_lesson_editorial_status(args.lesson_id, args.status)
     if args.json:
         print(json.dumps(result, indent=2, ensure_ascii=False))
@@ -237,7 +236,7 @@ def cmd_lesson_review(args) -> int:
 
 
 def cmd_lesson_policy(args) -> int:
-    """Prüft den produktiv deaktivierten Direct-Promotion-Gate."""
+    """Evaluates the direct promotion gate (disabled in production)."""
     result = get_client(args).evaluate_lesson_promotion(
         args.lesson_id, direct_promotion_enabled=False
     )
@@ -246,7 +245,7 @@ def cmd_lesson_policy(args) -> int:
 
 
 def cmd_lesson_deliver(args) -> int:
-    """Liefert begrenzte Kontext- oder Auswahl-Lessons."""
+    """Delivers contextual or selected lessons within limits."""
     result = get_client(args).deliver_lessons(
         session_key=args.session_key,
         delivery_key=args.delivery_key,
@@ -264,7 +263,7 @@ def cmd_lesson_deliver(args) -> int:
 
 
 def cmd_lessons(args) -> int:
-    """Listet Lessons Learned auf."""
+    """Lists lessons learned."""
     client = get_client(args)
     lessons = client.get_lessons(
         limit=args.limit,
@@ -293,7 +292,7 @@ def cmd_lessons(args) -> int:
 
 
 def cmd_context(args) -> int:
-    """Generiert Kontext fuer LLM-Prompts."""
+    """Generates context for LLM prompts."""
     client = get_client(args)
     ctx = client.generate_context(max_items=args.max_items)
     print(ctx)
@@ -301,7 +300,7 @@ def cmd_context(args) -> int:
 
 
 def cmd_session_start(args) -> int:
-    """Startet eine neue Session."""
+    """Starts a new session."""
     client = get_client(args)
     result = client.start_session(
         task=args.task,
@@ -322,7 +321,7 @@ def cmd_session_start(args) -> int:
 
 
 def cmd_session_end(args) -> int:
-    """Beendet eine Session."""
+    """Ends a session."""
     client = get_client(args)
     success = client.end_session(args.session_id, handoff_notes=args.notes)
     if success:
@@ -334,7 +333,7 @@ def cmd_session_end(args) -> int:
 
 
 def cmd_changes(args) -> int:
-    """Zeigt Aenderungen seit Zeitstempel."""
+    """Shows changes since timestamp."""
     client = get_client(args)
     changes = client.get_changes_since(args.since)
 

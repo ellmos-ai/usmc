@@ -5,14 +5,10 @@ Tests fuer USMC CLI
 
 import json
 import os
-import sys
 import tempfile
 import unittest
-from pathlib import Path
 from io import StringIO
 from unittest.mock import patch
-
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from usmc import USMCClient
 from usmc.cli import main

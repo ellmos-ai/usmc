@@ -4,6 +4,10 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- **Developer Dependencies & Clean Test Imports (2026-09-28):**
+  - **`[project.optional-dependencies]` in `pyproject.toml`:** Declared `test = ["pytest>=7.0", "ruff>=0.1.0"]` enabling standardized, reproducible developer installs via `pip install -e .[test]`.
+  - **Clean Test Suite Imports:** Removed redundant `sys.path.insert(0, ...)` workarounds from `tests/test_api.py`, `tests/test_cli.py`, `tests/test_client.py`, and `tests/test_paths.py` in favor of standard editable installs and `pytest.ini_options.pythonpath = "."`.
+  - **Clean Ruff Linting:** Passed with 0 errors across codebase.
 - **Discoverability, Visual Architecture, Level 1 SBOM, 18-Point Navigation Parity & PEP 621 Saturation (Pfad B, 2026-09-28):**
   - **Version Freeze Compliance (T-20260920-167562623):** Maintained frozen version `0.3.0` across package manifests and metadata tests.
   - **PEP 621 Metadata Saturation (`pyproject.toml`):**

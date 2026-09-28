@@ -3,16 +3,16 @@
 USMC High-Level API
 ====================
 
-Convenience-Funktionen fuer schnellen Zugriff ohne explizite Client-Instanz.
-Singleton-Pattern mit globaler Default-DB.
+Convenience functions for fast access without an explicit client instance.
+Singleton pattern with a global default database.
 
-Verwendung:
+Usage:
     from usmc import api
 
     api.init(agent_id="opus")
     api.fact("system", "os", "Windows 11")
-    api.note("Aktueller Task: Feature X implementieren")
-    api.lesson("Encoding-Bug", "cp1252", "PYTHONIOENCODING=utf-8")
+    api.note("Current task: implement feature X")
+    api.lesson("Encoding bug", "cp1252", "PYTHONIOENCODING=utf-8")
 
     print(api.context())
     print(api.status())
@@ -25,7 +25,7 @@ from typing import Optional, List, Dict, Iterable
 
 from .client import USMCClient
 
-# Globale Client-Instanz
+# Global client instance
 _client: Optional[USMCClient] = None
 
 
@@ -34,15 +34,15 @@ def init(
     agent_id: str = "default"
 ) -> USMCClient:
     """
-    Initialisiert die globale USMC-Instanz.
+    Initializes the global USMC instance.
 
     Args:
-        db_path: Pfad zur DB (default: ``~/.usmc/usmc_memory.db``,
-            Override via Env ``USMC_DB`` — siehe ``client.default_db_path``)
-        agent_id: Agent-Kennung
+        db_path: Path to database (default: ``~/.usmc/usmc_memory.db``,
+            override via env ``USMC_DB`` -- see ``client.default_db_path``)
+        agent_id: Agent identifier
 
     Returns:
-        Die initialisierte Client-Instanz
+        The initialized client instance
     """
     global _client
     _client = USMCClient(db_path=db_path, agent_id=agent_id)
@@ -50,7 +50,7 @@ def init(
 
 
 def get_client() -> USMCClient:
-    """Gibt die globale Client-Instanz zurueck (lazy init)."""
+    """Returns the global client instance (lazy init)."""
     global _client
     if _client is None:
         _client = USMCClient(agent_id="default")
@@ -58,7 +58,7 @@ def get_client() -> USMCClient:
 
 
 def set_agent(agent_id: str) -> None:
-    """Setzt die Agent-ID fuer neue Eintraege."""
+    """Sets the agent ID for new entries."""
     client = get_client()
     client.agent_id = agent_id
 
@@ -74,16 +74,16 @@ def fact(
     confidence: float = 1.0
 ) -> Dict:
     """
-    Speichert einen Fakt.
+    Stores a fact.
 
     Args:
-        category: user, project, system, oder domain
-        key: Schluessel
-        value: Wert
-        confidence: Konfidenz 0.0-1.0
+        category: user, project, system, or domain
+        key: Key
+        value: Value
+        confidence: Confidence 0.0-1.0
 
     Returns:
-        Dict mit Ergebnis
+        Dict with result
     """
     return get_client().add_fact(category, key, value, confidence)
 
@@ -94,13 +94,13 @@ def facts(
     agent_id: Optional[str] = None,
     grep: Optional[str] = None
 ) -> List[Dict]:
-    """Holt Fakten (optional gefiltert).
+    """Retrieves facts (optionally filtered).
 
     Args:
-        category: user, project, system oder domain
-        min_confidence: Minimale Konfidenz
-        agent_id: Nur Fakten dieses Agents
-        grep: Teilstring in key oder value
+        category: user, project, system, or domain
+        min_confidence: Minimum confidence
+        agent_id: Only facts from this agent
+        grep: Substring in key or value
     """
     return get_client().get_facts(
         category=category, min_confidence=min_confidence,
@@ -118,26 +118,26 @@ def note(
     tags: Optional[str] = None
 ) -> Dict:
     """
-    Speichert eine Notiz im Working Memory.
+    Stores a note in working memory.
 
     Args:
-        content: Notiz-Text
-        priority: Prioritaet (hoeher = wichtiger)
-        tags: Komma-separierte Tags
+        content: Note text
+        priority: Priority (higher = more important)
+        tags: Comma-separated tags
 
     Returns:
-        Dict mit Ergebnis
+        Dict with result
     """
     return get_client().add_working(content, type='note', priority=priority, tags=tags)
 
 
 def scratch(content: str) -> Dict:
-    """Speichert einen Scratchpad-Eintrag (temporaer)."""
+    """Stores a scratchpad entry (temporary)."""
     return get_client().add_working(content, type='scratchpad', priority=-1)
 
 
 def loop(content: str) -> Dict:
-    """Speichert einen Loop-Eintrag (fuer Iterationen)."""
+    """Stores a loop entry (for iterations)."""
     return get_client().add_working(content, type='loop', priority=0)
 
 
@@ -148,16 +148,16 @@ def working(
     tags_all: bool = False,
     grep: Optional[str] = None
 ) -> List[Dict]:
-    """Holt aktive Working-Memory-Eintraege (optional gefiltert).
+    """Retrieves active working memory entries (optionally filtered).
 
     Args:
-        limit: Maximale Anzahl
-        agent_id: Nur Notizen dieses Agents
-        tags: Tag-Filter ('a,b' oder Liste), ODER-verknuepft
-        tags_all: True = alle Tags muessen vorkommen (UND)
-        grep: Teilstring im Inhalt
+        limit: Maximum number of entries
+        agent_id: Only notes from this agent
+        tags: Tag filter ('a,b' or list), OR-connected
+        tags_all: True = all tags must match (AND)
+        grep: Substring in content
 
-    Die Filter wirken in der Datenbankabfrage, also vor ``limit``.
+    Filters are applied in the database query before ``limit``.
     """
     return get_client().get_working(
         limit=limit, agent_id=agent_id,
@@ -166,7 +166,7 @@ def working(
 
 
 def clear() -> int:
-    """Loescht alle Working-Memory-Eintraege des aktuellen Agents."""
+    """Deletes all working memory entries for the current agent."""
     return get_client().clear_working(agent_only=True)
 
 
@@ -185,18 +185,19 @@ def lesson(
     **contract,
 ) -> Dict:
     """
-    Speichert eine Lesson Learned.
+    Stores a lesson learned.
 
     Args:
-        title: Kurztitel
-        problem: Problem-Beschreibung
-        solution: Loesung
+        title: Short title
+        problem: Problem description
+        solution: Solution
         severity: critical, high, medium, low
-        source_key/episode_key: Gemeinsam gesetzter idempotenter v2-Schluessel
-        contract: Optionale Provenienz-, Review-, Privacy- und Policyfelder
+        category: Category (default: general)
+        source_key/episode_key: Jointly set idempotent v2 keys
+        contract: Optional provenance, review, privacy, and policy fields
 
     Returns:
-        Dict mit Ergebnis
+        Dict with result
     """
     return get_client().add_lesson(
         title=title,
@@ -217,13 +218,14 @@ def lessons(
     grep: Optional[str] = None,
     delivery_eligible_only: bool = False,
 ) -> List[Dict]:
-    """Holt Lessons Learned (optional gefiltert).
+    """Retrieves lessons learned (optionally filtered).
 
     Args:
-        severity: critical, high, medium oder low
-        limit: Maximale Anzahl
-        agent_id: Nur Lessons dieses Agents
-        grep: Teilstring in title, problem oder solution
+        severity: critical, high, medium, or low
+        limit: Maximum number of entries
+        agent_id: Only lessons from this agent
+        grep: Substring in title, problem, or solution
+        delivery_eligible_only: Only return lessons eligible for delivery
     """
     return get_client().get_lessons(
         limit=limit, severity=severity, agent_id=agent_id, grep=grep,
@@ -240,7 +242,7 @@ def lesson_feedback(
     delivery_key: Optional[str] = None,
     event_anchor: Optional[str] = None,
 ) -> Dict:
-    """Speichert eine idempotente, getrennt auswertbare Rueckmeldung."""
+    """Stores idempotent, separately evaluable feedback for a lesson."""
     return get_client().record_lesson_feedback(
         lesson_id=lesson_id,
         feedback_key=feedback_key,
@@ -253,12 +255,12 @@ def lesson_feedback(
 
 
 def lesson_review(lesson_id: int, status: str) -> Dict:
-    """Setzt den Redaktionsstatus ohne Publikationswirkung."""
+    """Sets editorial review status without publishing side effects."""
     return get_client().set_lesson_editorial_status(lesson_id, status)
 
 
 def lesson_promotion(lesson_id: int) -> Dict:
-    """Prueft den Direct-Promotion-Gate; produktiv immer deaktiviert."""
+    """Evaluates the direct promotion gate; always disabled in production."""
     return get_client().evaluate_lesson_promotion(
         lesson_id, direct_promotion_enabled=False
     )
@@ -271,7 +273,7 @@ def deliver_lessons(
     lesson_ids: Optional[Iterable[int]] = None,
     limit: int = 3,
 ) -> List[Dict]:
-    """Liefert synchron und begrenzt Kontext- oder Auswahl-Lessons."""
+    """Delivers contextual or selected lessons synchronously within limits."""
     return get_client().deliver_lessons(
         session_key=session_key,
         delivery_key=delivery_key,
@@ -293,7 +295,7 @@ def start(
     delivery_key: Optional[str] = None,
     lesson_session_key: Optional[str] = None,
 ) -> Dict:
-    """Startet eine neue Session."""
+    """Starts a new session."""
     return get_client().start_session(
         task=task,
         lesson_context=lesson_context,
@@ -305,7 +307,7 @@ def start(
 
 
 def end(session_id: int, notes: Optional[str] = None) -> bool:
-    """Beendet eine Session mit optionalen Handoff-Notes."""
+    """Ends a session with optional handoff notes."""
     return get_client().end_session(session_id, handoff_notes=notes)
 
 
@@ -314,17 +316,17 @@ def end(session_id: int, notes: Optional[str] = None) -> bool:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def context(max_items: int = 5) -> str:
-    """Generiert kompakten Kontext fuer LLM-Prompts."""
+    """Generates compact context for LLM prompts."""
     return get_client().generate_context(max_items=max_items)
 
 
 def status() -> Dict:
-    """Gibt Memory-Statistiken zurueck."""
+    """Returns memory statistics."""
     return get_client().get_status()
 
 
 def changes(since: str) -> Dict:
-    """Holt alle Aenderungen seit einem Zeitstempel."""
+    """Retrieves all changes since a given timestamp."""
     return get_client().get_changes_since(since)
 
 
@@ -333,19 +335,19 @@ def changes(since: str) -> Dict:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def remember(key: str, value: str, category: str = 'project') -> Dict:
-    """Shortcut: Speichert einen Fakt mit hoher Konfidenz."""
+    """Shortcut: stores a fact with high confidence."""
     return fact(category, key, value, confidence=0.95)
 
 
 def forget(key: str, category: str = 'project') -> bool:
     """
-    Loescht einen Fakt (hard delete).
+    Deletes a fact (hard delete).
 
     Args:
-        key: Fakt-Schluessel
-        category: Kategorie (default: project)
+        key: Fact key
+        category: Category (default: project)
 
     Returns:
-        True wenn geloescht, False wenn nicht gefunden
+        True if deleted, False if not found
     """
     return get_client().delete_fact(key, category=category)

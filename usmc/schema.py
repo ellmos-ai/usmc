@@ -3,8 +3,8 @@
 USMC Database Schema Definition + Migration
 ============================================
 
-Eigene SQLite-DB (usmc_memory.db), unabhaengig von bach.db.
-Tabellen: usmc_facts, usmc_working, usmc_lessons, usmc_sessions
+Dedicated SQLite database (usmc_memory.db), independent of bach.db.
+Tables: usmc_facts, usmc_working, usmc_lessons, usmc_sessions
 
 Author: Lukas Geiger
 License: MIT
@@ -355,7 +355,7 @@ REQUIRED_V2_INDEXES = (
 
 
 def init_db(conn: sqlite3.Connection) -> None:
-    """Erstellt alle Tabellen und setzt Schema-Version."""
+    """Creates all tables and sets schema version."""
     try:
         conn.executescript("BEGIN IMMEDIATE;\n" + SCHEMA_SQL)
         conn.execute(
@@ -369,7 +369,7 @@ def init_db(conn: sqlite3.Connection) -> None:
 
 
 def get_schema_version(conn: sqlite3.Connection) -> Optional[int]:
-    """Liest aktuelle Schema-Version aus der DB."""
+    """Reads current schema version from DB."""
     try:
         row = conn.execute(
             "SELECT value FROM usmc_meta WHERE key = 'schema_version'"
@@ -435,7 +435,7 @@ def _v2_repair_needed(conn: sqlite3.Connection) -> bool:
 
 
 def migrate(conn: sqlite3.Connection) -> None:
-    """Prüft und repariert alle additiven v2-Invarianten transaktional."""
+    """Checks and repairs all additive v2 invariants transactionally."""
     version = get_schema_version(conn)
     lessons_exists = _table_exists(conn, "usmc_lessons")
 
@@ -563,7 +563,7 @@ def _backfill_delivery_payload_hashes(conn: sqlite3.Connection) -> None:
 
 
 def _migrate_v1_to_v2(conn: sqlite3.Connection) -> None:
-    """Erweitert und repariert den Lesson-Vertrag atomar auf Schema v2."""
+    """Extends and repairs the lesson contract atomically to schema v2."""
     try:
         conn.execute("BEGIN IMMEDIATE")
         conn.execute(

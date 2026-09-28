@@ -32,14 +32,15 @@ class TestMetadataContract(unittest.TestCase):
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
-        self.assertIn("Tests-170%20passed", en_text)
-        self.assertIn("Tests-170%20bestanden", de_text)
-        self.assertIn("Tests-170%20aprobados", es_text)
-        self.assertIn("Verified-2026--09--26", en_text)
-        self.assertIn("Gepr%C3%BCft-2026--09--26", de_text)
-        self.assertIn("Verificado-2026--09--26", es_text)
+        self.assertIn("Tests-177%20passed", en_text)
+        self.assertIn("Tests-177%20bestanden", de_text)
+        self.assertIn("Tests-177%20aprobados", es_text)
+        self.assertIn("Verified-2026--09--28", en_text)
+        self.assertIn("Gepr%C3%BCft-2026--09--28", de_text)
+        self.assertIn("Verificado-2026--09--28", es_text)
         for text in [en_text, de_text, es_text]:
             self.assertIn("Attribution-NOTICE-blue.svg", text)
+            self.assertIn("Level%201%20SBOM-Text%20Companion-brightgreen.svg", text)
 
     def test_mermaid_sequence_diagram_present(self):
         for name in ["README.md", "README_de.md", "README_es.md"]:
@@ -54,7 +55,7 @@ class TestMetadataContract(unittest.TestCase):
         path = ROOT / "llms.txt"
         self.assertTrue(path.exists())
         text = path.read_text(encoding="utf-8")
-        self.assertIn("Last-checked: 2026-09-26", text)
+        self.assertIn("Last-checked: 2026-09-28", text)
         self.assertIn("0.3.0", text)
         self.assertIn("README_es.md", text)
         self.assertIn("NOTICE", text)
@@ -62,6 +63,8 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("THIRD_PARTY_LICENSES.txt", text)
         self.assertIn("SECURITY.md", text)
         self.assertIn("MARKETING-LOG.txt", text)
+        self.assertIn("177", text)
+        self.assertIn("521 BGB", text)
 
     def test_hygiene_and_governance_files_exist(self):
         for name in [
@@ -160,22 +163,24 @@ class TestMetadataContract(unittest.TestCase):
 
     def test_level1_sbom_inventory(self):
         sbom = (ROOT / "THIRD_PARTY_LICENSES.txt").read_text(encoding="utf-8")
-        self.assertIn("Audited: 2026-09-26", sbom)
+        self.assertIn("Audited: 2026-09-28", sbom)
         self.assertIn("RunAsInvoker", sbom)
         self.assertIn("dependencies = []", sbom)
         self.assertIn("Python Standard Library", sbom)
         self.assertIn("NOTICE", sbom)
 
-    def test_sixteen_point_navigation_parity(self):
+    def test_eighteen_point_navigation_parity(self):
         en_text = (ROOT / "README.md").read_text(encoding="utf-8")
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
         en_anchors = [
             "#key-features",
+            "#core-capabilities--primitives",
             "#target-personas--discoverability",
             "#comparative-matrix-vs-alternatives",
             "#architecture--data-flow",
+            "#ascii-topology",
             "#multi-agent-interaction-sequence",
             "#governance--runtime-invariants",
             "#quick-start",
@@ -185,15 +190,17 @@ class TestMetadataContract(unittest.TestCase):
             "#runtime-language-contract",
             "#database-schema--state-isolation",
             "#sibling-ecosystem--positioning",
+            "#testing--quality-gates",
             "#third-party-licenses--transparency",
-            "#security-policy--vulnerability-reporting",
-            "#license--liability",
+            "#security-policy--liability",
         ]
         de_anchors = [
             "#hauptmerkmale",
+            "#kernkonzepte--primitive",
             "#zielgruppen--auffindbarkeit",
             "#vergleichsmatrix-gegenueber-alternativen",
             "#architektur--datenfluss",
+            "#ascii-topologie",
             "#multi-agenten-interaktionssequenz",
             "#governance--laufzeit-invarianten",
             "#schnellstart",
@@ -203,15 +210,17 @@ class TestMetadataContract(unittest.TestCase):
             "#laufzeit-sprachvertrag",
             "#datenbankschema--status-isolation",
             "#geschwister-oekosystem--positionierung",
+            "#testen--qualitaetstore",
             "#drittanbieter-lizenzen--transparenz",
-            "#sicherheitsrichtlinie--meldewege",
-            "#lizenz--haftung",
+            "#sicherheitsrichtlinie--haftung",
         ]
         es_anchors = [
             "#características-principales",
+            "#capacidades-clave--primitivas",
             "#arquetipos-de-usuario--visibilidad",
             "#matriz-comparativa-frente-a-alternativas",
             "#arquitectura-y-flujo-de-datos",
+            "#topologia-ascii",
             "#secuencia-de-interacción-multi-agente",
             "#invariantes-de-gobernanza-y-ejecución",
             "#inicio-rápido",
@@ -221,14 +230,14 @@ class TestMetadataContract(unittest.TestCase):
             "#contrato-de-idioma-en-ejecución",
             "#esquema-de-base-de-datos-y-aislamiento",
             "#ecosistema-hermano-y-posicionamiento",
+            "#pruebas-y-verificacion",
             "#licencias-de-terceros-y-transparencia",
-            "#política-de-seguridad-y-reporte-de-vulnerabilidades",
-            "#licencia-y-responsabilidad",
+            "#politica-de-seguridad-y-responsabilidad",
         ]
 
-        self.assertEqual(len(en_anchors), 16)
-        self.assertEqual(len(de_anchors), 16)
-        self.assertEqual(len(es_anchors), 16)
+        self.assertEqual(len(en_anchors), 18)
+        self.assertEqual(len(de_anchors), 18)
+        self.assertEqual(len(es_anchors), 18)
 
         for anchor in en_anchors:
             self.assertIn(anchor, en_text, f"Missing English anchor: {anchor}")
@@ -236,6 +245,52 @@ class TestMetadataContract(unittest.TestCase):
             self.assertIn(anchor, de_text, f"Missing German anchor: {anchor}")
         for anchor in es_anchors:
             self.assertIn(anchor, es_text, f"Missing Spanish anchor: {anchor}")
+
+    def test_sec_dual_html_anchors_parity(self):
+        en_text = (ROOT / "README.md").read_text(encoding="utf-8")
+        de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
+        es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
+
+        for i in range(1, 19):
+            tag = f'id="sec-{i:02d}"'
+            link = f'#sec-{i:02d}'
+            for text, name in [(en_text, "README.md"), (de_text, "README_de.md"), (es_text, "README_es.md")]:
+                with self.subTest(sec=i, name=name):
+                    self.assertIn(tag, text, f"Missing anchor {tag} in {name}")
+                    self.assertIn(link, text, f"Missing link {link} in {name}")
+
+    def test_ascii_topology_projection_present(self):
+        en_text = (ROOT / "README.md").read_text(encoding="utf-8")
+        de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
+        es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
+
+        self.assertIn("[VIEW 1: CLIENT RUNTIMES & AGENT DRIVERS]", en_text)
+        self.assertIn("[VIEW 2: USMC CORE ENGINE & MEMORY PRIMITIVES]", en_text)
+        self.assertIn("[VIEW 3: ACID WAL PERSISTENCE & CONCURRENCY]", en_text)
+
+        self.assertIn("[SICHT 1: CLIENT-LAUFZEITEN & AGENTEN-TREIBER]", de_text)
+        self.assertIn("[SICHT 2: USMC KERN-ENGINE & SPEICHER-PRIMITIVE]", de_text)
+        self.assertIn("[SICHT 3: ACID WAL PERSISTENZ & KONKURRENZ]", de_text)
+
+        self.assertIn("[VISTA 1: ENTORNOS CLIENTE Y CONTROLADORES DE AGENTES]", es_text)
+        self.assertIn("[VISTA 2: MOTOR CENTRAL USMC Y PRIMITIVAS DE MEMORIA]", es_text)
+        self.assertIn("[VISTA 3: PERSISTENCIA ACID WAL Y CONCURRENCIA]", es_text)
+
+    def test_pep621_metadata_saturation(self):
+        pyproj = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn("keywords = [", pyproj)
+        self.assertIn('"agent-framework"', pyproj)
+        self.assertIn('"zero-dependency"', pyproj)
+        self.assertIn('"Plain-Text Licenses"', pyproj)
+        self.assertIn('"Third-Party Licenses (Text)"', pyproj)
+        self.assertIn('"Level 1 SBOM"', pyproj)
+
+    def test_persona_tags_present(self):
+        for name in ["README.md", "README_de.md", "README_es.md"]:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            with self.subTest(name=name):
+                for p in ["PERSONA-01", "PERSONA-02", "PERSONA-03", "PERSONA-04"]:
+                    self.assertIn(p, text)
 
     def test_target_personas_present(self):
         mkt = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")

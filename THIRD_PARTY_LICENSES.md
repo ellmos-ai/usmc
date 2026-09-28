@@ -4,7 +4,7 @@
 **License:** [MIT License](LICENSE)<br>
 **Attribution:** [NOTICE](NOTICE)<br>
 **Inventory:** [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt)<br>
-**Audit Date:** 2026-09-26<br>
+**Audit Date:** 2026-09-28<br>
 **Repository:** [ellmos-ai/usmc](https://github.com/ellmos-ai/usmc)<br>
 **Umbrella Collective:** [open-bricks](https://github.com/open-bricks)
 
@@ -44,22 +44,22 @@ The following tools are utilized exclusively for offline automated testing, code
 
 ---
 
-## Governance & Runtime Invariants
+## Governance & Level 1 SBOM Invariant Cross-Reference Matrix
 
 `usmc` strictly enforces ten foundational governance and runtime invariants:
 
-| Invariant | Category | Description |
-|---|---|---|
-| `INV-LOCAL-01` | Local-First & Zero-Egress | 100% offline-ready; all operations persist to local SQLite (`~/.usmc/usmc.db` or configured path); zero telemetry or outbound network calls. |
-| `INV-UNPRIV-02` | Unprivileged User Mode (`RunAsInvoker`) | All CLI commands, API calls, and background routines operate strictly in unprivileged user space. |
-| `INV-SQLITE-03` | ACID & WAL Concurrency | Resilient multi-agent concurrency via SQLite WAL mode, busy handlers, and atomic transaction semantics. |
-| `INV-SCHEMA-04` | Backward-Compatible Schema Evolution | Automated idempotent migration and schema evolution ensuring seamless inter-agent backward compatibility. |
-| `INV-BOUND-05` | Bounded Ring Buffer & Pruning | Safe retention limits and deterministic pruning prevent uncontrolled disk expansion in long-running agent loops. |
-| `INV-FILTER-06` | In-Engine Delimiter Filtering | SQL WHERE clause filtering with delimiter-anchored matching prevents busy-loop starvation and post-fetch truncation. |
-| `INV-LANG-07` | Stable Protocol & Language Contract | Human-readable prose localized to German (`RUNTIME_LANGUAGE = "de"`), while CLI subcommands and JSON keys remain stable English tokens. |
-| `INV-ISOL-08` | Strict State Isolation | Shared memory databases reside strictly in user directories (`~/.usmc/` or custom targets), completely isolated from git repositories. |
-| `INV-AUDIT-09` | Complete SPDX Audit Transparency | 100% Python standard library at runtime; zero external runtime dependencies and zero copyleft risks. |
-| `INV-SLA-10` | Cross-Platform Parity & SLA | Consistent behavior across Windows, Linux, and macOS with committed 48h response / 5-day triage security SLA. |
+| Invariant | Category | Description | Status |
+|---|---|---|---|
+| `INV-LOCAL-01` | Local-First & Zero-Egress | 100% offline-ready; all operations persist to local SQLite (`~/.usmc/usmc.db` or configured path); zero telemetry or outbound network calls. | VERIFIED |
+| `INV-UNPRIV-02` | Unprivileged User Mode (`RunAsInvoker`) | All CLI commands, API calls, and background routines operate strictly in unprivileged user space. | VERIFIED |
+| `INV-SQLITE-03` | ACID & WAL Concurrency | Resilient multi-agent concurrency via SQLite WAL mode, busy handlers, and atomic transaction semantics. | VERIFIED |
+| `INV-SCHEMA-04` | Backward-Compatible Schema Evolution | Automated idempotent migration and schema evolution ensuring seamless inter-agent backward compatibility. | VERIFIED |
+| `INV-BOUND-05` | Bounded Ring Buffer & Pruning | Safe retention limits and deterministic pruning prevent uncontrolled disk expansion in long-running agent loops. | VERIFIED |
+| `INV-FILTER-06` | In-Engine Delimiter Filtering | SQL WHERE clause filtering with delimiter-anchored matching prevents busy-loop starvation and post-fetch truncation. | VERIFIED |
+| `INV-LANG-07` | Stable Protocol & Language Contract | Human-readable prose localized to German (`RUNTIME_LANGUAGE = "de"`), while CLI subcommands and JSON keys remain stable English tokens. | VERIFIED |
+| `INV-ISOL-08` | Strict State Isolation | Shared memory databases reside strictly in user directories (`~/.usmc/` or custom targets), completely isolated from git repositories. | VERIFIED |
+| `INV-AUDIT-09` | Complete SPDX Audit Transparency | 100% Python standard library at runtime; zero external runtime dependencies and zero copyleft risks. | VERIFIED |
+| `INV-SLA-10` | Cross-Platform Parity & SLA | Consistent behavior across Windows, Linux, and macOS with committed 48h response / 5-day triage security SLA. | VERIFIED |
 
 ---
 

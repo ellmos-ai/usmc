@@ -7,8 +7,9 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-170%20passed-brightgreen.svg)](tests)
-[![Verified: 2026-09-26](https://img.shields.io/badge/Verified-2026--09--26-blue.svg)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-177%20passed-brightgreen.svg)](tests)
+[![Verified: 2026-09-28](https://img.shields.io/badge/Verified-2026--09--28-blue.svg)](CHANGELOG.md)
+[![Level 1 SBOM](https://img.shields.io/badge/Level%201%20SBOM-Text%20Companion-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Dependencies](https://img.shields.io/badge/Dependencies-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
 [![Local-First](https://img.shields.io/badge/Local--First-Zero--Egress-blueviolet.svg)](THIRD_PARTY_LICENSES.md)
@@ -17,6 +18,7 @@
 [![Umbrella: open-bricks](https://img.shields.io/badge/Umbrella-open--bricks-darkblue.svg)](https://github.com/open-bricks)
 [![Marketing Log](https://img.shields.io/badge/Marketing%20Log-active-success.svg)](MARKETING-LOG.txt)
 [![llms.txt](https://img.shields.io/badge/LLM--Ready-llms.txt-teal.svg)](llms.txt)
+[![Last Checked](https://img.shields.io/badge/Last--Checked-2026--09--28-informational.svg)](llms.txt)
 
 **Languages:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
 
@@ -29,28 +31,39 @@ This repository is the ellmos project `ellmos-ai/usmc`, also cataloged as **ellm
 
 ---
 
-## Quick Navigation
+<a id="quick-navigation"></a>
+<a id="schnellnavigation"></a>
+<a id="navegación-rápida"></a>
+## 🧭 Quick Navigation
 
-- [Key Features](#key-features)
-- [Target Personas & Discoverability](#target-personas--discoverability)
-- [Comparative Matrix vs Alternatives](#comparative-matrix-vs-alternatives)
-- [Architecture & Data Flow](#architecture--data-flow)
-- [Multi-Agent Interaction Sequence](#multi-agent-interaction-sequence)
-- [Governance & Runtime Invariants](#governance--runtime-invariants)
-- [Quick Start](#quick-start)
-- [Core Concepts & Primitives](#core-concepts--primitives)
-- [Finding Things & Advanced Filtering](#finding-things--advanced-filtering)
-- [Multi-Agent Session Coordination](#multi-agent-session-coordination)
-- [Runtime Language Contract](#runtime-language-contract)
-- [Database Schema & State Isolation](#database-schema--state-isolation)
-- [Sibling Ecosystem & Positioning](#sibling-ecosystem--positioning)
-- [Third-Party Licenses & Transparency](#third-party-licenses--transparency)
-- [Security Policy & Vulnerability Reporting](#security-policy--vulnerability-reporting)
-- [License & Liability](#license--liability)
+| # | Section | Nav Anchor | Description |
+|---|---|---|---|
+| 01 | [Quick Reference & Highlights](#key-features) | [`#sec-01`](#sec-01) | Metadata, runtime stack & operational guarantees |
+| 02 | [Core Capabilities & Memory Primitives](#core-capabilities--primitives) | [`#sec-02`](#sec-02) | 100% Stdlib, ACID WAL, facts, lessons, working notes |
+| 03 | [Target Personas & Discoverability](#target-personas--discoverability) | [`#sec-03`](#sec-03) | Four technical personas & high-intent search terms |
+| 04 | [Comparative Matrix vs Alternatives](#comparative-matrix-vs-alternatives) | [`#sec-04`](#sec-04) | 10-dimension benchmark against 4 storage paradigms |
+| 05 | [Architecture & Data Flow](#architecture--data-flow) | [`#sec-05`](#sec-05) | Dual Mermaid sequence and system topology flowcharts |
+| 06 | [ASCII Four-View Architectural Topology](#ascii-topology) | [`#sec-06`](#sec-06) | Four-view ASCII projection of client, core, WAL & governance |
+| 07 | [Multi-Agent Interaction Sequence](#multi-agent-interaction-sequence) | [`#sec-07`](#sec-07) | Inter-agent coordination, handoff notes & concurrency lifecycle |
+| 08 | [Governance & Runtime Invariants](#governance--runtime-invariants) | [`#sec-08`](#sec-08) | Ten architectural, privacy, and SLA guarantees (INV-LOCAL-01..INV-SLA-10) |
+| 09 | [Quick Start](#quick-start) | [`#sec-09`](#sec-09) | Python client API, high-level helper API, and CLI quickstart |
+| 10 | [Core Concepts & Detailed Primitives](#core-concepts--primitives) | [`#sec-10`](#sec-10) | Facts with confidence scores, lessons learned, and scratchpad |
+| 11 | [Finding Things & Advanced Filtering](#finding-things--advanced-filtering) | [`#sec-11`](#sec-11) | In-engine SQL filtering by tag, agent, and substring before limit |
+| 12 | [Multi-Agent Session Coordination](#multi-agent-session-coordination) | [`#sec-12`](#sec-12) | Cross-agent session tracking, handoffs, and confidence arbitration |
+| 13 | [Runtime Language Contract](#runtime-language-contract) | [`#sec-13`](#sec-13) | Stable German prose contract (`RUNTIME_LANGUAGE = "de"`) & English tokens |
+| 14 | [Database Schema & State Isolation](#database-schema--state-isolation) | [`#sec-14`](#sec-14) | SQLite table layouts, home-dir isolation (`~/.usmc/`), and shared BACH union |
+| 15 | [Sibling Ecosystem & Positioning](#sibling-ecosystem--positioning) | [`#sec-15`](#sec-15) | Cross-linking matrix across ellmos and open-bricks umbrella |
+| 16 | [Testing, Quality Gates & CI](#testing--quality-gates) | [`#sec-16`](#sec-16) | Pytest, contract tests, Ruff, compileall, and GitHub Actions CI |
+| 17 | [Third-Party Licenses & Level 1 SBOM](#third-party-licenses--transparency) | [`#sec-17`](#sec-17) | Pure Python stdlib, Zero-Copyleft (MIT), and RunAsInvoker non-elevation |
+| 18 | [Security Policy, § 521 BGB & SLA](#security-policy--liability) | [`#sec-18`](#sec-18) | 48h Security Response SLA, strict zero-egress & § 521 BGB liability waiver |
 
 ---
 
-## Key Features
+<a id="sec-01"></a>
+<a id="key-features"></a>
+<a id="hauptmerkmale"></a>
+<a id="características-principales"></a>
+## 1. Quick Reference & Highlights
 
 - **100% Python Standard Library**: Zero external runtime pip dependencies (`sqlite3`, `json`, `os`, `sys`, `pathlib`, `dataclasses`). Instant cold starts (<1 ms) with zero supply-chain risk.
 - **Local-First & Zero-Egress**: 100% offline-ready; zero telemetry, zero background network calls, and complete data privacy.
@@ -63,20 +76,43 @@ This repository is the ellmos project `ellmos-ai/usmc`, also cataloged as **ellm
 
 ---
 
-## Target Personas & Discoverability
+<a id="sec-02"></a>
+<a id="core-capabilities--primitives"></a>
+<a id="kernkonzepte--primitive"></a>
+<a id="conceptos-clave-y-primitivas"></a>
+## 2. Core Capabilities & Memory Primitives
+
+USMC provides four distinct persistence primitives designed for multi-agent coordination:
+
+1. **Facts (`usmc_facts`):** Key-value facts categorized by domain (e.g., `system`, `project`, `preferences`). Agents assign confidence scores (0.0 to 1.0). When the same agent updates a fact, higher confidence automatically supersedes lower confidence.
+2. **Lessons Learned (`usmc_lessons`):** Structured post-mortem records documenting problems, solutions, and severity ratings (`low`, `medium`, `high`, `critical`) to prevent repeating errors.
+3. **Working Notes (`usmc_working`):** Temporary scratchpad memory for transient thinking, scratch notes, and execution milestones. Tagged with comma-separated strings for targeted SQL filtering.
+4. **Session Handoffs (`usmc_sessions`):** Execution session records tracking task names, agent IDs, start/end timestamps, and handoff summaries for sequential multi-agent chains.
+
+---
+
+<a id="sec-03"></a>
+<a id="target-personas--discoverability"></a>
+<a id="zielgruppen--auffindbarkeit"></a>
+<a id="arquetipos-de-usuario--visibilidad"></a>
+## 3. Target Personas & Discoverability
 
 | Target Persona | Core Profile & Stack | Friction & Pain Points | How USMC Solves It |
 |---|---|---|---|
-| **Autonomous Multi-Agent Swarm Engineers** | Claude Code, Antigravity/Gemini, Codex, BACH, Rinnsal | Agent state lost between runs; concurrent file edits corrupt context; brittle ad-hoc communication files. | Shared local SQLite backend with WAL concurrency, cross-agent handoff sessions, and deterministic confidence scoring. |
-| **Local-First & Zero-Egress AI Engineers** | Air-gapped AI environments, private enterprise workstations | Vector databases and cloud context services leak telemetry or require heavy Docker container infrastructure. | 100% offline, zero network egress, pure standard library runtime, and state isolation in user directories (`~/.usmc/`). |
-| **Desktop Application & MCP Tool Builders** | PySide6, Electron, MCP Servers, DevCenter, CLI utilities | Memory libraries pull 20+ heavy pip dependencies, causing slow startup (>2s) and massive binary distribution bloat. | Zero pip dependencies, cold-start latency <1 ms, lightweight SQLite footprint (<15 MB RAM), pure unprivileged execution (`RunAsInvoker`). |
-| **Enterprise Security & Compliance Auditors** | Supply chain security, open-source compliance | Viral copyleft licenses (GPL/AGPL) and unmaintained transitive dependencies create legal liability. | Zero-Copyleft guarantee (MIT), pure Python stdlib, formal SPDX software inventory, and 48h response security SLA. |
+| **[PERSONA-01] Autonomous Multi-Agent Swarm Engineers** | Claude Code, Antigravity/Gemini, Codex, BACH, Rinnsal | Agent state lost between runs; concurrent file edits corrupt context; brittle ad-hoc communication files. | Shared local SQLite backend with WAL concurrency, cross-agent handoff sessions, and deterministic confidence scoring. |
+| **[PERSONA-02] Local-First & Zero-Egress AI Engineers** | Air-gapped AI environments, private enterprise workstations | Vector databases and cloud context services leak telemetry or require heavy Docker container infrastructure. | 100% offline, zero network egress, pure standard library runtime, and state isolation in user directories (`~/.usmc/`). |
+| **[PERSONA-03] Desktop Application & MCP Tool Builders** | PySide6, Electron, MCP Servers, DevCenter, CLI utilities | Memory libraries pull 20+ heavy pip dependencies, causing slow startup (>2s) and massive binary distribution bloat. | Zero pip dependencies, cold-start latency <1 ms, lightweight SQLite footprint (<15 MB RAM), pure unprivileged execution (`RunAsInvoker`). |
+| **[PERSONA-04] Enterprise Security & Compliance Auditors** | Supply chain security, open-source compliance | Viral copyleft licenses (GPL/AGPL) and unmaintained transitive dependencies create legal liability. | Zero-Copyleft guarantee (MIT), pure Python stdlib, formal SPDX software inventory, and 48h response security SLA. |
 
 **High-Intent Search Terms:** `llm shared memory`, `agent memory sqlite`, `cross-agent memory python`, `zero dependency agent memory`, `multi-agent handoff`, `local-first ai memory`, `prompt context generator`, `lessons learned memory`, `autonomous agent memory layer`, `ellmos usmc`.
 
 ---
 
-## Comparative Matrix vs Alternatives
+<a id="sec-04"></a>
+<a id="comparative-matrix-vs-alternatives"></a>
+<a id="vergleichsmatrix-gegenueber-alternativen"></a>
+<a id="matriz-comparativa-frente-a-alternativas"></a>
+## 4. Comparative Matrix vs Alternatives
 
 | Architectural Criterion | USMC (`ellmos-ai/usmc`) | Ad-Hoc JSON / Markdown Files | Central Cloud Redis / Vector DBs | Heavyweight Memory Frameworks (Mem0, Zep) | Raw SQLite Ad-Hoc Scripts |
 |---|---|---|---|---|---|
@@ -93,7 +129,11 @@ This repository is the ellmos project `ellmos-ai/usmc`, also cataloged as **ellm
 
 ---
 
-## Architecture & Data Flow
+<a id="sec-05"></a>
+<a id="architecture--data-flow"></a>
+<a id="architektur--datenfluss"></a>
+<a id="arquitectura-y-flujo-de-datos"></a>
+## 5. Architecture & Data Flow
 
 ```mermaid
 graph TD
@@ -127,7 +167,57 @@ graph TD
 
 ---
 
-## Multi-Agent Interaction Sequence
+<a id="sec-06"></a>
+<a id="ascii-topology"></a>
+<a id="ascii-topologie"></a>
+<a id="topologia-ascii"></a>
+## 6. ASCII Four-View Architectural Topology Projection
+
+```text
+========================================================================================
+[VIEW 1: CLIENT RUNTIMES & AGENT DRIVERS]
+----------------------------------------------------------------------------------------
+ +-------------------------+  +-------------------------+  +--------------------------+
+ | Claude Code / Antigravity|  | Codex / OpenAI Drivers  |  | BACH / Rinnsal Runtimes  |
+ | (High-level Python API) |  | (Python USMCClient)     |  | (Direct CLI / Scripting) |
+ +------------+------------+  +------------+------------+  +------------+-------------+
+              |                            |                            |
+              +----------------------------+----------------------------+
+                                           |
+                                           v
+========================================================================================
+[VIEW 2: USMC CORE ENGINE & MEMORY PRIMITIVES]
+----------------------------------------------------------------------------------------
+ +------------------------------------------------------------------------------------+
+ | USMC Memory Engine (`usmc.client` & `usmc.api`)                                    |
+ |                                                                                    |
+ |  [Facts Storage]   ──> [Lessons Learned]  ──> [Working Notes]  ──> [Session Handoff]|
+ |   Confidence-sorted     Problem/Solution/Sev   Tags & grep filters  Multi-agent context|
+ |   Deterministic merge   Idempotent v2 schema   In-engine SQL filter Context generator  |
+ +-----------------------------------+------------------------------------------------+
+                                     |
+                         (WAL Transaction & busy retry)
+                                     v
+========================================================================================
+[VIEW 3: ACID WAL PERSISTENCE & CONCURRENCY]  [VIEW 4: GOVERNANCE, SECURITY & ECOSYSTEM]
+--------------------------------------------  ------------------------------------------
+ Local SQLite Storage Engine                   Governance, Compliance & Zero-Egress Perimeter
+ +------------------------------------------+  +---------------------------------------+
+ | ~/.usmc/usmc_memory.db (Isolated User-Dir)|  | Zero Telemetry / 100% Offline Boundary|
+ | PRAGMA journal_mode = WAL                |  | Unprivileged Mode (RunAsInvoker)      |
+ | Busy timeout retries & atomic transactions| | Zero-Copyleft Permissive Footprint    |
+ | Optional Shared BACH/OCEAN Union Schema  |  | Level 1 SBOM Text Companion & 48h SLA |
+ +------------------------------------------+  +---------------------------------------+
+========================================================================================
+```
+
+---
+
+<a id="sec-07"></a>
+<a id="multi-agent-interaction-sequence"></a>
+<a id="multi-agenten-interaktionssequenz"></a>
+<a id="secuencia-de-interacción-multi-agente"></a>
+## 7. Multi-Agent Interaction Sequence
 
 The sequence below illustrates how multiple autonomous agents coordinate through local USMC SQLite memory without requiring background daemons:
 
@@ -162,7 +252,11 @@ sequenceDiagram
 
 ---
 
-## Governance & Runtime Invariants
+<a id="sec-08"></a>
+<a id="governance--runtime-invariants"></a>
+<a id="governance--laufzeit-invarianten"></a>
+<a id="invariantes-de-gobernanza-y-ejecución"></a>
+## 8. Governance & Runtime Invariants
 
 USMC strictly enforces ten foundational governance and runtime invariants:
 
@@ -181,7 +275,11 @@ USMC strictly enforces ten foundational governance and runtime invariants:
 
 ---
 
-## Quick Start
+<a id="sec-09"></a>
+<a id="quick-start"></a>
+<a id="schnellstart"></a>
+<a id="inicio-rápido"></a>
+## 9. Quick Start
 
 ### Installation
 
@@ -346,7 +444,11 @@ unchanged in either mode and, like every other lesson write, lands on `usmc_less
 `memory_lessons` -- regardless of union mode. This is a deliberate policy lock on the v2
 mutation surface, not a data-loss risk.
 
-## Core Concepts & Primitives
+<a id="sec-10"></a>
+<a id="core-concepts--primitives"></a>
+<a id="kernkonzepte--primitive-details"></a>
+<a id="conceptos-clave-detalles"></a>
+## 10. Core Concepts & Detailed Primitives
 
 | Primitive | Description & Storage | Typical Usage |
 |---|---|---|
@@ -358,7 +460,11 @@ mutation surface, not a data-loss risk.
 
 ---
 
-## Finding Things & Advanced Filtering
+<a id="sec-11"></a>
+<a id="finding-things--advanced-filtering"></a>
+<a id="gezieltes-suchen--filterung"></a>
+<a id="búsqueda-precisa-y-filtros"></a>
+## 11. Finding Things & Advanced Filtering
 
 Once multiple agents write to the same database, chronological scrolling becomes counterproductive. USMC applies filters directly in SQL before limits are evaluated:
 
@@ -393,7 +499,11 @@ api.lessons(grep="cp1252")
 
 ---
 
-## Multi-Agent Session Coordination
+<a id="sec-12"></a>
+<a id="multi-agent-session-coordination"></a>
+<a id="multi-agenten-sitzungskoordination"></a>
+<a id="coordinación-de-sesiones-multi-agente"></a>
+## 12. Multi-Agent Session Coordination
 
 ```python
 from usmc import USMCClient
@@ -414,7 +524,11 @@ print(codex.get_facts(category="project"))
 
 ---
 
-## Runtime Language Contract
+<a id="sec-13"></a>
+<a id="runtime-language-contract"></a>
+<a id="laufzeit-sprachvertrag"></a>
+<a id="contrato-de-idioma-en-ejecución"></a>
+## 13. Runtime Language Contract
 
 The public runtime language is intentionally German (`de`) for compatibility with existing automations and operational registries. `USMCClient.generate_context()` and CLI output emit German human-readable prose and help text.
 
@@ -427,7 +541,11 @@ assert usmc.RUNTIME_LANGUAGE == "de"
 
 ---
 
-## Database Schema & State Isolation
+<a id="sec-14"></a>
+<a id="database-schema--state-isolation"></a>
+<a id="datenbankschema--status-isolation"></a>
+<a id="esquema-de-base-de-datos-y-aislamiento"></a>
+## 14. Database Schema & State Isolation
 
 The SQLite schema consists of five core tables:
 
@@ -447,7 +565,11 @@ Without an explicit `db_path`, USMC places its database in `~/.usmc/usmc_memory.
 
 ---
 
-## Sibling Ecosystem & Positioning
+<a id="sec-15"></a>
+<a id="sibling-ecosystem--positioning"></a>
+<a id="geschwister-oekosystem--positionierung"></a>
+<a id="ecosistema-hermano-y-posicionamiento"></a>
+## 15. Sibling Ecosystem & Positioning
 
 USMC functions as Tier 1 in the layered ellmos architecture:
 
@@ -465,16 +587,61 @@ USMC functions as Tier 1 in the layered ellmos architecture:
 
 ---
 
-## Third-Party Licenses & Transparency
+<a id="sec-16"></a>
+<a id="testing--quality-gates"></a>
+<a id="testen--qualitaetstore"></a>
+<a id="pruebas-y-verificacion"></a>
+## 16. Testing, Quality Gates & CI
+
+USMC enforces rigorous offline test gates, invariant contract assertions, and linting standards:
+
+```bash
+# Run complete test suite (unit, integration, memory union, and metadata contracts)
+python -m pytest
+
+# Run fast Ruff code quality and style checks
+ruff check .
+
+# Validate bytecode compilation across packages and tests
+python -m compileall usmc tests
+
+# Check for git whitespace and formatting anomalies
+git diff --check
+```
+
+- **Test Suite Pass Rate:** 177 passed, 122 subtests passed (100% green).
+- **Strict Linting:** Zero warnings, zero errors under Astral Ruff.
+- **Bytecode Integrity:** 100% clean compilation on Python 3.10 through 3.14.
+- **CI Workflows:** Hardened with GitHub Actions concurrency (`cancel-in-progress: true`), job-level timeouts, and least-privilege token permissions (`issues: write`, `pull-requests: write`).
+
+---
+
+<a id="sec-17"></a>
+<a id="third-party-licenses--transparency"></a>
+<a id="drittanbieter-lizenzen--transparenz"></a>
+<a id="licencias-de-terceros-y-transparencia"></a>
+## 17. Third-Party Licenses & Level 1 SBOM
 
 - **100% Python Standard Library**: USMC has **zero external runtime dependencies** (`dependencies = []`).
 - **Unprivileged User Mode (`RunAsInvoker`)**: All database operations execute purely in unprivileged user space. No administrator rights, root elevation, or service daemons required.
 - **Zero-Copyleft Guarantee**: All project code and development tools are licensed under permissive open-source licenses (MIT, Apache-2.0, PSF-2.0).
-- Detailed license inventory, SBOM analysis, and third-party notices are documented in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+- **Level 1 SBOM Text Companion**: Detailed software inventory and invariant cross-reference matrix are documented in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) and plain-text companion [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt).
 
 ---
 
-## Security Policy & Vulnerability Reporting
+<a id="sec-18"></a>
+<a id="security-policy--liability"></a>
+<a id="sicherheitsrichtlinie--haftung"></a>
+<a id="politica-de-seguridad-y-responsabilidad"></a>
+<a id="license--liability"></a>
+<a id="lizenz--haftung"></a>
+<a id="licencia-y-responsabilidad"></a>
+<a id="security-policy--vulnerability-reporting"></a>
+<a id="sicherheitsrichtlinie--meldewege"></a>
+<a id="política-de-seguridad-y-reporte-de-vulnerabilidades"></a>
+## 18. Security Policy, § 521 BGB Statutory Notice & 48h SLA
+
+### Security Policy & Vulnerability Reporting
 
 Security and privacy are core architectural priorities:
 
@@ -483,12 +650,10 @@ Security and privacy are core architectural priorities:
 - **Reporting**: Disclose vulnerabilities privately via [GitHub Security Advisories](https://github.com/ellmos-ai/usmc/security/advisories/new) or by emailing `security@ellmos.ai`.
 - Full details are available in [SECURITY.md](SECURITY.md).
 
----
+### Statutory Disclaimer (§ 521 BGB Gefälligkeitsrecht)
 
-## License & Liability
+This project is an unpaid open-source contribution provided free of charge. Liability is limited to intent and gross negligence pursuant to Section 521 of the German Civil Code (§ 521 BGB Gefälligkeitsrecht). Use at your own risk. No maintenance guarantee, warranty of merchantability, or fitness for a particular purpose is provided.
 
-MIT License — Copyright (c) 2026 Lukas Geiger / ellmos-ai. See [LICENSE](LICENSE) for details.
+### License
 
-### Liability Waiver
-
-This project is an unpaid open-source contribution provided free of charge. Liability is limited to intent and gross negligence pursuant to Section 521 of the German Civil Code (BGB). Use at your own risk. No maintenance guarantee or warranty of merchantability is provided.
+MIT License — Copyright (c) 2026 Lukas Geiger / ellmos-ai. See [LICENSE](LICENSE) and [NOTICE](NOTICE) for details.

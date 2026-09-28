@@ -4,6 +4,25 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- **Discoverability, Visual Architecture, Level 1 SBOM, 18-Point Navigation Parity & PEP 621 Saturation (Pfad B, 2026-09-28):**
+  - **Version Freeze Compliance (T-20260920-167562623):** Maintained frozen version `0.3.0` across package manifests and metadata tests.
+  - **PEP 621 Metadata Saturation (`pyproject.toml`):**
+    - Saturated `keywords` to maximum 20/20 matching remote GitHub repository topics (`agent-framework`, `agent-memory`, `ai-agent`, `automation`, `cross-agent`, `cross-agent-memory`, `llm`, `llm-agents`, `llm-memory`, `local-ai`, `local-first`, `memory`, `open-source`, `prompt-context`, `python`, `python-cli`, `shared-memory`, `sqlite`, `sqlite-memory`, `zero-dependency`).
+    - Added dedicated plain-text companion URLs under `[project.urls]`: `Plain-Text Licenses`, `Third-Party Licenses (Text)`, and `Level 1 SBOM`.
+  - **18-Point Trilingual Navigation Parity & Dual HTML Anchors:**
+    - Expanded Quick Navigation architecture from 16 to 18 numbered points across English (`README.md`), German (`README_de.md`), and Spanish (`README_es.md`).
+    - Implemented reciprocal dual HTML anchors (`<a id="sec-01"></a>` through `<a id="sec-18"></a>`) alongside human-readable IDs (`#key-features`, `#sec-01`, etc.) for seamless cross-linking and machine parsing.
+    - Tagged target personas with explicit structured IDs (`[PERSONA-01]` through `[PERSONA-04]`).
+  - **ASCII Four-View Architectural Topology Projection (Section 6):**
+    - Added dedicated four-view ASCII topology diagram projection across all three README variants: View 1 (Client Runtimes & Agent Drivers), View 2 (USMC Core Engine & Memory Primitives), View 3 (ACID WAL Persistence & Concurrency), and View 4 (Governance, Security & Ecosystem Perimeter).
+  - **Quality Gates, Contract Testing & CI Guidance (Section 16):**
+    - Added dedicated Section 16 documenting offline testing commands (`pytest`, `ruff check .`, `compileall`, `git diff --check`), baseline pass rates (177 passed, 122 subtests), and CI concurrency settings.
+  - **Level 1 SBOM Software Inventory & Transparency (`THIRD_PARTY_LICENSES.txt` & `THIRD_PARTY_LICENSES.md`):**
+    - Re-audited software inventory Stand 2026-09-28 certifying unprivileged user-mode execution (`RunAsInvoker`), 100% Python Standard Library runtime, Zero-Copyleft licensing, and invariant matrix cross-references.
+  - **Statutory Legal Notice & Security SLA (Section 18):**
+    - Documented German statutory liability limitation pursuant to Section 521 BGB (§ 521 BGB Gefälligkeitsrecht for unpaid open-source contributions) and reiterated 48h Security Response SLA.
+  - **Machine-Readable LLM Context (`llms.txt`):**
+    - Updated verified date to `2026-09-28`, refreshed baseline test metrics (177 passed, 122 subtests), Level 1 SBOM companion references, and § 521 BGB notice.
 - **Lesson contract v2 joins the shared BACH/OCEAN memory contract (S2a, T-20260920-823767362):** union contract version 2. `memory_lessons` carries the lesson-v2 columns (provenance, idempotency, feedback counters, delivery), and `memory_lesson_feedback`, `memory_lesson_delivery_batches` and `memory_lesson_deliveries` are part of the pinned contract. `apply_union()` now moves `usmc_lessons` and its three side tables with unchanged IDs (children dropped before parents, foreign keys intact) and upgrades a database on contract v1 in place; rows on both sides abort without mutation. The client addresses every lesson table through `_table()`, so keyed lessons, editorial status, feedback and delivery (including SessionStart delivery) work in union mode; the policy lock `LessonV2UnionUnsupportedError` is removed. `memory_union.py` is self-contained again (no package imports) so BACH can vendor it byte-identically. Opt-in stays `USMC_MEMORY_UNION=1`; no live database is switched by this change.
 
 ## 0.3.0 - 2026-09-26

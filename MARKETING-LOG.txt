@@ -190,3 +190,58 @@ Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und SBOM-Revisionslauf
 - Bytecode Compilation: python -m compileall -q usmc tests passed mit 0 Fehlern.
 - Git Hygiene: git diff --check clean mit 0 Whitespace-Fehlern.
 ================================================================================
+
+================================================================================
+PATH B DISCOVERABILITY, VISUAL TOPOLOGY & LEVEL 1 SBOM AUDIT: usmc
+================================================================================
+Date: 2026-09-28
+Path: Pfad B (Marketing, Discoverability, Visual Topology & Level 1 SBOM Audit)
+Version: 0.3.0 (Version-Freeze per T-20260920-167562623)
+Repository: ellmos-ai/usmc
+Organization: ellmos-ai
+Umbrella Collective: open-bricks
+
+1. MARKETING, DISCOVERABILITY & VISUAL TOPOLOGY SUMMARY
+--------------------------------------------------------------------------------
+Turnusgemäßer Pfad B Marketing-, Visualisierungs-, SBOM- und Navigationslauf:
+  - Version-Freeze-Disziplin (T-20260920-167562623):
+    Version 0.3.0 strikt beibehalten; alle Änderungen sauber unter [Unreleased]
+    in CHANGELOG.md dokumentiert.
+  - PEP 621 Metadaten-Sättigung (pyproject.toml):
+    Keywords auf das Maximum von 20/20 gesättigt, exakt abgestimmt auf GitHub-Topics:
+    (agent-framework, agent-memory, ai-agent, automation, cross-agent, cross-agent-memory,
+    llm, llm-agents, llm-memory, local-ai, local-first, memory, open-source, prompt-context,
+    python, python-cli, shared-memory, sqlite, sqlite-memory, zero-dependency).
+    URLs in [project.urls] um Plain-Text Licenses, Third-Party Licenses (Text) und
+    Level 1 SBOM erweitert.
+  - 18-Punkte-Navigationsarchitektur & Dreisprachige Parität:
+    Schnellnavigation von 16 auf 18 nummerierte Abschnitte ausgebaut über Englisch
+    (README.md), Deutsch (README_de.md) und Spanisch (README_es.md). Reziproke duale
+    HTML-Anker (<a id="sec-01"></a> bis <a id="sec-18"></a>) zusätzlich zu den
+    deskriptiven Ankern (#key-features, #sec-01 etc.) für robuste Navigation und CI-Checks.
+    Ziel-Personas strukturiert mit [PERSONA-01] bis [PERSONA-04] gekennzeichnet.
+  - ASCII Vier-Ansichten-Systemtopologie (Abschnitt 6):
+    Dediziertes 4-Ansichten ASCII-Topologiediagramm in allen 3 README-Varianten
+    integriert: Ansicht 1 (Client Runtimes & Agent Drivers), Ansicht 2 (USMC Core Engine
+    & Memory Primitives), Ansicht 3 (ACID WAL Persistence & Concurrency) und Ansicht 4
+    (Governance, Security & Ecosystem Perimeter).
+  - Testen, Qualitätstore & CI (Abschnitt 16):
+    Neuer Abschnitt 16 mit exakten Testbefehlen (pytest, ruff check ., compileall,
+    git diff --check), 177 passed / 122 subtests Baselines und CI-Härtungsangaben.
+  - Level 1 SBOM Software-Inventar & Transparenz (THIRD_PARTY_LICENSES.txt & .md):
+    Re-Audit Stand 2026-09-28 bestätigt unprivilegierten RunAsInvoker Modus, 100% Python
+    Standard-Bibliothek, Zero-Copyleft-Garantie und Invarianten-Matrix-Referenz.
+  - Gesetzlicher Haftungsausschluss (§ 521 BGB Gefälligkeitsrecht) & 48h SLA:
+    Gesetzliche Klarstellung nach § 521 BGB für unentgeltliche Open-Source-Beiträge
+    sowie 48h Security Response SLA in allen drei README-Varianten und llms.txt verankert.
+  - Aktualisierte Badges & LLM-Kontext (llms.txt):
+    Badges auf 177 aprobados / passed, Verifiziert 2026-09-28 und Level 1 SBOM Text
+    Companion aktualisiert; llms.txt auf Stand 2026-09-28 gebracht.
+
+2. QUALITY GATES & VERIFICATION
+--------------------------------------------------------------------------------
+- Test Suite: 177 passed, 122 subtests passed (100% grün) via pytest.
+- Ruff Linting: ruff check . passed clean mit 0 Fehlern.
+- Bytecode Compilation: python -m compileall usmc tests passed mit 0 Fehlern.
+- Git Hygiene: git diff --check clean mit 0 Whitespace-Fehlern.
+================================================================================

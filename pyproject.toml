@@ -14,14 +14,26 @@ authors = [
     { name = "Lukas Geiger", email = "lukas@lukisch.dev" }
 ]
 keywords = [
-    "llm",
-    "ai-agents",
+    "agent-framework",
     "agent-memory",
-    "shared-memory",
+    "ai-agent",
+    "automation",
     "cross-agent",
-    "sqlite",
+    "cross-agent-memory",
+    "llm",
+    "llm-agents",
+    "llm-memory",
+    "local-ai",
     "local-first",
+    "memory",
+    "open-source",
     "prompt-context",
+    "python",
+    "python-cli",
+    "shared-memory",
+    "sqlite",
+    "sqlite-memory",
+    "zero-dependency",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -48,6 +60,9 @@ Security = "https://github.com/ellmos-ai/usmc/blob/main/SECURITY.md"
 "Umbrella Ecosystem" = "https://github.com/open-bricks"
 Notice = "https://github.com/ellmos-ai/usmc/blob/main/NOTICE"
 "Third-Party Licenses" = "https://github.com/ellmos-ai/usmc/blob/main/THIRD_PARTY_LICENSES.md"
+"Third-Party Licenses (Text)" = "https://raw.githubusercontent.com/ellmos-ai/usmc/main/THIRD_PARTY_LICENSES.txt"
+"Plain-Text Licenses" = "https://raw.githubusercontent.com/ellmos-ai/usmc/main/THIRD_PARTY_LICENSES.txt"
+"Level 1 SBOM" = "https://github.com/ellmos-ai/usmc/blob/main/THIRD_PARTY_LICENSES.md"
 "Marketing Log" = "https://github.com/ellmos-ai/usmc/blob/main/MARKETING-LOG.txt"
 "LLM Ready" = "https://github.com/ellmos-ai/usmc/blob/main/llms.txt"
 

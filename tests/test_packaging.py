@@ -78,8 +78,8 @@ class TestPackagingContract(unittest.TestCase):
             self.assertFalse(c.startswith("License :: OSI Approved"), f"PEP 639 conflict: found classifier {c}")
 
     def test_pip_metadata_dry_run_smoke(self):
-        """Smoke check that pip parses pyproject.toml and resolves editable metadata."""
-        cmd = [sys.executable, "-m", "pip", "install", "--no-deps", "--no-build-isolation", "-e", ".", "--dry-run"]
+        """Smoke check that pip parses pyproject.toml and resolves package metadata."""
+        cmd = [sys.executable, "-m", "pip", "install", "--no-deps", ".", "--dry-run"]
         res = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, check=False)
         self.assertEqual(res.returncode, 0, f"pip dry-run failed:\nSTDOUT:\n{res.stdout}\nSTDERR:\n{res.stderr}")
         self.assertIn("usmc-0.3.0", res.stdout + res.stderr)

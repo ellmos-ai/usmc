@@ -609,7 +609,7 @@ python -m compileall usmc tests
 git diff --check
 
 # Packaging & distribution metadata smoke check
-pip install --no-deps --no-build-isolation -e . --dry-run
+pip install --no-deps . --dry-run
 ```
 
 - **Test Suite Pass Rate:** 184 passed, 122 subtests passed (100% green).

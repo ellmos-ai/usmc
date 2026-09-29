@@ -616,7 +616,7 @@ python -m compileall usmc tests
 git diff --check
 
 # Paketierungs- und Distributions-Metadaten-Smoke-Check
-pip install --no-deps --no-build-isolation -e . --dry-run
+pip install --no-deps . --dry-run
 ```
 
 - **Test-Pass-Rate:** 184 bestanden, 122 Subtests bestanden (100% grün).

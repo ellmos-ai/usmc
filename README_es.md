@@ -513,7 +513,7 @@ python -m compileall usmc tests
 git diff --check
 
 # Comprobación preliminar de metadatos de empaquetado y distribución
-pip install --no-deps --no-build-isolation -e . --dry-run
+pip install --no-deps . --dry-run
 ```
 
 - **Tasa de aprobación de pruebas:** 184 aprobadas, 122 subpruebas aprobadas (100% verde).

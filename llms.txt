@@ -46,7 +46,7 @@ agent context generation SQLite
 - Human-readable API/CLI prose and help remain intentionally German (`de`) for
   compatibility; command names, category values and JSON keys are stable
   English protocol tokens. The package exposes `usmc.RUNTIME_LANGUAGE == "de"`.
-- Verified: test suite with 177 automated contract and unit tests passed (122 subtests, 100% green), Ruff and compileall
+- Verified: test suite with 178 automated contract and unit tests passed (122 subtests, 100% green), Ruff and compileall
   clean, Level 1 SBOM text companion audited, and local builds succeed.
 - Statutory notice: Liability limited pursuant to § 521 BGB (Gefälligkeitsrecht); 48h Security Response SLA.
 - Source version is `0.3.0`; `ellmos-module.v2.json` is active and public.

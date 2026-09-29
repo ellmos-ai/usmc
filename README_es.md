@@ -7,7 +7,7 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Versión: 0.3.0](https://img.shields.io/badge/Versi%C3%B3n-0.3.0-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-177%20aprobados-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-178%20aprobados-brightgreen.svg)](tests)
 [![Verificado: 2026-09-28](https://img.shields.io/badge/Verificado-2026--09--28-blue.svg)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/Plataformas-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Dependencias](https://img.shields.io/badge/Dependencias-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
@@ -513,7 +513,7 @@ python -m compileall usmc tests
 git diff --check
 ```
 
-- **Tasa de aprobación de pruebas:** 177 aprobadas, 122 subpruebas aprobadas (100% verde).
+- **Tasa de aprobación de pruebas:** 178 aprobadas, 122 subpruebas aprobadas (100% verde).
 - **Inspección estricta de código:** Cero advertencias y cero errores con Astral Ruff.
 - **Integridad de bytecode:** Compilación 100% limpia en Python 3.10 hasta 3.14.
 - **Flujos de trabajo CI:** Reforzados con concurrencia en GitHub Actions (`cancel-in-progress: true`), tiempos límite por tarea y permisos mínimos de token (`issues: write`, `pull-requests: write`).

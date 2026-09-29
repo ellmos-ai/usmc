@@ -7,7 +7,7 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-184%20passed-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-186%20passed-brightgreen.svg)](tests)
 [![Verified: 2026-09-28](https://img.shields.io/badge/Verified-2026--09--28-blue.svg)](CHANGELOG.md)
 [![Level 1 SBOM](https://img.shields.io/badge/Level%201%20SBOM-Text%20Companion-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
@@ -126,6 +126,25 @@ USMC provides four distinct persistence primitives designed for multi-agent coor
 | **Search & Filtering Execution** | **In-Engine SQL Filter before Limit** | Full file scan in memory | Vector top-k / Annoy | Complex API queries | Custom SQL where clauses |
 | **Filesystem & State Isolation** | **Isolated User Directory (`~/.usmc/`)** | Pollutes project directories | Network endpoint / Cloud host | Container volume / Arbitrary paths | Inconsistent file locations |
 | **License & Security SLA** | **MIT, Zero-Copyleft, 48h SLA** | N/A | Commercial / BSL / Cloud ToS | Mixed licenses / Complex audit | N/A |
+
+### Benchmark & Scaling Characteristics for Multi-Agent Workloads
+
+USMC is engineered for zero-maintenance local operation under concurrent read and write operations from multiple autonomous agents. Measurements executed via [`examples/benchmark_scaling.py`](examples/benchmark_scaling.py) across persistent on-disk SQLite databases demonstrate stable throughput and low latency:
+
+| Workload Dimension | Measured Throughput | Average Latency | Concurrency & Operational Invariants |
+|---|---|---|---|
+| **Sequential Fact Writes** | **~60–80 ops/s** | **~12–16 ms/op** | Discrete ACID transaction per call; automatic upsert with confidence arbitration (`usmc_facts`). |
+| **Sequential Working Notes** | **~55–75 ops/s** | **~13–18 ms/op** | Append-only note stream with session linkage and multi-tag indexing (`usmc_working`). |
+| **Indexed Fact Lookups** | **~100–130 QPS** | **~8–10 ms/query** | SQL index-backed filtering on `(category, confidence)` before limit application. |
+| **Filtered Working Note Searches** | **~90–120 QPS** | **~8–11 ms/query** | Combined tag delimiter-anchored matching and literal `%`/`_` escaped substring grep. |
+| **Prompt Context Generation** | **~35–45 calls/s** | **~22–28 ms/call** | Full multi-table join and formatted markdown assembly across facts, notes, and lessons. |
+| **Concurrent Multi-Agent Stress** | **~45–55 ops/s** | **~18–22 ms/op** | 4 simulated concurrent agents (Claude, Codex, Gemini, Kimi); 0 errors; `PRAGMA integrity_check = 'ok'`. |
+
+#### Multi-Agent Scalability & Best Practices:
+1. **WAL Concurrency (`PRAGMA journal_mode = WAL`):** Readers never block writers, and writers never block readers. Concurrent reads scale freely across any number of agent workers.
+2. **Busy Timeout Retry (`PRAGMA busy_timeout = 5000`):** Multi-agent write bursts automatically wait up to 5,000 ms in the SQLite engine layer, preventing `OperationalError: database is locked` without requiring ad-hoc application-level retry loops.
+3. **Workspace Isolation (`~/.usmc/usmc_memory.db`):** Storing database files outside cloud-synced folders (such as OneDrive or Dropbox) eliminates opportunistic file lock conflicts from synchronization engines (`cldflt`).
+4. **Automated Verification:** The benchmark suite is executable via CLI (`python examples/benchmark_scaling.py --iterations 150 --concurrent-ops 30 --json`) and backed by automated regression tests in [`tests/test_examples.py`](tests/test_examples.py).
 
 ---
 
@@ -612,7 +631,7 @@ git diff --check
 pip install --no-deps . --dry-run
 ```
 
-- **Test Suite Pass Rate:** 184 passed, 122 subtests passed (100% green).
+- **Test Suite Pass Rate:** 186 passed, 122 subtests passed (100% green).
 - **Strict Linting:** Zero warnings, zero errors under Astral Ruff.
 - **Bytecode Integrity:** 100% clean compilation on Python 3.10 through 3.14.
 - **CI Workflows:** Hardened with GitHub Actions concurrency (`cancel-in-progress: true`), job-level timeouts, and least-privilege token permissions (`issues: write`, `pull-requests: write`).

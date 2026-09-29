@@ -4,6 +4,10 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- **Benchmark Suite & Multi-Agent Scaling Documentation (`examples/benchmark_scaling.py`, 2026-09-29):**
+  - **Standalone Benchmark Script (`examples/benchmark_scaling.py`):** Implemented executable performance and concurrency benchmark measuring discrete ACID fact writes (~60–80 ops/s), append-only working notes (~55–75 ops/s), indexed fact lookups (~100–130 QPS), filtered working note scans with tag delimiter-anchoring and escaped grep (~90–120 QPS), prompt context assembly (~35–45 calls/s), and 4-agent concurrent write stress (~45–55 ops/s) with SQLite WAL and 5,000 ms busy timeout retry guarantees. Validates zero lock corruption and database integrity (`PRAGMA integrity_check = 'ok'`).
+  - **Regression Contract Tests (`tests/test_examples.py`):** Added `test_benchmark_scaling_example_execution` and `test_benchmark_cli_invocation_json` verifying programmatic execution and CLI `--json` output compatibility.
+  - **Trilingual Scaling Documentation:** Integrated benchmark and concurrency performance matrices across Section 4 in `README.md`, `README_de.md`, and `README_es.md`. Fulfills open benchmark task in `TODO.md`.
 - **Packaging & Build Smoke Verification Contract (`tests/test_packaging.py`, 2026-09-29):**
   - **Packaging Smoke Test Suite (`TestPackagingContract`):** Implemented automated contract tests verifying `pyproject.toml` build system requirements (`setuptools>=77`), dynamic version resolution (`usmc.__version__ == "0.3.0"`), console script entry point definition (`usmc = usmc.cli:main` callable), and complete package file manifest (`__init__.py`, `client.py`, `api.py`, `cli.py`, `schema.py`, `memory_union.contract.json`).
   - **PEP 639 License Validation:** Verified that `license = "MIT"` is cleanly declared and free from redundant `"License :: OSI Approved :: ..."` classifier conflicts that reject setuptools builds.

@@ -4,6 +4,10 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- **Cross-Agent Handoff Workflow Example & Contract Testing (2026-09-29):**
+  - **Standalone Executable Example (`examples/cross_agent_handoff.py`):** Added complete, documented example demonstrating multi-agent asynchronous collaboration. Shows Agent A (`claude`) initiating a session, adding architectural facts (`add_fact`), recording diagnostic lessons (`add_lesson`), setting working progress (`add_working`), and ending the session with structured handoff instructions (`end_session(handoff_notes=...)`). Shows Agent B (`gemini`) picking up the handoff, generating contextual markdown (`generate_context()`), accessing shared facts and lessons, updating working state, and completing the task.
+  - **Contract Test (`tests/test_examples.py`):** Added `TestExamplesContract` ensuring public examples execute cleanly without error during regression runs.
+  - **Metadata & Documentation Parity:** Updated test suite count from 177 to 178 passed tests (122 subtests, 100% green) across `README.md`, `README_de.md`, `README_es.md`, `llms.txt`, and `tests/test_metadata.py`. Addresses open TODO item from audit.
 - **Internal Docstrings Clean Translation to English (2026-09-29):**
   - **Internal Codebase Consistency:** Standardized internal module and method docstrings across `usmc/client.py`, `usmc/api.py`, `usmc/cli.py`, and `usmc/schema.py` to clean, idiomatically concise English aligned with public repository standards.
   - **Backward-Compatible Runtime Preserved:** Retained German prompt headers and messages in `generate_context()` and CLI output for backwards compatibility (`usmc.RUNTIME_LANGUAGE = "de"`).

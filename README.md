@@ -7,7 +7,7 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-177%20passed-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-178%20passed-brightgreen.svg)](tests)
 [![Verified: 2026-09-28](https://img.shields.io/badge/Verified-2026--09--28-blue.svg)](CHANGELOG.md)
 [![Level 1 SBOM](https://img.shields.io/badge/Level%201%20SBOM-Text%20Companion-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
@@ -609,7 +609,7 @@ python -m compileall usmc tests
 git diff --check
 ```
 
-- **Test Suite Pass Rate:** 177 passed, 122 subtests passed (100% green).
+- **Test Suite Pass Rate:** 178 passed, 122 subtests passed (100% green).
 - **Strict Linting:** Zero warnings, zero errors under Astral Ruff.
 - **Bytecode Integrity:** 100% clean compilation on Python 3.10 through 3.14.
 - **CI Workflows:** Hardened with GitHub Actions concurrency (`cancel-in-progress: true`), job-level timeouts, and least-privilege token permissions (`issues: write`, `pull-requests: write`).

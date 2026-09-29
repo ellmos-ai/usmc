@@ -4,6 +4,11 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- **Packaging & Build Smoke Verification Contract (`tests/test_packaging.py`, 2026-09-29):**
+  - **Packaging Smoke Test Suite (`TestPackagingContract`):** Implemented automated contract tests verifying `pyproject.toml` build system requirements (`setuptools>=77`), dynamic version resolution (`usmc.__version__ == "0.3.0"`), console script entry point definition (`usmc = usmc.cli:main` callable), and complete package file manifest (`__init__.py`, `client.py`, `api.py`, `cli.py`, `schema.py`, `memory_union.contract.json`).
+  - **PEP 639 License Validation:** Verified that `license = "MIT"` is cleanly declared and free from redundant `"License :: OSI Approved :: ..."` classifier conflicts that reject setuptools builds.
+  - **Dry-Run Installation Smoke:** Automated verification of `pip install --no-deps --no-build-isolation -e . --dry-run` to safeguard PyPI and local editable installation workflows.
+  - **Metadata & Documentation Parity:** Expanded test suite from 178 to 184 passed tests (122 subtests, 100% green) across `README.md`, `README_de.md`, `README_es.md`, `llms.txt`, and `tests/test_metadata.py`. Fulfills open build/package smoke check item in `TODO.md`.
 - **Cross-Agent Handoff Workflow Example & Contract Testing (2026-09-29):**
   - **Standalone Executable Example (`examples/cross_agent_handoff.py`):** Added complete, documented example demonstrating multi-agent asynchronous collaboration. Shows Agent A (`claude`) initiating a session, adding architectural facts (`add_fact`), recording diagnostic lessons (`add_lesson`), setting working progress (`add_working`), and ending the session with structured handoff instructions (`end_session(handoff_notes=...)`). Shows Agent B (`gemini`) picking up the handoff, generating contextual markdown (`generate_context()`), accessing shared facts and lessons, updating working state, and completing the task.
   - **Contract Test (`tests/test_examples.py`):** Added `TestExamplesContract` ensuring public examples execute cleanly without error during regression runs.

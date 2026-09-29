@@ -7,7 +7,7 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-178%20bestanden-brightgreen.svg)](tests)
+[![Tests](https://img.shields.io/badge/Tests-184%20bestanden-brightgreen.svg)](tests)
 [![Geprüft: 2026-09-28](https://img.shields.io/badge/Gepr%C3%BCft-2026--09--28-blue.svg)](CHANGELOG.md)
 [![Level 1 SBOM](https://img.shields.io/badge/Level%201%20SBOM-Text%20Companion-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
 [![Plattformen](https://img.shields.io/badge/Plattformen-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
@@ -614,9 +614,12 @@ python -m compileall usmc tests
 
 # Git-Whitespace- und Formatierungsprüfung
 git diff --check
+
+# Paketierungs- und Distributions-Metadaten-Smoke-Check
+pip install --no-deps . --dry-run
 ```
 
-- **Test-Pass-Rate:** 178 bestanden, 122 Subtests bestanden (100% grün).
+- **Test-Pass-Rate:** 184 bestanden, 122 Subtests bestanden (100% grün).
 - **Strikte Linting-Hygiene:** 0 Warnungen, 0 Fehler unter Astral Ruff.
 - **Bytecode-Integrität:** 100% fehlerfreie Kompilierung auf Python 3.10 bis 3.14.
 - **CI-Workflows:** Gehärtet mit GitHub Actions Concurrency (`cancel-in-progress: true`), Job-Level-Timeouts und Least-Privilege-Rechten (`issues: write`, `pull-requests: write`).

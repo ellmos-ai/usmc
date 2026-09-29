@@ -32,9 +32,9 @@ class TestMetadataContract(unittest.TestCase):
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
-        self.assertIn("Tests-178%20passed", en_text)
-        self.assertIn("Tests-178%20bestanden", de_text)
-        self.assertIn("Tests-178%20aprobados", es_text)
+        self.assertIn("Tests-184%20passed", en_text)
+        self.assertIn("Tests-184%20bestanden", de_text)
+        self.assertIn("Tests-184%20aprobados", es_text)
         self.assertIn("Verified-2026--09--28", en_text)
         self.assertIn("Gepr%C3%BCft-2026--09--28", de_text)
         self.assertIn("Verificado-2026--09--28", es_text)
@@ -63,7 +63,7 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("THIRD_PARTY_LICENSES.txt", text)
         self.assertIn("SECURITY.md", text)
         self.assertIn("MARKETING-LOG.txt", text)
-        self.assertIn("178", text)
+        self.assertIn("184", text)
         self.assertIn("521 BGB", text)
 
     def test_hygiene_and_governance_files_exist(self):

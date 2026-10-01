@@ -32,12 +32,15 @@ class TestMetadataContract(unittest.TestCase):
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
-        self.assertIn("Tests-186%20passed", en_text)
-        self.assertIn("Tests-186%20bestanden", de_text)
-        self.assertIn("Tests-186%20aprobados", es_text)
-        self.assertIn("Verified-2026--09--28", en_text)
-        self.assertIn("Gepr%C3%BCft-2026--09--28", de_text)
-        self.assertIn("Verificado-2026--09--28", es_text)
+        self.assertIn("Tests-191%20passed", en_text)
+        self.assertIn("Tests-191%20bestanden", de_text)
+        self.assertIn("Tests-191%20aprobados", es_text)
+        self.assertIn("Verified-2026--10--01", en_text)
+        self.assertIn("Gepr%C3%BCft-2026--10--01", de_text)
+        self.assertIn("Verificado-2026--10--01", es_text)
+        self.assertIn("Contributing-Guidelines-blue.svg", en_text)
+        self.assertIn("Mitwirken-Leitfaden-blue.svg", de_text)
+        self.assertIn("Contribuir-Gu%C3%ADa-blue.svg", es_text)
         for text in [en_text, de_text, es_text]:
             self.assertIn("Attribution-NOTICE-blue.svg", text)
             self.assertIn("Level%201%20SBOM-Text%20Companion-brightgreen.svg", text)
@@ -55,15 +58,16 @@ class TestMetadataContract(unittest.TestCase):
         path = ROOT / "llms.txt"
         self.assertTrue(path.exists())
         text = path.read_text(encoding="utf-8")
-        self.assertIn("Last-checked: 2026-09-28", text)
+        self.assertIn("Last-checked: 2026-10-01", text)
         self.assertIn("0.3.0", text)
         self.assertIn("README_es.md", text)
         self.assertIn("NOTICE", text)
         self.assertIn("THIRD_PARTY_LICENSES.md", text)
         self.assertIn("THIRD_PARTY_LICENSES.txt", text)
+        self.assertIn("CONTRIBUTING.md", text)
         self.assertIn("SECURITY.md", text)
         self.assertIn("MARKETING-LOG.txt", text)
-        self.assertIn("186", text)
+        self.assertIn("191", text)
         self.assertIn("521 BGB", text)
 
     def test_hygiene_and_governance_files_exist(self):
@@ -163,11 +167,13 @@ class TestMetadataContract(unittest.TestCase):
 
     def test_level1_sbom_inventory(self):
         sbom = (ROOT / "THIRD_PARTY_LICENSES.txt").read_text(encoding="utf-8")
-        self.assertIn("Audited: 2026-09-28", sbom)
+        self.assertIn("Audited: 2026-10-01", sbom)
         self.assertIn("RunAsInvoker", sbom)
         self.assertIn("dependencies = []", sbom)
         self.assertIn("Python Standard Library", sbom)
         self.assertIn("NOTICE", sbom)
+        self.assertIn("521 BGB", sbom)
+        self.assertIn("48h response", sbom)
 
     def test_eighteen_point_navigation_parity(self):
         en_text = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -340,6 +346,46 @@ class TestMetadataContract(unittest.TestCase):
                 self.assertIn("https://github.com/ellmos-ai/policy-registry", text)
                 self.assertIn("https://github.com/dev-bricks/DevCenter", text)
                 self.assertIn("https://github.com/open-bricks", text)
+
+    def test_contributing_guidelines_and_invariants(self):
+        path = ROOT / "CONTRIBUTING.md"
+        self.assertTrue(path.exists(), "CONTRIBUTING.md must exist")
+        text = path.read_text(encoding="utf-8")
+        self.assertIn("## English", text)
+        self.assertIn("## Deutsch", text)
+        self.assertIn("RunAsInvoker", text)
+        self.assertIn("Plan D Architecture", text)
+        self.assertIn("pytest -ra -v", text)
+        self.assertIn("ruff check .", text)
+        self.assertIn("compileall", text)
+        self.assertIn("T-20260920-167562623", text)
+        self.assertIn("SECURITY.md", text)
+        for i in range(1, 11):
+            inv = f"INV-{'LOCAL' if i == 1 else 'UNPRIV' if i == 2 else 'SQLITE' if i == 3 else 'SCHEMA' if i == 4 else 'BOUND' if i == 5 else 'FILTER' if i == 6 else 'LANG' if i == 7 else 'ISOL' if i == 8 else 'AUDIT' if i == 9 else 'SLA'}-{i:02d}"
+            self.assertIn(inv, text)
+
+    def test_pep621_contributing_url(self):
+        pyproj = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn('Contributing = "https://github.com/ellmos-ai/usmc/blob/main/CONTRIBUTING.md"', pyproj)
+        self.assertIn(".pytest_tmp*", pyproj)
+        self.assertIn(".nyc_output", pyproj)
+
+    def test_security_policy_supported_versions_03x(self):
+        sec = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+        self.assertIn("**0.3.x**", sec)
+        self.assertIn("Aktiv", sec)
+        self.assertIn("Active", sec)
+
+    def test_marketing_log_recency_pfad_a(self):
+        mkt = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
+        self.assertIn("PATH A REPOSITORY HYGIENE & CI LIFECYCLE AUDIT: usmc", mkt)
+        self.assertIn("Date: 2026-10-01", mkt)
+        self.assertIn("T-20260920-167562623", mkt)
+
+    def test_changelog_pfad_a_unreleased_entry(self):
+        cl = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("Repository Hygiene, Multi-Host Sync Defense, PEP 621 Metadata, Level 1 SBOM Re-Audit & Contract Tests (Pfad A, 2026-10-01)", cl)
+        self.assertIn("T-20260920-167562623", cl)
 
 
 if __name__ == "__main__":

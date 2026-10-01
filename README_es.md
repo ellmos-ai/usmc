@@ -7,17 +7,19 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Versión: 0.3.0](https://img.shields.io/badge/Versi%C3%B3n-0.3.0-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-186%20aprobados-brightgreen.svg)](tests)
-[![Verificado: 2026-09-28](https://img.shields.io/badge/Verificado-2026--09--28-blue.svg)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-191%20aprobados-brightgreen.svg)](tests)
+[![Verificado: 2026-10-01](https://img.shields.io/badge/Verificado-2026--10--01-blue.svg)](CHANGELOG.md)
 [![Plataformas](https://img.shields.io/badge/Plataformas-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Dependencias](https://img.shields.io/badge/Dependencias-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
 [![Level 1 SBOM](https://img.shields.io/badge/Level%201%20SBOM-Text%20Companion-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
+[![Contribuir](https://img.shields.io/badge/Contribuir-Gu%C3%ADa-blue.svg)](CONTRIBUTING.md)
 [![Local-First](https://img.shields.io/badge/Local--First-Zero--Egress-blueviolet.svg)](THIRD_PARTY_LICENSES.md)
 [![SLA de seguridad: 48h](https://img.shields.io/badge/SLA%20Seguridad-48h%20%2F%205d-orange.svg)](SECURITY.md)
 [![Ecosistema: ellmos-ai](https://img.shields.io/badge/Ecosistema-ellmos--ai-blueviolet.svg)](https://github.com/ellmos-ai)
 [![Organización paraguas: open-bricks](https://img.shields.io/badge/Paraguas-open--bricks-darkblue.svg)](https://github.com/open-bricks)
 [![Marketing Log](https://img.shields.io/badge/Marketing%20Log-activo-success.svg)](MARKETING-LOG.txt)
 [![llms.txt](https://img.shields.io/badge/LLM--Ready-llms.txt-teal.svg)](llms.txt)
+[![Última comprobación](https://img.shields.io/badge/%C3%9Altima%20comprobaci%C3%B3n-2026--10--01-informational.svg)](llms.txt)
 
 **Idiomas:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
 
@@ -535,7 +537,7 @@ git diff --check
 pip install --no-deps . --dry-run
 ```
 
-- **Tasa de aprobación de pruebas:** 186 aprobadas, 122 subpruebas aprobadas (100% verde).
+- **Tasa de aprobación de pruebas:** 191 aprobadas, 127 subpruebas aprobadas (100% verde).
 - **Inspección estricta de código:** Cero advertencias y cero errores con Astral Ruff.
 - **Integridad de bytecode:** Compilación 100% limpia en Python 3.10 hasta 3.14.
 - **Flujos de trabajo CI:** Reforzados con concurrencia en GitHub Actions (`cancel-in-progress: true`), tiempos límite por tarea y permisos mínimos de token (`issues: write`, `pull-requests: write`).

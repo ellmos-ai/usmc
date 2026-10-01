@@ -98,6 +98,12 @@ uv.lock
 *-Mac Studio*
 *-MacBook*
 *-IDEAPAD*
+*-IDEAPAD-GEI*
+ehthumbs.db
+TASKPLAN_*.md
+LOCK.dev.*
+LOCK.antigravity.*
+LOCK.bugsearch.*
 *.orig
 *.rej
 *.tmp

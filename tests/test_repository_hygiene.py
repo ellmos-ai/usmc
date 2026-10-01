@@ -43,11 +43,16 @@ class TestRepositoryHygiene(unittest.TestCase):
             "LOCK.user.agent",
             "LOCK.until.2026-12-31",
             "LOCK.condition.busy",
-            ".automation-lock",
             "README-IDEAPAD.md",
+            "README-IDEAPAD-GEI.md",
             "README_WORKSTATION-LG.md",
             "run.swp",
             "edit.swo",
+            "ehthumbs.db",
+            "TASKPLAN_routine.md",
+            "LOCK.dev.audit",
+            "LOCK.antigravity.guard",
+            "LOCK.bugsearch.scan",
         ]:
             with self.subTest(path=path):
                 self.assertTrue(self.check_ignored(path), path)

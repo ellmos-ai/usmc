@@ -245,3 +245,52 @@ Turnusgemäßer Pfad B Marketing-, Visualisierungs-, SBOM- und Navigationslauf:
 - Bytecode Compilation: python -m compileall usmc tests passed mit 0 Fehlern.
 - Git Hygiene: git diff --check clean mit 0 Whitespace-Fehlern.
 ================================================================================
+
+================================================================================
+PATH A REPOSITORY HYGIENE & CI LIFECYCLE AUDIT: usmc
+================================================================================
+Date: 2026-10-01
+Path: Pfad A (Repository Hygiene, Multi-Host Sync Defense, PEP 621 Metadata & Level 1 SBOM Audit)
+Version: 0.3.0 (Version-Freeze per T-20260920-167562623)
+Repository: ellmos-ai/usmc
+Organization: ellmos-ai
+Umbrella Collective: open-bricks
+
+1. REPOSITORY HYGIENE, METADATA & GOVERNANCE AUDIT SUMMARY
+--------------------------------------------------------------------------------
+Turnusgemäßer Pfad A Hygiene-, Multi-Host-Defense-, Lizenz-Audit- und Vertragstest-Lauf:
+  - Version-Freeze-Disziplin (T-20260920-167562623):
+    Version 0.3.0 strikt beibehalten; kein Version-Bump; alle Erweiterungen unter
+    [Unreleased] in CHANGELOG.md erfasst.
+  - Zweisprachige CONTRIBUTING.md:
+    Vollständig überarbeitet und standardisiert auf bilinguales Format (EN/DE) mit
+    detaillierter Spezifikation aller 10 Invarianten (INV-LOCAL-01 bis INV-SLA-10),
+    unprivilegiertem Benutzermodus (RunAsInvoker), Plan-D-Klonarchitektur
+    (C:\_Local_DEV\repos\usmc), Offline-Qualitätstoren und 48h-SLA.
+  - Multi-Host- und Lock-Defense (.gitignore):
+    Gehärtet gegen Multi-Host-Sync-Artefakte (*-IDEAPAD-GEI*), kanonische Entwickler-
+    und Agenten-Locks (LOCK.dev.*, LOCK.antigravity.*, LOCK.bugsearch.*),
+    Aufgabenplanungs-Dateien (TASKPLAN_*.md) und Miniaturbild-Caches (ehthumbs.db).
+  - PEP 621 Standardisierung (pyproject.toml):
+    Contributing-URL unter [project.urls] hinterlegt; [tool.pytest.ini_options]
+    norecursedirs um .pytest_tmp* und .nyc_output gehärtet.
+  - Level 1 SBOM Re-Audit Stand 2026-10-01 (THIRD_PARTY_LICENSES.txt & .md):
+    Re-Audit Stand 2026-10-01 bestätigt RunAsInvoker, 100% Python Standard-Bibliothek,
+    Zero-Copyleft-Garantie, § 521 BGB Gefälligkeitsrecht Haftungsbeschränkung,
+    48h Security Response SLA und vollständige SPDX-Lizenztexte.
+  - Sicherheitsrichtlinie (SECURITY.md):
+    Unterstützte Versionstabelle um 0.3.x als aktiven Hauptzweig und 0.2.x als
+    unterstützten Altzweig aktualisiert.
+  - LLM-Kontext (llms.txt) & Dokumentations-Parität:
+    Stand 2026-10-01 synchronisiert; Badges aktualisiert.
+  - Erweiterte automatisierte Vertragstests (tests/test_metadata.py & test_repository_hygiene.py):
+    Verifiziert zweisprachige CONTRIBUTING.md, Invarianten, PEP 621 URLs,
+    SECURITY.md Versionen und erweiterte Multi-Host-Ignorierungsregeln.
+
+2. QUALITY GATES & VERIFICATION
+--------------------------------------------------------------------------------
+- Test Suite: Vollsuite grün via pytest.
+- Ruff Linting: ruff check . passed clean mit 0 Fehlern.
+- Bytecode Compilation: python -m compileall usmc tests passed mit 0 Fehlern.
+- Git Hygiene: git diff --check clean mit 0 Whitespace-Fehlern.
+================================================================================

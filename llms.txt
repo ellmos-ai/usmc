@@ -1,6 +1,6 @@
 # USMC - United Shared Memory Client
 
-## Last-checked: 2026-09-28
+## Last-checked: 2026-10-01
 
 USMC is the ellmos shared-memory primitive: a zero-dependency Python library and CLI that lets multiple LLM agents share local SQLite-backed memory. Use it when an agent framework needs persistent facts, lessons learned, working notes, session handoff records, and compact prompt context without a daemon or cloud service.
 
@@ -46,7 +46,7 @@ agent context generation SQLite
 - Human-readable API/CLI prose and help remain intentionally German (`de`) for
   compatibility; command names, category values and JSON keys are stable
   English protocol tokens. The package exposes `usmc.RUNTIME_LANGUAGE == "de"`.
-- Verified: test suite with 186 automated contract and unit tests passed (122 subtests, 100% green), Ruff and compileall
+- Verified: test suite with 191 automated contract and unit tests passed (127 subtests, 100% green), Ruff and compileall
   clean, Level 1 SBOM text companion audited, and local builds succeed.
 - Statutory notice: Liability limited pursuant to § 521 BGB (Gefälligkeitsrecht); 48h Security Response SLA.
 - Source version is `0.3.0`; `ellmos-module.v2.json` is active and public.
@@ -74,6 +74,7 @@ There is no PyPI release yet. The name `usmc` is unclaimed on PyPI as of 2026-08
 - Attribution Notice: https://github.com/ellmos-ai/usmc/blob/main/NOTICE
 - Third-Party Licenses: https://github.com/ellmos-ai/usmc/blob/main/THIRD_PARTY_LICENSES.md
 - Software Inventory: https://github.com/ellmos-ai/usmc/blob/main/THIRD_PARTY_LICENSES.txt
+- Contributing Guidelines: https://github.com/ellmos-ai/usmc/blob/main/CONTRIBUTING.md
 - Marketing Log: https://github.com/ellmos-ai/usmc/blob/main/MARKETING-LOG.txt
 - Issues: https://github.com/ellmos-ai/usmc/issues
 - License: https://github.com/ellmos-ai/usmc/blob/main/LICENSE

@@ -7,9 +7,10 @@
 [![Attribution: NOTICE](https://img.shields.io/badge/Attribution-NOTICE-blue.svg)](NOTICE)
 [![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-blue.svg)](CHANGELOG.md)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/Tests-186%20bestanden-brightgreen.svg)](tests)
-[![Geprüft: 2026-09-28](https://img.shields.io/badge/Gepr%C3%BCft-2026--09--28-blue.svg)](CHANGELOG.md)
+[![Tests](https://img.shields.io/badge/Tests-191%20bestanden-brightgreen.svg)](tests)
+[![Geprüft: 2026-10-01](https://img.shields.io/badge/Gepr%C3%BCft-2026--10--01-blue.svg)](CHANGELOG.md)
 [![Level 1 SBOM](https://img.shields.io/badge/Level%201%20SBOM-Text%20Companion-brightgreen.svg)](THIRD_PARTY_LICENSES.txt)
+[![Mitwirken](https://img.shields.io/badge/Mitwirken-Leitfaden-blue.svg)](CONTRIBUTING.md)
 [![Plattformen](https://img.shields.io/badge/Plattformen-Windows%20%7C%20Linux%20%7C%20macOS-informational.svg)](.github/workflows/ci.yml)
 [![Abhängigkeiten](https://img.shields.io/badge/Abh%C3%A4ngigkeiten-100%25%20Stdlib-success.svg)](THIRD_PARTY_LICENSES.md)
 [![Local-First](https://img.shields.io/badge/Local--First-Zero--Egress-blueviolet.svg)](THIRD_PARTY_LICENSES.md)
@@ -18,7 +19,7 @@
 [![Dachorganisation: open-bricks](https://img.shields.io/badge/Dachorganisation-open--bricks-darkblue.svg)](https://github.com/open-bricks)
 [![Marketing Log](https://img.shields.io/badge/Marketing%20Log-aktiv-success.svg)](MARKETING-LOG.txt)
 [![llms.txt](https://img.shields.io/badge/LLM--Ready-llms.txt-teal.svg)](llms.txt)
-[![Letzte Prüfung](https://img.shields.io/badge/Letzte%20Pr%C3%BCfung-2026--09--28-informational.svg)](llms.txt)
+[![Letzte Prüfung](https://img.shields.io/badge/Letzte%20Pr%C3%BCfung-2026--10--01-informational.svg)](llms.txt)
 
 **Sprachen:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
 
@@ -638,7 +639,7 @@ git diff --check
 pip install --no-deps . --dry-run
 ```
 
-- **Test-Pass-Rate:** 186 bestanden, 122 Subtests bestanden (100% grün).
+- **Test-Pass-Rate:** 191 bestanden, 127 Subtests bestanden (100% grün).
 - **Strikte Linting-Hygiene:** 0 Warnungen, 0 Fehler unter Astral Ruff.
 - **Bytecode-Integrität:** 100% fehlerfreie Kompilierung auf Python 3.10 bis 3.14.
 - **CI-Workflows:** Gehärtet mit GitHub Actions Concurrency (`cancel-in-progress: true`), Job-Level-Timeouts und Least-Privilege-Rechten (`issues: write`, `pull-requests: write`).

@@ -6,8 +6,9 @@
 
 | Version | Unterstützt | Anmerkung |
 |---------|-------------|-----------|
-| **0.2.x** | :white_check_mark: Aktiv | Aktuelle Haupt- und Wartungsversion |
-| < 0.2.0 | :x: Veraltet | Bitte auf Version 0.2.2+ aktualisieren |
+| **0.3.x** | :white_check_mark: Aktiv | Aktuelle Haupt- und Wartungsversion |
+| 0.2.x | :white_check_mark: Unterstützt | Vorherige Hauptversion |
+| < 0.2.0 | :x: Veraltet | Bitte auf Version 0.3.0+ aktualisieren |
 
 ### Sicherheitslücken melden
 
@@ -57,8 +58,9 @@ Falls GitHub Private Vulnerability Reporting im Repository nicht verfügbar sein
 
 | Version | Supported | Notes |
 |---------|-----------|-------|
-| **0.2.x** | :white_check_mark: Active | Current primary and maintenance release |
-| < 0.2.0 | :x: End of Life | Please upgrade to version 0.2.2+ |
+| **0.3.x** | :white_check_mark: Active | Current primary and maintenance release |
+| 0.2.x | :white_check_mark: Supported | Prior release branch |
+| < 0.2.0 | :x: End of Life | Please upgrade to version 0.3.0+ |
 
 ### Reporting Security Issues
 

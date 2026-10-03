@@ -32,12 +32,12 @@ class TestMetadataContract(unittest.TestCase):
         de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
         es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
 
-        self.assertIn("Tests-191%20passed", en_text)
-        self.assertIn("Tests-191%20bestanden", de_text)
-        self.assertIn("Tests-191%20aprobados", es_text)
-        self.assertIn("Verified-2026--10--01", en_text)
-        self.assertIn("Gepr%C3%BCft-2026--10--01", de_text)
-        self.assertIn("Verificado-2026--10--01", es_text)
+        self.assertIn("Tests-196%20passed", en_text)
+        self.assertIn("Tests-196%20bestanden", de_text)
+        self.assertIn("Tests-196%20aprobados", es_text)
+        self.assertIn("Verified-2026--10--03", en_text)
+        self.assertIn("Gepr%C3%BCft-2026--10--03", de_text)
+        self.assertIn("Verificado-2026--10--03", es_text)
         self.assertIn("Contributing-Guidelines-blue.svg", en_text)
         self.assertIn("Mitwirken-Leitfaden-blue.svg", de_text)
         self.assertIn("Contribuir-Gu%C3%ADa-blue.svg", es_text)
@@ -58,7 +58,7 @@ class TestMetadataContract(unittest.TestCase):
         path = ROOT / "llms.txt"
         self.assertTrue(path.exists())
         text = path.read_text(encoding="utf-8")
-        self.assertIn("Last-checked: 2026-10-01", text)
+        self.assertIn("Last-checked: 2026-10-03", text)
         self.assertIn("0.3.0", text)
         self.assertIn("README_es.md", text)
         self.assertIn("NOTICE", text)
@@ -67,7 +67,7 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("CONTRIBUTING.md", text)
         self.assertIn("SECURITY.md", text)
         self.assertIn("MARKETING-LOG.txt", text)
-        self.assertIn("191", text)
+        self.assertIn("196", text)
         self.assertIn("521 BGB", text)
 
     def test_hygiene_and_governance_files_exist(self):
@@ -167,7 +167,7 @@ class TestMetadataContract(unittest.TestCase):
 
     def test_level1_sbom_inventory(self):
         sbom = (ROOT / "THIRD_PARTY_LICENSES.txt").read_text(encoding="utf-8")
-        self.assertIn("Audited: 2026-10-01", sbom)
+        self.assertIn("Audited: 2026-10-03", sbom)
         self.assertIn("RunAsInvoker", sbom)
         self.assertIn("dependencies = []", sbom)
         self.assertIn("Python Standard Library", sbom)
@@ -386,6 +386,35 @@ class TestMetadataContract(unittest.TestCase):
         cl = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
         self.assertIn("Repository Hygiene, Multi-Host Sync Defense, PEP 621 Metadata, Level 1 SBOM Re-Audit & Contract Tests (Pfad A, 2026-10-01)", cl)
         self.assertIn("T-20260920-167562623", cl)
+
+    def test_pep621_level1_sbom_text_url(self):
+        pyproj = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+        self.assertIn('"Level 1 SBOM (Text)" = "https://raw.githubusercontent.com/ellmos-ai/usmc/main/THIRD_PARTY_LICENSES.txt"', pyproj)
+
+    def test_third_party_licenses_md_audit_date_20261003(self):
+        tpl = (ROOT / "THIRD_PARTY_LICENSES.md").read_text(encoding="utf-8")
+        self.assertIn("**Audit Date:** 2026-10-03", tpl)
+
+    def test_marketing_log_recency_pfad_b_20261003(self):
+        mkt = (ROOT / "MARKETING-LOG.txt").read_text(encoding="utf-8")
+        self.assertIn("PATH B MARKETING & DISCOVERABILITY AUDIT: usmc", mkt)
+        self.assertIn("Date: 2026-10-03", mkt)
+        self.assertIn("Version: 0.3.0", mkt)
+        self.assertIn("T-20260920-167562623", mkt)
+
+    def test_changelog_pfad_b_20261003_unreleased_entry(self):
+        cl = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("Discoverability, Visual Architecture, Level 1 SBOM Re-Audit & PEP 621 Standardisierung (Pfad B, 2026-10-03)", cl)
+        self.assertIn("T-20260920-167562623", cl)
+
+    def test_verified_badges_recency_20261003(self):
+        en_text = (ROOT / "README.md").read_text(encoding="utf-8")
+        de_text = (ROOT / "README_de.md").read_text(encoding="utf-8")
+        es_text = (ROOT / "README_es.md").read_text(encoding="utf-8")
+
+        self.assertIn("Last--Checked-2026--10--03", en_text)
+        self.assertIn("Letzte%20Pr%C3%BCfung-2026--10--03", de_text)
+        self.assertIn("%C3%9Altima%20comprobaci%C3%B3n-2026--10--03", es_text)
 
 
 if __name__ == "__main__":

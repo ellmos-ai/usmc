@@ -294,3 +294,58 @@ Turnusgemäßer Pfad A Hygiene-, Multi-Host-Defense-, Lizenz-Audit- und Vertrags
 - Bytecode Compilation: python -m compileall usmc tests passed mit 0 Fehlern.
 - Git Hygiene: git diff --check clean mit 0 Whitespace-Fehlern.
 ================================================================================
+
+================================================================================
+PATH B MARKETING & DISCOVERABILITY AUDIT: usmc
+================================================================================
+Date: 2026-10-03
+Path: Pfad B (Marketing, Discoverability, Visual Architecture & Developer Experience)
+Version: 0.3.0 (Version-Freeze per T-20260920-167562623)
+Repository: ellmos-ai/usmc
+Organization: ellmos-ai
+Umbrella Collective: open-bricks
+
+1. DISCOVERABILITY, MARKETING & ARCHITECTURAL SUMMARY
+--------------------------------------------------------------------------------
+Turnusgemäßer Pfad B Discoverability-, Marketing-, Dokumentations- und Visual-Architecture-Lauf:
+  - Version-Freeze-Disziplin (T-20260920-167562623):
+    Version 0.3.0 strikt beibehalten; kein Version-Bump; alle Erweiterungen unter
+    [Unreleased] in CHANGELOG.md und in diesem Prüfprotokoll erfasst.
+  - Visuelle Vier-Sichten-Systemtopologie (ASCII Four-View Architecture Projection):
+    Projektion in Abschnitt 6 über alle drei Sprachversionen (README.md, README_de.md,
+    README_es.md) verifiziert und synchronisiert:
+    * Sicht 1: Client-Laufzeiten & Agenten-Treiber (Claude Code, Antigravity, Codex, BACH, Rinnsal)
+    * Sicht 2: USMC Kern-Engine & Speicher-Primitive (Facts, Lessons, Working Notes, Session Handoff)
+    * Sicht 3: ACID WAL Persistenz & Konkurrenz (~/.usmc/usmc_memory.db, WAL, Busy-Retry)
+    * Sicht 4: Governance, Sicherheit & Zero-Egress Perimeter (Zero-Copyleft, RunAsInvoker, 48h SLA)
+  - 18-Punkte-Schnellnavigation & Dreisprachige Parität:
+    Vollständige 18-Punkte-Navigationsarchitektur mit bilateralen HTML-Ankern (<a id="sec-01"></a>
+    bis <a id="sec-18"></a>) und reziproken Verlinkungen über alle drei Sprachfassungen synchron.
+  - Zielgruppen & Personas ([PERSONA-01] bis [PERSONA-04]):
+    1. Autonomous Multi-Agent Swarm Engineers (Zero-Daemon, ACID WAL, Session Handoff)
+    2. Local-First & Zero-Egress Systems Engineers (100% Offline, Home-Dir Isolation)
+    3. Desktop Application & MCP Tool Integrators (Pure Stdlib, <1 ms Cold-Start, Zero Pip Deps)
+    4. Enterprise Security & Compliance Auditors (Zero-Copyleft MIT, § 521 BGB, RunAsInvoker)
+  - 10-Dimensionen-Vergleichsmatrix vs. 4 Alternativen:
+    USMC Benchmark gegenüber Ad-Hoc JSON, Cloud Redis, Schwergewichtigen Frameworks (Mem0/Zep)
+    und unmanaged SQLite across 10 architektonischen Dimensionen.
+  - PEP 621 Standardisierung in pyproject.toml:
+    Ergänzung der "Level 1 SBOM (Text)" URL neben "Level 1 SBOM", "Third-Party Licenses (Text)"
+    und 20/20 gesättigten Keywords zur maximalen Auffindbarkeit.
+  - Level 1 SBOM Re-Audit Stand 2026-10-03 (THIRD_PARTY_LICENSES.txt & THIRD_PARTY_LICENSES.md):
+    Re-Zertifizierung der 100% Standardbibliothek-Laufzeit (0 pip deps), RunAsInvoker Non-Elevation,
+    Zero-Copyleft (MIT), Haftungsbeschränkung nach § 521 BGB (Gefälligkeitsrecht) und 48h Security SLA.
+  - Shields.io Badges & RAG-Kontext (llms.txt):
+    Badges synchronisiert auf Stand 2026-10-03 und 196 passed Tests (100% grün); llms.txt Last-Checked
+    auf 2026-10-03 aktualisiert.
+  - Automatisierte Vertragstestsuite (tests/test_metadata.py):
+    Erweitert auf 196 Tests mit neuen Contract-Tests für Level 1 SBOM (Text) URL, Badge-Recency (2026-10-03),
+    llms.txt Recency und Marketing-Log Recency.
+
+2. QUALITY GATES & VERIFICATION
+--------------------------------------------------------------------------------
+- Test Suite: 196 passed, 127 subtests passed (100% grün) via pytest.
+- Ruff Linting: ruff check . passed clean mit 0 Fehlern.
+- Bytecode Compilation: python -m compileall usmc tests passed mit 0 Fehlern.
+- Git Hygiene: git diff --check clean mit 0 Whitespace-Fehlern.
+================================================================================

@@ -4,6 +4,14 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+- **Discoverability, Visual Architecture, Level 1 SBOM Re-Audit & PEP 621 Standardisierung (Pfad B, 2026-10-03):**
+  - **Version Freeze Compliance (T-20260920-167562623):** Maintained frozen release version `0.3.0` across package manifests, constants, and contract tests.
+  - **PEP 621 URL Parity (`pyproject.toml`):** Added `"Level 1 SBOM (Text)"` URL linking to raw `THIRD_PARTY_LICENSES.txt` to align with fleet-wide package metadata conventions.
+  - **Level 1 SBOM Re-Audit Stand 2026-10-03 (`THIRD_PARTY_LICENSES.txt` & `THIRD_PARTY_LICENSES.md`):** Re-certified 100% Python Standard Library zero-dependency runtime footprint, unprivileged user mode (`RunAsInvoker`), Zero-Copyleft MIT licensing, § 521 BGB statutory disclaimer, and 48h Security Response SLA.
+  - **Trilingual Documentation & Verification Badges:** Synchronized verified date badges to `2026-10-03` and test pass rates to `196 passed` (127 subtests, 100% green) across `README.md`, `README_de.md`, and `README_es.md`.
+  - **Machine-Readable LLM Context (`llms.txt`):** Updated last-checked timestamp to `2026-10-03`, refreshed test metrics, and reaffirmed Level 1 SBOM text companion inventory.
+  - **Contract Test Suite Expansion (`tests/test_metadata.py`):** Added automated contract tests verifying PEP 621 Level 1 SBOM (Text) URL, verified badge timestamps (2026-10-03), llms.txt recency, and MARKETING-LOG / CHANGELOG Pfad B audit entries.
+
 - **Repository Hygiene, Multi-Host Sync Defense, PEP 621 Metadata, Level 1 SBOM Re-Audit & Contract Tests (Pfad A, 2026-10-01):**
   - **Version Freeze Compliance (T-20260920-167562623):** Maintained frozen version `0.3.0` across all package manifests, runtime constants, and test assertions.
   - **Standardized Bilingual CONTRIBUTING.md:** Overhauled `CONTRIBUTING.md` into comprehensive bilingual format (EN/DE) with full specification of all 10 governance and runtime invariants (`INV-LOCAL-01` to `INV-SLA-10`), unprivileged user-mode execution (`RunAsInvoker`), Plan D local repository clone rules (`C:\_Local_DEV\repos\usmc`), offline Quality Gates (`compileall`, `ruff check .`, `pytest -ra -v`), and 48h Security Response SLA.

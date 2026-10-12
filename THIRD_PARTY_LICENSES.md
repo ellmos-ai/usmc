@@ -1,126 +1,36 @@
-# Third-Party Licenses & Software Inventory
+# License and dependency notes
 
-**Project:** `usmc` (United Shared Memory Client)<br>
-**License:** [MIT License](LICENSE)<br>
-**Attribution:** [NOTICE](NOTICE)<br>
-**Inventory:** [THIRD_PARTY_LICENSES.txt](THIRD_PARTY_LICENSES.txt)<br>
-**Audit Date:** 2026-10-03<br>
-**Repository:** [ellmos-ai/usmc](https://github.com/ellmos-ai/usmc)<br>
-**Umbrella Collective:** [open-bricks](https://github.com/open-bricks)
+**Source revision reviewed:** `bf281f1d68e9e6af44db9d12588a000fac531a61`
+**Package version:** `0.3.0`
+**Project license:** [MIT](LICENSE), with attribution in [NOTICE](NOTICE)
 
----
+This file summarizes declared direct project dependencies and selected upstream license information. It is not a generated SBOM, a complete transitive dependency audit, or a legal review of every way the software may be combined or distributed. Build and test tools can resolve to different versions because the project declares version floors rather than a lockfile.
 
-## Runtime Architecture & Dependencies
+## Declared package scopes
 
-`usmc` is engineered as a **zero-dependency, local-first shared memory client and coordination store for LLM agents and multi-agent frameworks**. It provides lightweight, structured working memory, persistent facts, categorized lessons, and prompt-context generation over a robust local SQLite database with write-ahead logging (WAL), zero daemon overhead, and fail-safe multi-agent concurrency.
-
-### Mandatory Runtime Dependencies
-
-`usmc` maintains a **zero external runtime dependency footprint** (`dependencies = []`). The entire runtime execution relies strictly on the official Python Standard Library:
-
-| Package / Module | Version Spec | License | Type | Purpose |
-|---|---|---|---|---|
-| *Python Standard Library* | `>=3.10` | PSF-2.0 | Built-in | Core runtime: `argparse`, `dataclasses`, `datetime`, `json`, `os`, `pathlib`, `sqlite3`, `sys`, `typing` |
-
-All state persistence is handled entirely via Python's built-in `sqlite3` driver. Zero third-party telemetry, analytics, cloud synchronization, or remote networking services are packaged or contacted.
-
-### Development & Test Tooling
-
-The following tools are utilized exclusively for offline automated testing, code quality auditing, packaging, and linting:
-
-| Package / Tool | Version Spec | License | Scope | Purpose |
-|---|---|---|---|---|
-| [pytest](https://pytest.org/) | `>=7.0` | MIT | `[dev]` | Automated unit, contract, and metadata test runner |
-| [ruff](https://github.com/astral-sh/ruff) | `>=0.6` | MIT OR Apache-2.0 | `[dev]` | High-performance Python code style and lint enforcement |
-| [setuptools](https://github.com/pypa/setuptools) | `>=77.0` | MIT | `[build-system]` | Standard packaging and build backend |
-| [wheel](https://github.com/pypa/wheel) | `>=0.40` | MIT | `[build-system]` | Standard built-package distribution format |
-
----
-
-## Zero-Copyleft Guarantee & Unprivileged Execution
-
-- **Zero-Copyleft Guarantee:** All runtime code and development dependencies are governed strictly by permissive, business-friendly open-source licenses (MIT, Apache-2.0, PSF-2.0). The codebase contains **zero** GPL, AGPL, or viral copyleft components.
-- **Unprivileged User-Mode Operation (`RunAsInvoker`):** All CLI commands, memory ingestion, SQLite transactions, and state queries execute purely within unprivileged user space. No administrative rights, root elevation, sudo, or UAC prompts are ever required.
-
----
-
-## Governance & Level 1 SBOM Invariant Cross-Reference Matrix
-
-`usmc` strictly enforces ten foundational governance and runtime invariants:
-
-| Invariant | Category | Description | Status |
+| Component | Scope in this project | Declaration or observation | License information |
 |---|---|---|---|
-| `INV-LOCAL-01` | Local-First & Zero-Egress | 100% offline-ready; all operations persist to local SQLite (`~/.usmc/usmc.db` or configured path); zero telemetry or outbound network calls. | VERIFIED |
-| `INV-UNPRIV-02` | Unprivileged User Mode (`RunAsInvoker`) | All CLI commands, API calls, and background routines operate strictly in unprivileged user space. | VERIFIED |
-| `INV-SQLITE-03` | ACID & WAL Concurrency | Resilient multi-agent concurrency via SQLite WAL mode, busy handlers, and atomic transaction semantics. | VERIFIED |
-| `INV-SCHEMA-04` | Backward-Compatible Schema Evolution | Automated idempotent migration and schema evolution ensuring seamless inter-agent backward compatibility. | VERIFIED |
-| `INV-BOUND-05` | Bounded Ring Buffer & Pruning | Safe retention limits and deterministic pruning prevent uncontrolled disk expansion in long-running agent loops. | VERIFIED |
-| `INV-FILTER-06` | In-Engine Delimiter Filtering | SQL WHERE clause filtering with delimiter-anchored matching prevents busy-loop starvation and post-fetch truncation. | VERIFIED |
-| `INV-LANG-07` | Stable Protocol & Language Contract | Human-readable prose localized to German (`RUNTIME_LANGUAGE = "de"`), while CLI subcommands and JSON keys remain stable English tokens. | VERIFIED |
-| `INV-ISOL-08` | Strict State Isolation | Shared memory databases reside strictly in user directories (`~/.usmc/` or custom targets), completely isolated from git repositories. | VERIFIED |
-| `INV-AUDIT-09` | Complete SPDX Audit Transparency | 100% Python standard library at runtime; zero external runtime dependencies and zero copyleft risks. | VERIFIED |
-| `INV-SLA-10` | Cross-Platform Parity & SLA | Consistent behavior across Windows, Linux, and macOS with committed 48h response / 5-day triage security SLA. | VERIFIED |
+| USMC | Project source and package | `pyproject.toml`; version `0.3.0` | MIT; see `LICENSE` and `NOTICE`. |
+| Python standard library | Runtime environment, including `sqlite3` | Python `>=3.10` | Python distributions include PSF license information; details depend on the Python distribution. |
+| setuptools | Build backend | `setuptools>=77` | Check the resolved backend distribution's license files for the build in use. |
+| pytest | Test extra | `pytest>=7.0`; observed metadata in this review: 8.3.4, MIT | [pytest project](https://github.com/pytest-dev/pytest) and its resolved distribution metadata. |
+| Ruff | Test extra | `ruff>=0.1.0`; observed metadata in this review: 0.16.8, MIT | [Ruff project](https://github.com/astral-sh/ruff) and its resolved distribution metadata. |
+| tomli | Test extra on Python <3.11 | `tomli>=2.0; python_version < '3.11'` | Check the resolved distribution metadata and [tomli project](https://github.com/hukkin/tomli). |
 
----
+`pyproject.toml` declares no direct runtime package dependencies. It does not declare `wheel` as a build requirement. Python itself, build isolation, pip, Git, and test tools have scopes outside the runtime dependency list.
 
-## License Texts & Attribution
+## Network and runtime scope
 
-### MIT License (`usmc`, `pytest`, `ruff`, `setuptools`, `wheel`)
+The package's declared runtime dependency list is empty, but this does not make installation or builds network-free. Installing from Git or resolving a build backend may use network access. The reviewed USMC package modules contain no direct HTTP client; this source review does not audit the host, Python distribution, build tools, or calling processes.
 
-```
-MIT License
+## License references
 
-Copyright (c) 2026 Lukas Geiger / ellmos-ai
+- Project license: [`LICENSE`](LICENSE)
+- Project attribution: [`NOTICE`](NOTICE)
+- Python license information: https://docs.python.org/3/license.html
+- setuptools license and notices: https://github.com/pypa/setuptools
+- pytest license and notices: https://github.com/pytest-dev/pytest
+- Ruff license and notices: https://github.com/astral-sh/ruff
+- tomli license and notices: https://github.com/hukkin/tomli
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-### Python Software Foundation License Version 2 (`Python Standard Library`)
-
-```
-1. This LICENSE AGREEMENT is between the Python Software Foundation ("PSF"), and
-the Individual or Organization ("Licensee") accessing and otherwise using this
-software ("Python") in source or binary form and its associated documentation.
-
-2. Subject to the terms and conditions of this License Agreement, PSF hereby
-grants Licensee a nonexclusive, royalty-free, world-wide license to reproduce,
-analyze, test, perform and/or display publicly, prepare derivative works, distribute,
-and otherwise use Python alone or in any derivative version, provided, however, that
-PSF's License Agreement and PSF's notice of copyright, i.e., "Copyright (c) 2001-2026
-Python Software Foundation; All Rights Reserved" are included in Python alone or in
-any derivative version prepared by Licensee.
-```
-
-### Apache License Version 2.0 (`ruff`)
-
-```
-Copyright (c) Astral Software Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-```
+The companion [plain-text notes](THIRD_PARTY_LICENSES.txt) use the same limited scope.

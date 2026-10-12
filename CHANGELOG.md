@@ -4,66 +4,36 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
-- **Discoverability, Visual Architecture, Level 1 SBOM Re-Audit & PEP 621 Standardisierung (Pfad B, 2026-10-03):**
-  - **Version Freeze Compliance (T-20260920-167562623):** Maintained frozen release version `0.3.0` across package manifests, constants, and contract tests.
-  - **PEP 621 URL Parity (`pyproject.toml`):** Added `"Level 1 SBOM (Text)"` URL linking to raw `THIRD_PARTY_LICENSES.txt` to align with fleet-wide package metadata conventions.
-  - **Level 1 SBOM Re-Audit Stand 2026-10-03 (`THIRD_PARTY_LICENSES.txt` & `THIRD_PARTY_LICENSES.md`):** Re-certified 100% Python Standard Library zero-dependency runtime footprint, unprivileged user mode (`RunAsInvoker`), Zero-Copyleft MIT licensing, § 521 BGB statutory disclaimer, and 48h Security Response SLA.
-  - **Trilingual Documentation & Verification Badges:** Synchronized verified date badges to `2026-10-03` and test pass rates to `196 passed` (127 subtests, 100% green) across `README.md`, `README_de.md`, and `README_es.md`.
-  - **Machine-Readable LLM Context (`llms.txt`):** Updated last-checked timestamp to `2026-10-03`, refreshed test metrics, and reaffirmed Level 1 SBOM text companion inventory.
-  - **Contract Test Suite Expansion (`tests/test_metadata.py`):** Added automated contract tests verifying PEP 621 Level 1 SBOM (Text) URL, verified badge timestamps (2026-10-03), llms.txt recency, and MARKETING-LOG / CHANGELOG Pfad B audit entries.
+### 2026-10-12 — Documentation and packaging review
 
-- **Repository Hygiene, Multi-Host Sync Defense, PEP 621 Metadata, Level 1 SBOM Re-Audit & Contract Tests (Pfad A, 2026-10-01):**
-  - **Version Freeze Compliance (T-20260920-167562623):** Maintained frozen version `0.3.0` across all package manifests, runtime constants, and test assertions.
-  - **Standardized Bilingual CONTRIBUTING.md:** Overhauled `CONTRIBUTING.md` into comprehensive bilingual format (EN/DE) with full specification of all 10 governance and runtime invariants (`INV-LOCAL-01` to `INV-SLA-10`), unprivileged user-mode execution (`RunAsInvoker`), Plan D local repository clone rules (`C:\_Local_DEV\repos\usmc`), offline Quality Gates (`compileall`, `ruff check .`, `pytest -ra -v`), and 48h Security Response SLA.
-  - **Multi-Host Cloud-Sync & Lock Defense (`.gitignore`):** Hardened `.gitignore` against multi-host conflict files (`*-IDEAPAD-GEI*`), canonical dev and agent locks (`LOCK.dev.*`, `LOCK.antigravity.*`, `LOCK.bugsearch.*`), task planning files (`TASKPLAN_*.md`), and editor/thumbnail artifacts (`ehthumbs.db`).
-  - **PEP 621 Metadata Standardisierung (`pyproject.toml`):** Added `Contributing` URL under `[project.urls]`, hardened `[tool.pytest.ini_options]` with extended `norecursedirs` (`.pytest_tmp*`, `.nyc_output`).
-  - **Level 1 SBOM Re-Audit Stand 2026-10-01 (`THIRD_PARTY_LICENSES.txt` & `THIRD_PARTY_LICENSES.md`):** Re-audited software inventory Stand 2026-10-01 confirming unprivileged user-mode execution (`RunAsInvoker`), 100% Python Standard Library runtime, Zero-Copyleft licensing, statutory liability limitation pursuant to Section 521 BGB (§ 521 BGB Gefälligkeitsrecht), 48h Security Response SLA, and full SPDX license texts (MIT, PSF-2.0, Apache-2.0).
-  - **Security Policy Modernization (`SECURITY.md`):** Updated supported versions tables in German and English to formally recognize `0.3.x` as the active primary release branch and `0.2.x` as supported prior release branch.
-  - **Documentation, Badges & Context Recency:** Synchronized test badges, audit dates (`2026-10-01`), and machine-readable `llms.txt` Stand 2026-10-01 across all documentation assets.
-  - **Contract Test Suite Expansion (`tests/test_metadata.py` & `tests/test_repository_hygiene.py`):** Extended contract tests verifying bilingual CONTRIBUTING.md content, invariant coverage, PEP 621 Contributing URL, SECURITY.md supported version table, multi-host ignore rules, and Level 1 SBOM companion invariants.
+- Replaced the English, German, and Spanish README entry points with concise guides and corrected archival editions. The original source revision remains available through its commit link.
+- Corrected current descriptions of data paths, network requests, process privileges, retention, dependency and license scope, security response targets, accessibility, and statutory liability. This review supersedes earlier unqualified current-page security and compliance wording; dated release notes below are historical records, not current verification.
+- Updated package keywords and URLs, the test-only dependency declaration, and the explicit source-distribution manifest; CI installs the test extra. Version `0.3.0` remains unchanged; this work did not change runtime code or publish a release.
+- Retained functional package, SQLite, migration, API, CLI, workflow, and archive checks while removing assertions that only pinned marketing prose, stale dates, or stale test counts.
+- Generalized host-specific examples in this copy of the changelog while retaining event dates and the broader ignore-rule history.
 
-- **Benchmark Suite & Multi-Agent Scaling Documentation (`examples/benchmark_scaling.py`, 2026-09-29):**
-  - **Standalone Benchmark Script (`examples/benchmark_scaling.py`):** Implemented executable performance and concurrency benchmark measuring discrete ACID fact writes (~60–80 ops/s), append-only working notes (~55–75 ops/s), indexed fact lookups (~100–130 QPS), filtered working note scans with tag delimiter-anchoring and escaped grep (~90–120 QPS), prompt context assembly (~35–45 calls/s), and 4-agent concurrent write stress (~45–55 ops/s) with SQLite WAL and 5,000 ms busy timeout retry guarantees. Validates zero lock corruption and database integrity (`PRAGMA integrity_check = 'ok'`).
-  - **Regression Contract Tests (`tests/test_examples.py`):** Added `test_benchmark_scaling_example_execution` and `test_benchmark_cli_invocation_json` verifying programmatic execution and CLI `--json` output compatibility.
-  - **Trilingual Scaling Documentation:** Integrated benchmark and concurrency performance matrices across Section 4 in `README.md`, `README_de.md`, and `README_es.md`. Fulfills open benchmark task in `TODO.md`.
-- **Packaging & Build Smoke Verification Contract (`tests/test_packaging.py`, 2026-09-29):**
-  - **Packaging Smoke Test Suite (`TestPackagingContract`):** Implemented automated contract tests verifying `pyproject.toml` build system requirements (`setuptools>=77`), dynamic version resolution (`usmc.__version__ == "0.3.0"`), console script entry point definition (`usmc = usmc.cli:main` callable), and complete package file manifest (`__init__.py`, `client.py`, `api.py`, `cli.py`, `schema.py`, `memory_union.contract.json`).
-  - **PEP 639 License Validation:** Verified that `license = "MIT"` is cleanly declared and free from redundant `"License :: OSI Approved :: ..."` classifier conflicts that reject setuptools builds.
-  - **Dry-Run Installation Smoke:** Automated verification of `pip install --no-deps --no-build-isolation -e . --dry-run` to safeguard PyPI and local editable installation workflows.
-  - **Metadata & Documentation Parity:** Expanded test suite from 178 to 184 passed tests (122 subtests, 100% green) across `README.md`, `README_de.md`, `README_es.md`, `llms.txt`, and `tests/test_metadata.py`. Fulfills open build/package smoke check item in `TODO.md`.
-- **Cross-Agent Handoff Workflow Example & Contract Testing (2026-09-29):**
-  - **Standalone Executable Example (`examples/cross_agent_handoff.py`):** Added complete, documented example demonstrating multi-agent asynchronous collaboration. Shows Agent A (`claude`) initiating a session, adding architectural facts (`add_fact`), recording diagnostic lessons (`add_lesson`), setting working progress (`add_working`), and ending the session with structured handoff instructions (`end_session(handoff_notes=...)`). Shows Agent B (`gemini`) picking up the handoff, generating contextual markdown (`generate_context()`), accessing shared facts and lessons, updating working state, and completing the task.
-  - **Contract Test (`tests/test_examples.py`):** Added `TestExamplesContract` ensuring public examples execute cleanly without error during regression runs.
-  - **Metadata & Documentation Parity:** Updated test suite count from 177 to 178 passed tests (122 subtests, 100% green) across `README.md`, `README_de.md`, `README_es.md`, `llms.txt`, and `tests/test_metadata.py`. Addresses open TODO item from audit.
-- **Internal Docstrings Clean Translation to English (2026-09-29):**
-  - **Internal Codebase Consistency:** Standardized internal module and method docstrings across `usmc/client.py`, `usmc/api.py`, `usmc/cli.py`, and `usmc/schema.py` to clean, idiomatically concise English aligned with public repository standards.
-  - **Backward-Compatible Runtime Preserved:** Retained German prompt headers and messages in `generate_context()` and CLI output for backwards compatibility (`usmc.RUNTIME_LANGUAGE = "de"`).
-  - **Full Test Suite Verification:** All 177 tests and 122 subtests green, 0 ruff errors.
-- **Developer Dependencies & Clean Test Imports (2026-09-28):**
-  - **`[project.optional-dependencies]` in `pyproject.toml`:** Declared `test = ["pytest>=7.0", "ruff>=0.1.0"]` enabling standardized, reproducible developer installs via `pip install -e .[test]`.
-  - **Clean Test Suite Imports:** Removed redundant `sys.path.insert(0, ...)` workarounds from `tests/test_api.py`, `tests/test_cli.py`, `tests/test_client.py`, and `tests/test_paths.py` in favor of standard editable installs and `pytest.ini_options.pythonpath = "."`.
-  - **Clean Ruff Linting:** Passed with 0 errors across codebase.
-- **Discoverability, Visual Architecture, Level 1 SBOM, 18-Point Navigation Parity & PEP 621 Saturation (Pfad B, 2026-09-28):**
-  - **Version Freeze Compliance (T-20260920-167562623):** Maintained frozen version `0.3.0` across package manifests and metadata tests.
-  - **PEP 621 Metadata Saturation (`pyproject.toml`):**
-    - Saturated `keywords` to maximum 20/20 matching remote GitHub repository topics (`agent-framework`, `agent-memory`, `ai-agent`, `automation`, `cross-agent`, `cross-agent-memory`, `llm`, `llm-agents`, `llm-memory`, `local-ai`, `local-first`, `memory`, `open-source`, `prompt-context`, `python`, `python-cli`, `shared-memory`, `sqlite`, `sqlite-memory`, `zero-dependency`).
-    - Added dedicated plain-text companion URLs under `[project.urls]`: `Plain-Text Licenses`, `Third-Party Licenses (Text)`, and `Level 1 SBOM`.
-  - **18-Point Trilingual Navigation Parity & Dual HTML Anchors:**
-    - Expanded Quick Navigation architecture from 16 to 18 numbered points across English (`README.md`), German (`README_de.md`), and Spanish (`README_es.md`).
-    - Implemented reciprocal dual HTML anchors (`<a id="sec-01"></a>` through `<a id="sec-18"></a>`) alongside human-readable IDs (`#key-features`, `#sec-01`, etc.) for seamless cross-linking and machine parsing.
-    - Tagged target personas with explicit structured IDs (`[PERSONA-01]` through `[PERSONA-04]`).
-  - **ASCII Four-View Architectural Topology Projection (Section 6):**
-    - Added dedicated four-view ASCII topology diagram projection across all three README variants: View 1 (Client Runtimes & Agent Drivers), View 2 (USMC Core Engine & Memory Primitives), View 3 (ACID WAL Persistence & Concurrency), and View 4 (Governance, Security & Ecosystem Perimeter).
-  - **Quality Gates, Contract Testing & CI Guidance (Section 16):**
-    - Added dedicated Section 16 documenting offline testing commands (`pytest`, `ruff check .`, `compileall`, `git diff --check`), baseline pass rates (177 passed, 122 subtests), and CI concurrency settings.
-  - **Level 1 SBOM Software Inventory & Transparency (`THIRD_PARTY_LICENSES.txt` & `THIRD_PARTY_LICENSES.md`):**
-    - Re-audited software inventory Stand 2026-09-28 certifying unprivileged user-mode execution (`RunAsInvoker`), 100% Python Standard Library runtime, Zero-Copyleft licensing, and invariant matrix cross-references.
-  - **Statutory Legal Notice & Security SLA (Section 18):**
-    - Documented German statutory liability limitation pursuant to Section 521 BGB (§ 521 BGB Gefälligkeitsrecht for unpaid open-source contributions) and reiterated 48h Security Response SLA.
-  - **Machine-Readable LLM Context (`llms.txt`):**
-    - Updated verified date to `2026-09-28`, refreshed baseline test metrics (177 passed, 122 subtests), Level 1 SBOM companion references, and § 521 BGB notice.
-- **Lesson contract v2 joins the shared BACH/OCEAN memory contract (S2a, T-20260920-823767362):** union contract version 2. `memory_lessons` carries the lesson-v2 columns (provenance, idempotency, feedback counters, delivery), and `memory_lesson_feedback`, `memory_lesson_delivery_batches` and `memory_lesson_deliveries` are part of the pinned contract. `apply_union()` now moves `usmc_lessons` and its three side tables with unchanged IDs (children dropped before parents, foreign keys intact) and upgrades a database on contract v1 in place; rows on both sides abort without mutation. The client addresses every lesson table through `_table()`, so keyed lessons, editorial status, feedback and delivery (including SessionStart delivery) work in union mode; the policy lock `LessonV2UnionUnsupportedError` is removed. `memory_union.py` is self-contained again (no package imports) so BACH can vendor it byte-identically. Opt-in stays `USMC_MEMORY_UNION=1`; no live database is switched by this change.
+### 2026-10-03 — Discoverability and package metadata
 
+- Added a plain-text third-party license inventory URL and refreshed the machine-readable context index. Earlier audit language is not current verification and is superseded by the 2026-10-12 scope correction.
+
+### 2026-10-01 — Repository hygiene and contributor guidance
+
+- Updated contributor guidance, ignore patterns, test exclusions, package URLs, and supported-version tables. Earlier unqualified security, liability, and egress descriptions are historical statements, not current guarantees.
+
+### 2026-09-29 — Examples and packaging checks
+
+- Added a standalone SQLite scaling benchmark and a cross-agent handoff example with executable checks; benchmark measurements depend on the environment.
+- Added packaging checks for project metadata, the console entry point, selected package files, and editable-install behavior.
+- Standardized internal Python docstrings while preserving the existing German runtime messages and output contract.
+
+### 2026-09-28 — Developer setup and guide navigation
+
+- Added the test extra and standardized test imports; expanded trilingual guide navigation and architecture diagrams. Historical test counts are not current verification.
+
+### Shared-memory lesson migration (S2a; previously Unreleased)
+
+- Added the lesson-v2 tables and delivery data to the opt-in shared-memory contract. The migration backs up the SQLite database, preserves lesson and related row IDs, and aborts without mutation when it encounters conflicting rows or unsupported columns.
+- `USMC_MEMORY_UNION=1` remains an explicit opt-in; no existing database is switched automatically. The migration upgrades the supported earlier contract, and `memory_union.py` remains self-contained for downstream vendoring.
 ## 0.3.0 - 2026-09-26
 
 - **Repository Hygiene, CI Lifecycle Workflows, Lock Defense & NOTICE Attribution (Pfad A, 2026-09-26):**
@@ -75,7 +45,7 @@ All notable changes to USMC are documented here.
     - Hardened `.github/workflows/label-sync.yml` with top-level concurrency (`cancel-in-progress: true`) and `timeout-minutes: 5`.
   - **Multi-Host Cloud-Sync & Lock Defense (`.gitignore`):**
     - Reinforced canonical locks (`LOCK.user.*`, `LOCK.until.*`, `LOCK.condition.*`, `.automation-lock`, `LOCK.permissions.json`).
-    - Added multi-host sync guard patterns (`*-IDEAPAD*`, `*_WORKSTATION*`, `*_WORKSTATION-LG*`, `*-WORKSTATION.*`, `*-WORKSTATION-LG.*`).
+    - Added multi-host sync guard patterns (`*-IDEAPAD*`, `*_WORKSTATION*`, `*-WORKSTATION.*`).
     - Added test & cache dirs (`.pytest_temp/`, `.pytest_tmp*/`, `.tox/`) and editor swap patterns (`Desktop.ini`, `*.swp`, `*.swo`).
   - **PEP 621 Standardisierung (`pyproject.toml`):**
     - Expanded `license-files` whitelist to include `NOTICE` and `THIRD_PARTY_LICENSES.txt`.
@@ -124,7 +94,7 @@ Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und Versionslauf:
   - Hardened `.github/workflows/welcome.yml` with `timeout-minutes: 5` and concurrency `cancel-in-progress: true`.
   - Hardened `.github/workflows/ci.yml` with `timeout-minutes: 15`, concurrency `cancel-in-progress: true`, and automated `ruff check .` lint enforcement.
 - **Multi-Host Cloud-Sync & Lock Defense (`.gitignore`)**:
-  - Hardened `.gitignore` against synchronization conflict copies (`*conflicted copy*`, `* (Kopie)*`, `* (Copy)*`, `*-ASUS*`, `*-ASUS-GEI*`, `*-LAPTOP*`, `*-WORKSTATION*`, `*-WORKSTATION-LG*`, `*-Mac Studio*`, `*-MacBook*`).
+  - Hardened `.gitignore` against synchronization conflict copies (`*conflicted copy*`, `* (Kopie)*`, `* (Copy)*`, `*-ASUS*`, `*-LAPTOP*`, `*-WORKSTATION*`, `*-Mac Studio*`, `*-MacBook*`).
   - Added multi-agent lock patterns (`LOCK*`, `LOCK.user.*`, `LOCK.until.*`, `LOCK.condition.*`, `LOCK.permissions.json`, `uv.lock`, with preservation of `!package-lock.json`).
   - Added test caches and build artifacts (`.hypothesis/`, `.nyc_output/`, `node_modules/`, `*.orig`, `*.rej`, `*.tmp`, `*.bak`).
 - **Packaging & Pytest Guardrails (`pyproject.toml`)**:

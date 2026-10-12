@@ -1,103 +1,49 @@
-# Sicherheitsrichtlinie / Security Policy
+# Security policy
 
 ## Deutsch
 
-### Unterstützte Versionen
+### Versionen
 
-| Version | Unterstützt | Anmerkung |
-|---------|-------------|-----------|
-| **0.3.x** | :white_check_mark: Aktiv | Aktuelle Haupt- und Wartungsversion |
-| 0.2.x | :white_check_mark: Unterstützt | Vorherige Hauptversion |
-| < 0.2.0 | :x: Veraltet | Bitte auf Version 0.3.0+ aktualisieren |
+Die Paketmetadaten nennen derzeit Version 0.3.0. Diese Richtlinie verspricht keine Sicherheitswartung für frühere Versionszweige. Prüfe vor dem Einsatz den aktuellen Quellstand, die Release-Hinweise und die CI-Ergebnisse.
 
 ### Sicherheitslücken melden
 
-Wenn Sie eine Sicherheitslücke oder Schwachstelle in **usmc** (United Shared Memory Client) entdecken, melden Sie diese bitte verantwortungsbewusst und diskret:
+Bitte melde Schwachstellen nicht öffentlich. Verwende [GitHub Private Vulnerability Reporting](https://github.com/ellmos-ai/usmc/security/advisories/new). Falls dieser Weg nicht verfügbar ist, nutze `security@ellmos.ai`. Füge, soweit möglich, betroffene Version, Reproduktionsschritte und beobachtete Auswirkungen bei. Teile keine echten Nutzerdaten oder Zugangsdaten in einem Bericht.
 
-1. **Kein öffentliches GitHub-Issue eröffnen.**
-2. **GitHub Private Vulnerability Reporting verwenden:** [Security Advisories](https://github.com/ellmos-ai/usmc/security/advisories/new)
-3. Fügen Sie eine präzise Beschreibung, Reproduktionsschritte sowie die potenzielle Sicherheitsauswirkung bei.
+### Reaktionsziele
 
-Falls GitHub Private Vulnerability Reporting im Repository nicht verfügbar sein sollte, kontaktieren Sie das Sicherheitsteam direkt per E-Mail:
-- `security@ellmos.ai`
-- `support@lukasgeiger.com`
-- `lukas@open-bricks.org`
-- `security@open-bricks.org`
+Die Maintainer streben eine erste Rückmeldung innerhalb von 48 Stunden und eine Triage innerhalb von fünf Werktagen an. Das sind Arbeitsziele, keine vertragliche Service-Level-Zusage; Zeiten können je nach Verfügbarkeit und Schweregrad abweichen. Eine Fehlerbehebung oder ein Veröffentlichungszeitpunkt wird nicht zugesagt.
 
-### Reaktionszeit & SLA
+### Quellumfang und Betriebsgrenzen
 
-- **Erstreaktion:** Innerhalb von **48 Stunden** (**48 hours**) an Werktagen mit Eingangsbestätigung.
-- **Triage & Einstufung:** Innerhalb von **5 Werktagen** (**5 business days**) mit technischer Bewertung und Priorisierung.
-- **Patch-Bereitstellung:** Kritische Sicherheitsbehebungen werden unverzüglich als Point-Release bereitgestellt.
+USMC speichert Datensätze in einer SQLite-Datei. Der Standardpfad ist `~/.usmc/usmc_memory.db`; `USMC_DB`, `--db` und das Python-Argument `db_path` können ihn überschreiben. Ein benutzerdefinierter Pfad ist nicht auf das Home-Verzeichnis beschränkt. Die Datei unterliegt den Rechten des Hosts; USMC verschlüsselt sie nicht selbst und entfernt gespeicherte Datensätze nicht automatisch.
 
-### Sicherheitsprinzipien & Laufzeit-Invarianten
+Die geprüften Paketmodule enthalten keinen direkten HTTP-Client. Das ist eine begrenzte Aussage über den Quellstand, keine Egress-Firewall: Installation, Git/Python-Buildwerkzeuge und aufrufende Programme können Netzwerkzugriff verwenden. USMC erstellt keine Sandbox und ändert die Rechte des gestarteten Prozesses nicht; der Prozess erbt die Rechte seines Launchers.
 
-- **100% Local-First & Zero Egress:** usmc persistiert ausschließlich in der lokalen SQLite-Datenbank (`~/.usmc/usmc.db` oder benutzerdefinierter lokaler Pfad). Es existiert keinerlei Telemetrie, Tracking oder externer Netzwerkzugriff.
-- **Unprivilegierter Benutzermodus (`RunAsInvoker`):** Alle CLI- und Modul-Operationen laufen vollständig im unprivilegierten Benutzerkontext ohne Administrator- oder Root-Rechte.
-- **ACID-Transaktionssicherheit & WAL:** Robuste Multi-Agenten-Gleichzeitigkeit durch SQLite Write-Ahead Logging (WAL) und Busy-Handler.
-- **Isolierter Speicherort:** Die Datenbank liegt standardmäßig im Benutzerverzeichnis (`~/.usmc/`), niemals innerhalb von Quellcode-Repositories.
+SQLite-Transaktionen und WAL regeln Datenbankzugriffe. Agentenkennungen sind Datenlabels, keine Prozess-Authentifizierung oder Betriebssystem-Sperre. Anwendungen bleiben für Zugriff, Pfadwahl, Sicherungen und Aufbewahrung verantwortlich. `USMC_MEMORY_UNION=1` aktiviert einen optionalen Schema-Migrationspfad; lies die zugehörigen Hinweise und Tests, bevor du ihn auf vorhandenen Daten nutzt.
 
-| Invariante | Kategorie | Beschreibung |
-|---|---|---|
-| `INV-LOCAL-01` | Local-First & Zero-Egress | 100% offlinefähig; sämtliche Operationen persistieren in lokaler SQLite; keine Netzwerkaufrufe oder Telemetrie. |
-| `INV-UNPRIV-02` | Unprivilegierter Benutzermodus (`RunAsInvoker`) | Sämtliche Prozesse operieren im unprivilegierten Benutzerkontext ohne Root-/Admin-Elevation. |
-| `INV-SQLITE-03` | ACID & WAL-Nebenläufigkeit | Ausfallsichere Multi-Agenten-Gleichzeitigkeit durch SQLite WAL-Modus, Busy-Handler und atomare Transaktionen. |
-| `INV-SCHEMA-04` | Abwärtskompatible Schema-Evolution | Automatische, idempotente Migrationen garantieren nahtlosen Zugriff über Agenten-Generationen hinweg. |
-| `INV-BOUND-05` | Ringpuffer & Bereinigung | Konfigurierbare Aufbewahrungsgrenzen und deterministische Bereinigung verhindern unkontrolliertes Festplattenwachstum. |
-| `INV-FILTER-06` | In-Engine Delimiter-Filterung | SQL-WHERE-Filterung mit Begrenzungszeichen verhindert Aushungerung durch Schreibschleifen und Nachfilter-Verlust. |
-| `INV-LANG-07` | Stabiler Protokollvertrag | Menschliche Ausgabetexte auf Deutsch (`RUNTIME_LANGUAGE = "de"`), CLI-Befehle und JSON-Schlüssel als stabile englische Token. |
-| `INV-ISOL-08` | Strikte Zustandstrennung | Datenbanken residieren isoliert im Benutzerverzeichnis (`~/.usmc/`), vollständig getrennt von Git-Repositories. |
-| `INV-AUDIT-09` | Vollständige SPDX-Transparenz | 100% reine Python-Standardbibliothek zur Laufzeit; keinerlei externe Laufzeit-Abhängigkeiten oder Copyleft-Risiken. |
-| `INV-SLA-10` | Plattformunabhängigkeit & SLA | Einheitliches Verhalten unter Windows, Linux und macOS mit 48h-Sicherheits-Reaktions-SLA. |
-
----
+Die Software und diese Dokumentation sind keine Zertifizierung, vollständige Sicherheitsprüfung oder Rechtsberatung. Wenn du möglicherweise personenbezogene oder vertrauliche Daten speicherst, prüfe Zweck, Rechtsgrundlage, Zugriff, Sicherung und Aufbewahrung für deinen Einsatz.
 
 ## English
 
-### Supported Versions
+### Versions
 
-| Version | Supported | Notes |
-|---------|-----------|-------|
-| **0.3.x** | :white_check_mark: Active | Current primary and maintenance release |
-| 0.2.x | :white_check_mark: Supported | Prior release branch |
-| < 0.2.0 | :x: End of Life | Please upgrade to version 0.3.0+ |
+The package metadata currently declares version 0.3.0. This policy does not promise security maintenance for earlier release lines. Before use, check the current source revision, release notes, and CI results.
 
-### Reporting Security Issues
+### Reporting a vulnerability
 
-If you discover a security vulnerability or concern in **usmc** (United Shared Memory Client), please disclose it responsibly:
+Please do not disclose vulnerabilities in a public issue. Use [GitHub Private Vulnerability Reporting](https://github.com/ellmos-ai/usmc/security/advisories/new). If that route is unavailable, contact `security@ellmos.ai`. Include the affected version, reproduction steps, and observed impact where possible. Do not include real user data or credentials in a report.
 
-1. **Do not file a public GitHub issue.**
-2. **Use GitHub Private Vulnerability Reporting:** [Security Advisories](https://github.com/ellmos-ai/usmc/security/advisories/new)
-3. Include detailed steps to reproduce, impact assessment, and any proposed remediations.
+### Response targets
 
-If Private Vulnerability Reporting is unavailable, contact the security team via email:
-- `security@ellmos.ai`
-- `support@lukasgeiger.com`
-- `lukas@open-bricks.org`
-- `security@open-bricks.org`
+Maintainers aim to acknowledge reports within 48 hours and triage them within five business days. These are working targets, not a contractual service-level commitment; timing may vary with availability and severity. No fix or release date is promised.
 
-### Response Time & SLA
+### Source scope and operating boundaries
 
-- **Initial Response:** Within **48 hours** on business days.
-- **Triage & Assessment:** Within **5 business days** with confirmed assessment and mitigation timeline.
-- **Patch Release:** Critical security patches are released as high-priority point releases.
+USMC stores records in an SQLite file. The default path is `~/.usmc/usmc_memory.db`; `USMC_DB`, `--db`, and the Python `db_path` argument can override it. A custom path is not restricted to the home directory. The file uses host filesystem permissions; USMC does not encrypt it itself or automatically remove stored records.
 
-### Security Principles & Runtime Invariants
+The reviewed package modules contain no direct HTTP client. This is a bounded statement about the source, not an egress firewall: installation, Git/Python build tools, and calling programs may use the network. USMC does not create a sandbox or change the launched process's privileges; the process inherits privileges from its launcher.
 
-- **100% Local-First & Zero Egress:** usmc persists exclusively to the local SQLite database (`~/.usmc/usmc.db` or configured local target). No telemetry, tracking, or external network requests exist.
-- **Non-Elevation User Mode (`RunAsInvoker`):** All CLI tools and modules operate strictly within unprivileged user space. No administrative or root elevation is ever requested or required.
-- **ACID Transaction Resilience & WAL:** Resilient multi-agent concurrency via SQLite Write-Ahead Logging (WAL) and busy handlers.
-- **Isolated Database State:** The database resides strictly in user home (`~/.usmc/`), never inside source repositories.
+SQLite transactions and WAL govern database access. Agent identifiers are data labels, not process authentication or an operating-system lock. Applications remain responsible for access, path choice, backups, and retention. `USMC_MEMORY_UNION=1` enables an optional schema migration path; read its guidance and tests before enabling it on existing data.
 
-| Invariant | Category | Description |
-|---|---|---|
-| `INV-LOCAL-01` | Local-First & Zero-Egress | 100% offline-ready; all operations persist to local SQLite; zero telemetry or outbound network calls. |
-| `INV-UNPRIV-02` | Unprivileged User Mode (`RunAsInvoker`) | All CLI commands, API calls, and background routines operate strictly in unprivileged user space. |
-| `INV-SQLITE-03` | ACID & WAL Concurrency | Resilient multi-agent concurrency via SQLite WAL mode, busy handlers, and atomic transaction semantics. |
-| `INV-SCHEMA-04` | Backward-Compatible Schema Evolution | Automated idempotent migration and schema evolution ensuring seamless inter-agent backward compatibility. |
-| `INV-BOUND-05` | Bounded Ring Buffer & Pruning | Safe retention limits and deterministic pruning prevent uncontrolled disk expansion in long-running agent loops. |
-| `INV-FILTER-06` | In-Engine Delimiter Filtering | SQL WHERE clause filtering with delimiter-anchored matching prevents busy-loop starvation and post-fetch truncation. |
-| `INV-LANG-07` | Stable Protocol & Language Contract | Human-readable prose localized to German (`RUNTIME_LANGUAGE = "de"`), while CLI subcommands and JSON keys remain stable English tokens. |
-| `INV-ISOL-08` | Strict State Isolation | Shared memory databases reside strictly in user directories (`~/.usmc/` or custom targets), completely isolated from git repositories. |
-| `INV-AUDIT-09` | Complete SPDX Audit Transparency | 100% Python standard library at runtime; zero external runtime dependencies and zero copyleft risks. |
-| `INV-SLA-10` | Cross-Platform Parity & SLA | Consistent behavior across Windows, Linux, and macOS with committed 48h response / 5-day triage security SLA. |
+The software and this document are not a certification, complete security audit, or legal advice. If you may store personal or confidential data, assess purpose, legal basis, access, backups, and retention for your deployment.

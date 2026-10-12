@@ -87,18 +87,13 @@ uv.lock
 * (Copy)*
 *conflicted copy*
 *-ASUS*
-*-ASUS-GEI*
 *-LAPTOP*
 *-WORKSTATION*
-*-WORKSTATION-LG*
 *_WORKSTATION*
-*_WORKSTATION-LG*
 *-WORKSTATION.*
-*-WORKSTATION-LG.*
 *-Mac Studio*
 *-MacBook*
 *-IDEAPAD*
-*-IDEAPAD-GEI*
 ehthumbs.db
 TASKPLAN_*.md
 LOCK.dev.*
@@ -109,7 +104,7 @@ LOCK.bugsearch.*
 *.tmp
 *.bak
 
-# SQLite sidecar files (the runtime database lives in ~/.usmc, never in the repo)
+# SQLite sidecar files (default DB is under ~/.usmc; USMC_DB or --db can override it)
 *.db-wal
 *.db-shm
 *.sqlite-wal

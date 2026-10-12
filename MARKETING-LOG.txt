@@ -1,3 +1,5 @@
+Historical record note (2026-10-12): Entries below describe dated snapshots, not current certifications, runtime guarantees, or legal advice. Current scope is documented in README.md and SECURITY.md. Historical entries were not rewritten; one local checkout path and host labels was generalized in this copy.
+
 ================================================================================
 PATH B MARKETING & DISCOVERABILITY AUDIT: usmc
 ================================================================================
@@ -93,7 +95,7 @@ Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und Versionslauf:
     welcome.yml mit timeout-minutes: 5 und concurrency gehärtet; ci.yml mit
     timeout-minutes: 15, concurrency, ruff lint check und compileall abgesichert.
   - Multi-Host- & Lock-Schutz in .gitignore (*conflicted copy*, * (Kopie)*,
-    * (Copy)*, *-WORKSTATION*, *-WORKSTATION-LG*, *-ASUS*, *-ASUS-GEI*, *-LAPTOP*,
+    * (Copy)*, *-WORKSTATION*, *-WORKSTATION*, *-ASUS*, *-ASUS*, *-LAPTOP*,
     *-Mac Studio*, *-MacBook*, LOCK*, LOCK.*, uv.lock, !package-lock.json,
     .hypothesis/, .nyc_output/, node_modules/, *.orig, *.rej, *.tmp, *.bak).
   - Pytest ini_options Härtung in pyproject.toml (minversion = "7.0",
@@ -165,8 +167,8 @@ Turnusgemäßer Pfad A Wartungs-, Hygiene-, CI-Härtungs- und SBOM-Revisionslauf
     - .github/workflows/label-sync.yml: Concurrency (cancel-in-progress: true) und timeout-minutes: 5.
     - .github/workflows/ci.yml: Multi-Python Matrix (3.10-3.14), Concurrency und 15m Timeout verifiziert.
   - Multi-Host Cloud-Sync & Lock-Verteidigung (.gitignore):
-    Gehärtet gegen Multi-Host-Tokens (*-IDEAPAD*, *_WORKSTATION*, *_WORKSTATION-LG*,
-    *-WORKSTATION.*, *-WORKSTATION-LG.*), kanonische Locks (LOCK.user.*, LOCK.until.*,
+    Gehärtet gegen Multi-Host-Tokens (*-IDEAPAD*, *_WORKSTATION*, *_WORKSTATION*,
+    *-WORKSTATION.*, *-WORKSTATION.*), kanonische Locks (LOCK.user.*, LOCK.until.*,
     LOCK.condition.*, .automation-lock), Test-Caches (.pytest_temp/, .pytest_tmp*/, .tox/)
     und Editor-Swap-Dateien (Desktop.ini, *.swp, *.swo).
   - PEP 621 Standardisierung (pyproject.toml):
@@ -266,9 +268,9 @@ Turnusgemäßer Pfad A Hygiene-, Multi-Host-Defense-, Lizenz-Audit- und Vertrags
     Vollständig überarbeitet und standardisiert auf bilinguales Format (EN/DE) mit
     detaillierter Spezifikation aller 10 Invarianten (INV-LOCAL-01 bis INV-SLA-10),
     unprivilegiertem Benutzermodus (RunAsInvoker), Plan-D-Klonarchitektur
-    (C:\_Local_DEV\repos\usmc), Offline-Qualitätstoren und 48h-SLA.
+    ([local checkout path and host labels]), Offline-Qualitätstoren und 48h-SLA.
   - Multi-Host- und Lock-Defense (.gitignore):
-    Gehärtet gegen Multi-Host-Sync-Artefakte (*-IDEAPAD-GEI*), kanonische Entwickler-
+    Gehärtet gegen Multi-Host-Sync-Artefakte (*-IDEAPAD*), kanonische Entwickler-
     und Agenten-Locks (LOCK.dev.*, LOCK.antigravity.*, LOCK.bugsearch.*),
     Aufgabenplanungs-Dateien (TASKPLAN_*.md) und Miniaturbild-Caches (ehthumbs.db).
   - PEP 621 Standardisierung (pyproject.toml):

@@ -24,7 +24,7 @@ keywords = [
     "llm-agents",
     "llm-memory",
     "local-ai",
-    "local-first",
+    "sqlite-local-storage",
     "memory",
     "open-source",
     "prompt-context",
@@ -33,7 +33,7 @@ keywords = [
     "shared-memory",
     "sqlite",
     "sqlite-memory",
-    "zero-dependency",
+    "no-direct-runtime-dependencies",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -61,10 +61,6 @@ Security = "https://github.com/ellmos-ai/usmc/blob/main/SECURITY.md"
 Notice = "https://github.com/ellmos-ai/usmc/blob/main/NOTICE"
 "Third-Party Licenses" = "https://github.com/ellmos-ai/usmc/blob/main/THIRD_PARTY_LICENSES.md"
 "Third-Party Licenses (Text)" = "https://raw.githubusercontent.com/ellmos-ai/usmc/main/THIRD_PARTY_LICENSES.txt"
-"Plain-Text Licenses" = "https://raw.githubusercontent.com/ellmos-ai/usmc/main/THIRD_PARTY_LICENSES.txt"
-"Level 1 SBOM" = "https://github.com/ellmos-ai/usmc/blob/main/THIRD_PARTY_LICENSES.md"
-"Level 1 SBOM (Text)" = "https://raw.githubusercontent.com/ellmos-ai/usmc/main/THIRD_PARTY_LICENSES.txt"
-"Marketing Log" = "https://github.com/ellmos-ai/usmc/blob/main/MARKETING-LOG.txt"
 "LLM Ready" = "https://github.com/ellmos-ai/usmc/blob/main/llms.txt"
 Contributing = "https://github.com/ellmos-ai/usmc/blob/main/CONTRIBUTING.md"
 
@@ -72,6 +68,7 @@ Contributing = "https://github.com/ellmos-ai/usmc/blob/main/CONTRIBUTING.md"
 test = [
     "pytest>=7.0",
     "ruff>=0.1.0",
+    "tomli>=2.0; python_version < '3.11'",
 ]
 
 [project.scripts]

@@ -1,8 +1,9 @@
 # TASKPLAN Readback — bundle 1927 — 2026-08-11
+> Privacy update (2026-10-12): the local checkout location in this report is generalized. The report date and findings remain historical; this is not a current full-repository privacy certification.
 
 ## Fresh local evidence
 
-- Repository: `C:\_Local_DEV\repos\usmc`
+- Repository: `[local checkout path]`
 - Local `HEAD`: `5fcade0` (`main`); the worktree's only pre-existing dirty
   tracked file was `TODO.md` and was not modified.
 - `python -m pytest -q`: **61 passed, 15 subtests passed**.

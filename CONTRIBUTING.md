@@ -2,72 +2,66 @@
 
 [English](#english) | [Deutsch](#deutsch)
 
----
-
 <a id="english"></a>
 ## English
 
-Thank you for your interest in contributing to **USMC (United Shared Memory Client)**!
+Thank you for your interest in contributing to USMC.
 
-### Architectural Principles & Governance Invariants
+### Project behavior
 
-`usmc` is a sovereign, zero-dependency Python shared memory library and CLI coordination store for local LLM agents and multi-agent frameworks. It provides lightweight, structured working memory, persistent facts, categorized lessons, session handoffs, and prompt-context generation over a robust local SQLite database with write-ahead logging (WAL), zero daemon overhead, and fail-safe multi-agent concurrency. All contributions must respect our foundational invariants:
+USMC is a Python package and CLI that stores facts, lessons, working notes, and session handoffs in SQLite. The project declares no direct runtime dependencies. Its database path defaults to `~/.usmc/usmc_memory.db` and can be overridden; do not assume that custom paths stay within a home directory. The package source review found no direct HTTP client, but Git, pip, build tools, and callers may use the network. The package does not sandbox callers, change process privileges, or automatically prune records.
 
-1. **100% Local-First & Zero-Egress (`INV-LOCAL-01`)**: All operations persist to local SQLite (`~/.usmc/usmc.db` or configured local target); zero telemetry, analytics, cloud synchronization, or outbound network calls.
-2. **Unprivileged RunAsInvoker (`INV-UNPRIV-02`)**: All CLI commands, API calls, and background routines execute strictly within unprivileged user space; no administrative rights, root elevation, sudo, or UAC prompts are ever required.
-3. **ACID & WAL Concurrency (`INV-SQLITE-03`)**: Resilient multi-agent concurrency via SQLite Write-Ahead Logging (WAL) mode, busy handlers, and atomic transaction semantics.
-4. **Backward-Compatible Schema Evolution (`INV-SCHEMA-04`)**: Automated, idempotent migrations and schema evolution ensuring seamless inter-agent backward compatibility.
-5. **Bounded Ring Buffer & Pruning (`INV-BOUND-05`)**: Safe retention limits and deterministic pruning prevent uncontrolled disk expansion in long-running agent loops.
-6. **In-Engine Delimiter Filtering (`INV-FILTER-06`)**: SQL WHERE clause filtering with delimiter-anchored matching prevents busy-loop starvation and post-fetch truncation.
-7. **Stable Protocol & Language Contract (`INV-LANG-07`)**: Human-readable prose localized to German (`RUNTIME_LANGUAGE = "de"`), while CLI subcommands and JSON keys remain stable English tokens.
-8. **Strict State Isolation (`INV-ISOL-08`)**: Shared memory databases reside strictly in user directories (`~/.usmc/` or custom targets), completely isolated from git repositories.
-9. **Complete SPDX Audit Transparency (`INV-AUDIT-09`)**: 100% Python Standard Library at runtime (`dependencies = []`); zero external runtime dependencies and zero copyleft risks.
-10. **48h Security Response SLA (`INV-SLA-10`)**: Committed vulnerability triage and response within 48 hours via [SECURITY.md](SECURITY.md).
+### Development
 
-### Development Guidelines & Quality Gates
+Use a source checkout and a Python version supported by `pyproject.toml` (`>=3.10`). Install the test tools with:
 
-- **Plan D Architecture**: Development, git operations, and tests occur strictly in the canonical local git repository clone (`C:\_Local_DEV\repos\usmc`). OneDrive mirrors are derived read-only projections.
-- **Python Compatibility**: Python 3.10, 3.11, 3.12, 3.13, and 3.14 support.
-- **Zero-Dependency Core**: The core package relies strictly on the official Python Standard Library; external runtime dependencies are strictly prohibited.
-- **Version Freeze Policy**: Versions are strictly frozen per T-20260920-167562623 unless explicitly authorized by maintainers. All ongoing improvements land under `## [Unreleased]` in `CHANGELOG.md`.
-- **Pre-commit Quality Gates**:
-  - Bytecode compilation: `python -m compileall -q usmc tests`
-  - Code formatting & linting: `ruff check .`
-  - Automated test suite: `pytest -ra -v` (100% green required)
-  - Git whitespace hygiene: `git diff --check`
-- **Security Vulnerabilities**: Never report security vulnerabilities publicly. Please follow our [SECURITY.md](SECURITY.md) guidelines for responsible disclosure (48h response SLA).
+```console
+python -m pip install -e ".[test]"
+```
 
----
+Run the relevant checks before submitting changes:
+
+```console
+python -m pytest -ra -v
+python -m ruff check .
+python -m compileall -q usmc tests
+git diff --check
+```
+
+Tests must use temporary databases and isolated home/config paths. They must not read or mutate a maintainer's real `~/.usmc` database. Tests that enable `USMC_MEMORY_UNION` should use a disposable database and verify backup/migration effects there.
+
+Keep the package version unchanged unless a maintainer explicitly authorizes a version change. Record user-visible changes under `## [Unreleased]` in `CHANGELOG.md`. Do not describe a source observation as a firewall, certification, complete dependency audit, or deployment guarantee.
+
+For security reports, follow [SECURITY.md](SECURITY.md) and use its private reporting channel.
 
 <a id="deutsch"></a>
 ## Deutsch
 
-Vielen Dank für Ihr Interesse an einer Mitarbeit an **USMC (United Shared Memory Client)**!
+Vielen Dank für dein Interesse an einer Mitarbeit an USMC.
 
-### Architektur-Prinzipien & Governance-Invarianten
+### Projektverhalten
 
-`usmc` ist eine souveräne Python-Speicherschicht ohne externe Laufzeitabhängigkeiten für lokale LLM-Agenten und Multi-Agenten-Systeme. Sie bietet eine einheitliche, SQLite-basierte Persistenz für Fakten, gelernte Lektionen, sitzungsbezogene Arbeitsnotizen, Übergabekontext und kompakte Prompt-Generierung ohne Hintergrund-Daemon oder Cloud-Dienst. Alle Beiträge müssen unsere grundlegenden Invarianten einhalten:
+USMC ist ein Python-Paket mit CLI, das Fakten, Lessons Learned, Arbeitsnotizen und Sitzungsübergaben in SQLite speichert. Das Projekt deklariert keine direkten Laufzeit-Abhängigkeiten. Der Standardpfad der Datenbank ist `~/.usmc/usmc_memory.db` und kann überschrieben werden; benutzerdefinierte Pfade bleiben nicht zwingend im Home-Verzeichnis. Die geprüften Paketmodule enthalten keinen direkten HTTP-Client, aber Git, pip, Build-Werkzeuge und aufrufende Programme können das Netzwerk nutzen. Das Paket isoliert Aufrufer nicht in einer Sandbox, ändert keine Prozessrechte und löscht Datensätze nicht automatisch.
 
-1. **100% Local-First & Zero-Egress (`INV-LOCAL-01`)**: Sämtliche Operationen persistieren in einer lokalen SQLite-Datenbank (`~/.usmc/usmc.db` oder konfigurierter lokaler Pfad); keinerlei Telemetrie oder externe Netzwerkaufrufe.
-2. **Unprivilegierter Benutzermodus / RunAsInvoker (`INV-UNPRIV-02`)**: Alle CLI-Befehle, API-Aufrufe und Routinen operieren strikt im Standard-Benutzerkontext; administrative Rechte oder UAC-Elevation werden niemals angefordert.
-3. **ACID & WAL-Nebenläufigkeit (`INV-SQLITE-03`)**: Ausfallsichere Multi-Agenten-Gleichzeitigkeit durch SQLite WAL-Modus, Busy-Handler und atomare Transaktionen.
-4. **Abwärtskompatible Schema-Evolution (`INV-SCHEMA-04`)**: Automatische, idempotente Migrationen garantieren nahtlosen Zugriff über Agenten-Generationen hinweg.
-5. **Ringpuffer & Bereinigung (`INV-BOUND-05`)**: Konfigurierbare Aufbewahrungsgrenzen und deterministische Bereinigung verhindern unkontrolliertes Festplattenwachstum.
-6. **In-Engine Delimiter-Filterung (`INV-FILTER-06`)**: SQL-WHERE-Filterung mit Begrenzungszeichen verhindert Aushungerung durch Schreibschleifen und Nachfilter-Verlust.
-7. **Stabiler Protokollvertrag (`INV-LANG-07`)**: Menschliche Ausgabetexte auf Deutsch (`RUNTIME_LANGUAGE = "de"`), CLI-Befehle und JSON-Schlüssel als stabile englische Token.
-8. **Strikte Zustandstrennung (`INV-ISOL-08`)**: Datenbanken residieren isoliert im Benutzerverzeichnis (`~/.usmc/`), vollständig getrennt von Git-Repositories.
-9. **Vollständige SPDX-Transparenz (`INV-AUDIT-09`)**: 100% reine Python-Standardbibliothek zur Laufzeit (`dependencies = []`); keinerlei externe Laufzeit-Abhängigkeiten oder Copyleft-Risiken.
-10. **48h Sicherheits-Reaktions-SLA (`INV-SLA-10`)**: Verbindliche Sicherheits-Ersteinschätzung innerhalb von 48 Stunden gemäß [SECURITY.md](SECURITY.md).
+### Entwicklung
 
-### Richtlinien für Entwickler & Qualitäts-Tore
+Arbeite mit einem Quellcheckout und einer von `pyproject.toml` unterstützten Python-Version (`>=3.10`). Installiere die Testwerkzeuge mit:
 
-- **Plan D Architektur**: Entwicklung und Tests erfolgen ausschließlich im lokalen kanonischen Git-Repository (`C:\_Local_DEV\repos\usmc`).
-- **Python-Unterstützung**: Python 3.10 bis 3.14.
-- **Null externe Laufzeitabhängigkeiten**: Der Kern basiert rein auf der Python-Standardbibliothek.
-- **Versions-Einfrier-Richtlinie**: Versionen bleiben eingefroren per T-20260920-167562623; Neuerungen werden unter `## [Unreleased]` in `CHANGELOG.md` erfasst.
-- **Qualitäts-Tore vor Commits**:
-  - Bytecode-Prüfung: `python -m compileall -q usmc tests`
-  - Linter & Code-Prüfung: `ruff check .`
-  - Testsuite: `pytest -ra -v` (100% grün erforderlich)
-  - Git-Whitespace-Prüfung: `git diff --check`
-- **Sicherheitsmeldungen**: Sicherheitslücken bitte nicht öffentlich melden, sondern gemäß [SECURITY.md](SECURITY.md) vertraulich einreichen (48h Reaktions-SLA).
+```console
+python -m pip install -e ".[test]"
+```
+
+Führe vor dem Einreichen die passenden Prüfungen aus:
+
+```console
+python -m pytest -ra -v
+python -m ruff check .
+python -m compileall -q usmc tests
+git diff --check
+```
+
+Tests müssen temporäre Datenbanken und isolierte Home-/Konfigurationspfade verwenden. Sie dürfen keine echte `~/.usmc`-Datenbank eines Maintainers lesen oder ändern. Tests, die `USMC_MEMORY_UNION` aktivieren, verwenden eine wegwerfbare Datenbank und prüfen Sicherungs- und Migrationseffekte ausschließlich dort.
+
+Ändere die Paketversion nur nach ausdrücklicher Freigabe durch einen Maintainer. Erfasse sichtbare Änderungen unter `## [Unreleased]` in `CHANGELOG.md`. Beschreibe eine Quellbeobachtung nicht als Firewall, Zertifizierung, vollständiges Abhängigkeits-Audit oder Bereitstellungsgarantie.
+
+Sicherheitsmeldungen gehören gemäß [SECURITY.md](SECURITY.md) auf den dort beschriebenen privaten Meldeweg.

@@ -21,7 +21,7 @@ import os
 import sqlite3
 import re
 from pathlib import Path
-from typing import Optional, List, Dict, Iterable
+from typing import Optional, List, Dict, Iterable, Tuple, Any
 from datetime import datetime
 
 from . import memory_union, schema
@@ -53,9 +53,42 @@ _LESSON_FIELDS = (
 )
 _LESSON_SELECT = ", ".join(_LESSON_FIELDS)
 
+_LESSON_DEFAULTS: Dict[str, Any] = {
+    "source_kind": "legacy", "source_key": None, "episode_key": None,
+    "source_hash": None, "event_anchor": None,
+    "editorial_status": "legacy", "evidence_class": "unknown",
+    "privacy_scope": "local", "sensitive_source": 0, "user_preference": 0,
+    "policy_relevant": 0, "conflict_flag": 0, "mutates_skill": 0,
+    "mutates_workflow": 0, "ingest_payload_hash": None,
+    "ingest_payload_hash_version": None, "helpful_count": 0,
+    "unhelpful_count": 0, "independent_repeat_count": 0,
+    "delivery_failure_count": 0, "last_delivered_at": None,
+}
 
-def _lesson_dict(row) -> Dict:
-    result = dict(zip(_LESSON_FIELDS, row))
+
+def _available_lesson_cols(conn: sqlite3.Connection, table_name: str) -> frozenset:
+    return frozenset(
+        r[1] for r in conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    )
+
+
+def _lesson_select_and_missing(
+    conn: sqlite3.Connection, table_name: str
+) -> Tuple[str, frozenset]:
+    available = _available_lesson_cols(conn, table_name)
+    present = [f for f in _LESSON_FIELDS if f in available]
+    missing = frozenset(_LESSON_FIELDS) - available
+    return ", ".join(present), missing
+
+
+def _lesson_dict(row, missing: frozenset = frozenset()) -> Dict:
+    available_fields = [f for f in _LESSON_FIELDS if f not in missing]
+    result = dict(zip(available_fields, row))
+    for col in missing:
+        result[col] = _LESSON_DEFAULTS.get(col)
+    if missing:
+        result["_synth"] = True
+        result["_missing_cols"] = sorted(missing)
     result["weight"] = lesson_weight(result)
     return result
 

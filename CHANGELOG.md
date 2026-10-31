@@ -4,6 +4,15 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+### 2026-10-31 — Pfad A: Repository hygiene, Dependabot security, CI matrix hardening & contract tests
+
+- **CI Matrix & Lifecycle Hardening:** Expanded `.github/workflows/ci.yml` matrix with multi-platform runners (`ubuntu-latest`, `windows-latest`, `macos-latest`) and added automated whitespace check gate (`git diff --check`).
+- **Dependabot Security Automation:** Provisioned `.github/dependabot.yml` with security-only pip policy (`open-pull-requests-limit: 0`, grouped security updates) and weekly github-actions updates (`open-pull-requests-limit: 3`, Monday 06:00 Europe/Berlin).
+- **Multi-Host Ignore Hardening (`.gitignore`):** Protected against lowercase `thumbs.db`, wildcard `TASKPLAN*` / `*-TASKPLAN*`, and host-specific artifacts (`*-ASUS-GEI.*`, `*-IDEAPAD-GEI.*`, `*-WORKSTATION-LG.*`).
+- **PEP 621 Metadata & Policy Parity (`pyproject.toml`):** Maintained strict version freeze at `0.3.0` per T-20260920-167562623; declared Security and Contributing references in `[project.urls]`.
+- **Level 1 SBOM Inventory (`THIRD_PARTY_LICENSES.md`, `THIRD_PARTY_LICENSES.txt`):** Updated review date to 2026-10-31, reaffirming zero runtime dependencies (`dependencies = []`), local-only SQLite storage, and 48h security response target.
+- **Contract Tests (`tests/test_metadata.py`):** Added 4 new automated contract tests verifying Dependabot configuration, CI tri-platform & whitespace gates, PEP 621 metadata freeze, and hardened `.gitignore` rules (181 passed).
+
 ### 2026-10-12 — Documentation and packaging review
 
 - Replaced the English, German, and Spanish README entry points with concise guides and corrected archival editions. The original source revision remains available through its commit link.

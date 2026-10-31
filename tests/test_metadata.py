@@ -174,6 +174,53 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn(".pytest_tmp*", pyproject)
         self.assertIn(".nyc_output", pyproject)
 
+    def test_dependabot_configuration(self):
+        dep_path = ROOT / ".github" / "dependabot.yml"
+        self.assertTrue(dep_path.is_file(), "Missing .github/dependabot.yml")
+        text = dep_path.read_text(encoding="utf-8")
+        self.assertIn("version: 2", text)
+        self.assertIn('package-ecosystem: "pip"', text)
+        self.assertIn("open-pull-requests-limit: 0", text)
+        self.assertIn("security-updates", text)
+        self.assertIn('package-ecosystem: "github-actions"', text)
+        self.assertIn("open-pull-requests-limit: 3", text)
+        self.assertIn('timezone: "Europe/Berlin"', text)
+
+    def test_ci_whitespace_gate_and_tri_platform(self):
+        ci_path = ROOT / ".github" / "workflows" / "ci.yml"
+        self.assertTrue(ci_path.is_file(), "Missing .github/workflows/ci.yml")
+        text = ci_path.read_text(encoding="utf-8")
+        self.assertIn("git diff --check", text, "Missing git diff --check quality gate")
+        self.assertIn("ubuntu-latest", text)
+        self.assertIn("windows-latest", text)
+        self.assertIn("macos-latest", text)
+
+    def test_pep621_metadata_freeze_and_security_urls(self):
+        self.assertEqual(usmc.__version__, "0.3.0", "Version bump forbidden in Pfad A/B runs (T-20260920-167562623)")
+        pyproject_path = ROOT / "pyproject.toml"
+        try:
+            import tomllib
+        except ModuleNotFoundError:
+            import tomli as tomllib
+        with open(pyproject_path, "rb") as f:
+            data = tomllib.load(f)
+        project = data.get("project", {})
+        urls = project.get("urls", {})
+        self.assertIn("Security", urls)
+        self.assertIn("Contributing", urls)
+        classifiers = project.get("classifiers", [])
+        for c in classifiers:
+            self.assertFalse(c.startswith("License ::"), f"OSI classifier found in violation of PEP 639: {c}")
+
+    def test_gitignore_hardened_multi_host_and_taskplan(self):
+        gi_path = ROOT / ".gitignore"
+        text = gi_path.read_text(encoding="utf-8")
+        self.assertIn("thumbs.db", text)
+        self.assertIn("*-TASKPLAN*", text)
+        self.assertIn("TASKPLAN*", text)
+        self.assertIn("*-ASUS-GEI.*", text)
+        self.assertIn("*-WORKSTATION-LG.*", text)
+
 
 if __name__ == "__main__":
     unittest.main()

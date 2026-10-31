@@ -59,6 +59,7 @@ tokens.json
 # OS & Editor
 .DS_Store
 Thumbs.db
+thumbs.db
 desktop.ini
 Desktop.ini
 *.swp
@@ -87,15 +88,21 @@ uv.lock
 * (Copy)*
 *conflicted copy*
 *-ASUS*
+*-ASUS-GEI.*
 *-LAPTOP*
 *-WORKSTATION*
 *_WORKSTATION*
 *-WORKSTATION.*
+*-WORKSTATION-LG.*
 *-Mac Studio*
 *-MacBook*
 *-IDEAPAD*
+*-IDEAPAD-GEI.*
 ehthumbs.db
+TASKPLAN*
+*-TASKPLAN*
 TASKPLAN_*.md
+TASKPLAN_*.txt
 LOCK.dev.*
 LOCK.antigravity.*
 LOCK.bugsearch.*

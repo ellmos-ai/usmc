@@ -3,7 +3,7 @@ USMC — License and dependency notes
 Source revision reviewed: bf281f1d68e9e6af44db9d12588a000fac531a61
 Package version: 0.3.0
 Project license: MIT (see LICENSE and NOTICE)
-Review date: 2026-10-12
+Review date: 2026-10-31
 
 SCOPE
 This is a source-metadata summary, not a generated SBOM, a complete transitive

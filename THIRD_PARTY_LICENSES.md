@@ -2,6 +2,7 @@
 
 **Source revision reviewed:** `bf281f1d68e9e6af44db9d12588a000fac531a61`
 **Package version:** `0.3.0`
+**Review date:** `2026-10-31`
 **Project license:** [MIT](LICENSE), with attribution in [NOTICE](NOTICE)
 
 This file summarizes declared direct project dependencies and selected upstream license information. It is not a generated SBOM, a complete transitive dependency audit, or a legal review of every way the software may be combined or distributed. Build and test tools can resolve to different versions because the project declares version floors rather than a lockfile.

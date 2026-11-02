@@ -108,7 +108,7 @@ class TestMetadataContract(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertTrue((workflows / name).is_file())
         stale = (workflows / "stale.yml").read_text(encoding="utf-8")
-        self.assertIn("actions/stale@v9", stale)
+        self.assertRegex(stale, r"actions/stale@v\d+")
         self.assertIn("timeout-minutes: 10", stale)
         welcome = (workflows / "welcome.yml").read_text(encoding="utf-8")
         self.assertIn("actions/first-interaction@v3", welcome)

@@ -122,6 +122,34 @@ Python-/Git-Paketinstallation und andere Aufruferprozesse liegen außerhalb dies
 
 Mehrere Prozesse können dieselbe SQLite-Datei öffnen. SQLite liefert sein dokumentiertes Transaktions- und Sperrverhalten; Agentenkennungen markieren Datensätze und authentifizieren keine Prozesse oder erzwingen eine Ein-Schreiber-Sperre. Anwendungen entscheiden selbst, welche Prozesse auf die Datei zugreifen und wie sie ihren Ablauf koordinieren.
 
+Die folgende Sequenz veranschaulicht, wie autonome Agenten Fakten und Lessons Learned über eine gemeinsame USMC-SQLite-Datenbank austauschen:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Agent Alpha (Rechercheur)
+    participant C as USMC-Client
+    participant DB as SQLite (usmc_memory.db)
+    actor B as Agent Beta (Entwickler)
+
+    A->>C: add_fact(category="architecture", key="db", value="sqlite", confidence=0.9)
+    C->>DB: INSERT INTO usmc_facts (category, key, value, confidence, agent_id)
+    DB-->>C: COMMIT (WAL-Modus)
+    C-->>A: Fakten-Datensatz
+
+    A->>C: add_lesson(category="tooling", problem="Lock-Konflikt", solution="vorher lock_status prüfen")
+    C->>DB: INSERT INTO usmc_lessons (category, problem, solution, agent_id)
+    DB-->>C: COMMIT
+    C-->>A: Lesson-Datensatz
+
+    Note over DB: Persistente lokale SQLite-Datenbank für prozessübergreifenden Zugriff
+
+    B->>C: generate_context()
+    C->>DB: SELECT Fakten, Lessons, Arbeitsnotizen
+    DB-->>C: Datensätze
+    C-->>B: formatierter Prompt-Kontext (geteilter Speicher)
+```
+
 <a id="sec-08"></a>
 <a id="governance--laufzeit-invarianten"></a>
 <a id="governance--runtime-invariants"></a>

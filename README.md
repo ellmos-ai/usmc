@@ -7,6 +7,8 @@
 [![Dependabot](https://img.shields.io/badge/Dependabot-active-brightgreen.svg)](.github/dependabot.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-0%20runtime-blue.svg)](#data-and-runtime-scope)
+[![Storage](https://img.shields.io/badge/Storage-SQLite%20(WAL)-informational.svg)](#data-and-runtime-scope)
 
 **Languages:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
 
@@ -17,6 +19,25 @@ USMC is a Python package and CLI that stores facts, lessons, working notes, and 
 ## Data and runtime scope
 
 By default, the database path is `~/.usmc/usmc_memory.db`. Set `USMC_DB` or pass `--db` to choose another path; custom paths are used as supplied. USMC does not automatically prune stored records. Choose a suitable local path and manage its permissions, backups, and retention for your use case.
+
+```mermaid
+graph LR
+  subgraph Agents["Autonomous Agents"]
+    Claude["Claude Code"]
+    Gemini["Antigravity / Gemini"]
+    Codex["Codex / GPT"]
+  end
+
+  subgraph USMC["USMC Architecture"]
+    Client["USMC Client / CLI"]
+    DB[("Local SQLite (WAL mode)<br/>~/.usmc/usmc_memory.db")]
+  end
+
+  Claude -->|"facts / lessons / working notes"| Client
+  Gemini -->|"cross-agent handoff"| Client
+  Codex -->|"context retrieval"| Client
+  Client <-->|"ACID transactions (zero dependencies)"| DB
+```
 
 The reviewed package source contains no direct HTTP client. Installing from GitHub or building the package uses network-capable tools, and a calling agent or other process may use the network independently. USMC does not provide a firewall or sandbox; processes inherit the privileges of their launcher.
 
@@ -43,6 +64,7 @@ print(client.generate_context())
 ## Documentation
 
 - [Full guide and API examples](docs/archive/README.full.en.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Security and data-handling notes](SECURITY.md)
 - [Contributing and test commands](CONTRIBUTING.md)
 - [Third-party license inventory](THIRD_PARTY_LICENSES.md) and [plain-text license notes](THIRD_PARTY_LICENSES.txt)

@@ -122,6 +122,34 @@ La instalación mediante Python/Git y otros procesos llamadores quedan fuera de 
 
 Varios procesos pueden abrir el mismo archivo SQLite. SQLite proporciona su comportamiento documentado de transacciones y bloqueos; los identificadores de agente etiquetan registros, pero no autentican procesos ni imponen un bloqueo de escritor único. Cada aplicación decide qué procesos pueden acceder al archivo y cómo coordina su flujo de trabajo.
 
+La siguiente secuencia ilustra cómo agentes autónomos coordinan hechos y lecciones a través de una base de datos SQLite compartida:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Agente Alfa (Investigador)
+    participant C as Cliente USMC
+    participant DB as SQLite (usmc_memory.db)
+    actor B as Agente Beta (Implementador)
+
+    A->>C: add_fact(category="architecture", key="db", value="sqlite", confidence=0.9)
+    C->>DB: INSERT INTO usmc_facts (category, key, value, confidence, agent_id)
+    DB-->>C: COMMIT (modo WAL)
+    C-->>A: registro de hecho
+
+    A->>C: add_lesson(category="tooling", problem="conflicto de bloqueo", solution="verificar lock_status antes")
+    C->>DB: INSERT INTO usmc_lessons (category, problem, solution, agent_id)
+    DB-->>C: COMMIT
+    C-->>A: registro de leccion
+
+    Note over DB: Base de datos SQLite local y persistente accesible entre procesos
+
+    B->>C: generate_context()
+    C->>DB: SELECT hechos, lecciones, notas de trabajo
+    DB-->>C: conjuntos de registros
+    C-->>B: contexto de prompt formateado (memoria compartida)
+```
+
 <a id="sec-08"></a>
 <a id="invariantes-de-gobernanza-y-ejecución"></a>
 <a id="governance--runtime-invariants"></a>

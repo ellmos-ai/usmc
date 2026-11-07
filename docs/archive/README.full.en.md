@@ -122,6 +122,34 @@ Python/Git package installation and other caller processes are outside this loca
 
 Separate processes can open the same SQLite file. SQLite provides its documented transaction and locking behavior; USMC agent identifiers label records and do not authenticate processes or impose a single-writer lock. Applications must decide which processes can access the file and coordinate their own workflow.
 
+The following sequence illustrates how multiple autonomous agents coordinate facts and lessons through a shared USMC SQLite database:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor A as Agent Alpha (Researcher)
+    participant C as USMC Client
+    participant DB as SQLite (usmc_memory.db)
+    actor B as Agent Beta (Implementer)
+
+    A->>C: add_fact(category="architecture", key="db", value="sqlite", confidence=0.9)
+    C->>DB: INSERT INTO usmc_facts (category, key, value, confidence, agent_id)
+    DB-->>C: COMMIT (WAL mode)
+    C-->>A: fact record
+
+    A->>C: add_lesson(category="tooling", problem="lock conflict", solution="check lock_status first")
+    C->>DB: INSERT INTO usmc_lessons (category, problem, solution, agent_id)
+    DB-->>C: COMMIT
+    C-->>A: lesson record
+
+    Note over DB: Persistent local SQLite database accessible across agent sessions
+
+    B->>C: generate_context()
+    C->>DB: SELECT facts, lessons, working notes
+    DB-->>C: record sets
+    C-->>B: formatted prompt context (shared memory)
+```
+
 <a id="sec-08"></a>
 <a id="governance--runtime-invariants"></a>
 <a id="governance--laufzeit-invarianten"></a>

@@ -7,6 +7,8 @@
 [![Dependabot](https://img.shields.io/badge/Dependabot-activo-brightgreen.svg)](.github/dependabot.yml)
 [![Licencia MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+[![Cero dependencias](https://img.shields.io/badge/Dependencias-0%20en%20ejecuci%C3%B3n-blue.svg)](#datos-y-alcance-de-ejecución)
+[![Almacenamiento](https://img.shields.io/badge/Almacenamiento-SQLite%20(WAL)-informational.svg)](#datos-y-alcance-de-ejecución)
 
 **Idiomas:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
 
@@ -17,6 +19,25 @@ USMC es un paquete de Python y una CLI que guarda hechos, lecciones, notas de tr
 ## Datos y alcance de ejecución
 
 La ruta predeterminada de la base de datos es `~/.usmc/usmc_memory.db`. `USMC_DB` o `--db` permiten elegir otra ruta; las rutas personalizadas se usan tal como se indican. USMC no purga registros automáticamente. Elige una ruta local adecuada y gestiona permisos, copias de seguridad y retención según tu uso.
+
+```mermaid
+graph LR
+  subgraph Agents["Agentes Autónomos"]
+    Claude["Claude Code"]
+    Gemini["Antigravity / Gemini"]
+    Codex["Codex / GPT"]
+  end
+
+  subgraph USMC["Arquitectura USMC"]
+    Client["Cliente USMC / CLI"]
+    DB[("SQLite local (modo WAL)<br/>~/.usmc/usmc_memory.db")]
+  end
+
+  Claude -->|"hechos / lecciones / notas"| Client
+  Gemini -->|"traspaso entre agentes"| Client
+  Codex -->|"recuperación de contexto"| Client
+  Client <-->|"transacciones ACID (cero dependencias)"| DB
+```
 
 El código fuente del paquete revisado no contiene un cliente HTTP directo. La instalación desde GitHub y la compilación usan herramientas con capacidad de red, y los agentes u otros procesos que llaman a USMC pueden usar la red por separado. USMC no proporciona firewall ni sandbox; los procesos heredan los privilegios de quien los inicia.
 
@@ -43,6 +64,7 @@ print(client.generate_context())
 ## Documentación
 
 - [Guía completa y ejemplos de API](docs/archive/README.full.es.md)
+- [Código de conducta](CODE_OF_CONDUCT.md)
 - [Seguridad y tratamiento de datos](SECURITY.md)
 - [Contribución y comandos de prueba](CONTRIBUTING.md)
 - [Inventario de licencias de terceros](THIRD_PARTY_LICENSES.md) y [versión de texto](THIRD_PARTY_LICENSES.txt)

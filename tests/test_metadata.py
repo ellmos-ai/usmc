@@ -221,6 +221,40 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("*-ASUS-GEI.*", text)
         self.assertIn("*-WORKSTATION-LG.*", text)
 
+    def test_code_of_conduct_presence_and_links(self):
+        coc_path = ROOT / "CODE_OF_CONDUCT.md"
+        self.assertTrue(coc_path.is_file(), "CODE_OF_CONDUCT.md must exist")
+        coc_text = coc_path.read_text(encoding="utf-8")
+        self.assertIn("## English", coc_text)
+        self.assertIn("## Deutsch", coc_text)
+        self.assertIn("security@ellmos.ai", coc_text)
+        for name in ENTRY_GUIDES:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            self.assertIn("CODE_OF_CONDUCT.md", text, f"{name} must link CODE_OF_CONDUCT.md")
+
+    def test_community_health_templates(self):
+        funding = ROOT / ".github" / "FUNDING.yml"
+        self.assertTrue(funding.is_file(), "FUNDING.yml must exist")
+        self.assertIn("paypal.me", funding.read_text(encoding="utf-8"))
+        for template in ["bug_report.md", "feature_request.md"]:
+            t_path = ROOT / ".github" / "ISSUE_TEMPLATE" / template
+            self.assertTrue(t_path.is_file(), f"{template} must exist")
+
+    def test_section_07_sequence_diagrams(self):
+        for archive_name in ENTRY_GUIDES.values():
+            text = (ROOT / archive_name).read_text(encoding="utf-8")
+            self.assertIn("sequenceDiagram", text, f"{archive_name} must contain sequenceDiagram in section 7")
+            self.assertIn("usmc_memory.db", text)
+            self.assertIn("generate_context", text)
+
+    def test_readme_overview_diagrams_and_badges(self):
+        for entry_name in ENTRY_GUIDES:
+            text = (ROOT / entry_name).read_text(encoding="utf-8")
+            self.assertIn("graph LR", text, f"{entry_name} must contain graph LR overview diagram")
+            self.assertIn("subgraph Agents", text)
+            self.assertIn("subgraph USMC", text)
+            self.assertIn("usmc_memory.db", text)
+
 
 if __name__ == "__main__":
     unittest.main()

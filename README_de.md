@@ -7,6 +7,8 @@
 [![Dependabot](https://img.shields.io/badge/Dependabot-aktiv-brightgreen.svg)](.github/dependabot.yml)
 [![MIT-Lizenz](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
+[![Null Abhängigkeiten](https://img.shields.io/badge/Abh%C3%A4ngigkeiten-0%20Laufzeit-blue.svg)](#daten-und-laufzeitumfang)
+[![Speicher](https://img.shields.io/badge/Speicher-SQLite%20(WAL)-informational.svg)](#daten-und-laufzeitumfang)
 
 **Sprachen:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
 
@@ -17,6 +19,25 @@ USMC ist ein Python-Paket mit CLI. Es speichert Fakten, Lessons Learned, Arbeits
 ## Daten und Laufzeitumfang
 
 Standardmäßig liegt die Datenbank unter `~/.usmc/usmc_memory.db`. Mit `USMC_DB` oder `--db` lässt sich ein anderer Pfad wählen; benutzerdefinierte Pfade werden wie angegeben verwendet. USMC löscht gespeicherte Datensätze nicht automatisch. Wähle einen geeigneten lokalen Pfad und verwalte Berechtigungen, Sicherungen und Aufbewahrung passend zum Einsatz.
+
+```mermaid
+graph LR
+  subgraph Agents["Autonome Agenten"]
+    Claude["Claude Code"]
+    Gemini["Antigravity / Gemini"]
+    Codex["Codex / GPT"]
+  end
+
+  subgraph USMC["USMC-Architektur"]
+    Client["USMC-Client / CLI"]
+    DB[("Lokales SQLite (WAL-Modus)<br/>~/.usmc/usmc_memory.db")]
+  end
+
+  Claude -->|"Fakten / Lessons / Notizen"| Client
+  Gemini -->|"Agenten-Übergabe"| Client
+  Codex -->|"Kontext-Abfrage"| Client
+  Client <-->|"ACID-Transaktionen (ohne Abhängigkeiten)"| DB
+```
 
 Der geprüfte Paketquellcode enthält keinen direkten HTTP-Client. Installation aus GitHub und Paketbau verwenden netzwerkfähige Werkzeuge; aufrufende Agenten oder andere Prozesse können unabhängig davon das Netzwerk nutzen. USMC stellt weder Firewall noch Sandbox bereit. Prozesse erben die Rechte ihres aufrufenden Prozesses.
 
@@ -43,6 +64,7 @@ print(client.generate_context())
 ## Dokumentation
 
 - [Ausführlicher Leitfaden und API-Beispiele](docs/archive/README.full.de.md)
+- [Verhaltenskodex](CODE_OF_CONDUCT.md)
 - [Sicherheit und Datenverarbeitung](SECURITY.md)
 - [Mitwirken und Testbefehle](CONTRIBUTING.md)
 - [Drittanbieter-Lizenzinventar](THIRD_PARTY_LICENSES.md) und [Textfassung](THIRD_PARTY_LICENSES.txt)

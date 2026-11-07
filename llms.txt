@@ -45,6 +45,7 @@ Installing from Git requires network access. For development in a source checkou
 - German guide: https://github.com/ellmos-ai/usmc/blob/main/README_de.md
 - Spanish guide: https://github.com/ellmos-ai/usmc/blob/main/README_es.md
 - Corrected detailed guides: https://github.com/ellmos-ai/usmc/tree/main/docs/archive
+- Code of Conduct: https://github.com/ellmos-ai/usmc/blob/main/CODE_OF_CONDUCT.md
 - Security and data handling: https://github.com/ellmos-ai/usmc/blob/main/SECURITY.md
 - Contributing and tests: https://github.com/ellmos-ai/usmc/blob/main/CONTRIBUTING.md
 - Project license: https://github.com/ellmos-ai/usmc/blob/main/LICENSE

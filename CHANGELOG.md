@@ -4,6 +4,15 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+### 2026-11-07 — Pfad B: Multi-agent sequence diagram, architecture overview, community health & discoverability
+
+- **Visual Architecture & Sequence Diagrams:** Added trilingual Mermaid sequence diagrams to Section 7 of `docs/archive/README.full.en.md`, `README.full.de.md`, and `README.full.es.md` detailing cross-agent fact logging, lesson recording, and prompt context generation. Added clean Architecture Overview flowcharts to `README.md`, `README_de.md`, and `README_es.md`.
+- **Badges & Discoverability:** Added Zero-Dependencies (`0 runtime`) and SQLite WAL Storage badges to English, German, and Spanish README entry points; verified 100% green test badge status (181 passed).
+- **Community Health & Standards:** Added bilingual `CODE_OF_CONDUCT.md` (English / Deutsch) based on Contributor Covenant v2.1 with private security reporting routes; added `.github/FUNDING.yml` and issue templates (`.github/ISSUE_TEMPLATE/bug_report.md`, `feature_request.md`).
+- **Machine-Readable Metadata:** Synchronized `llms.txt` with Code of Conduct references and updated index pointers.
+- **Contract Tests (`tests/test_metadata.py`):** Extended metadata test suite with assertions for Code of Conduct presence, funding configuration, issue templates, and trilingual sequence diagrams.
+- **Version Freeze Policy:** Version `0.3.0` strictly maintained per T-20260920-167562623; no runtime code modified.
+
 ### 2026-10-31 — Pfad A: Repository hygiene, Dependabot security, CI matrix hardening & contract tests
 
 - **CI Matrix & Lifecycle Hardening:** Expanded `.github/workflows/ci.yml` matrix with multi-platform runners (`ubuntu-latest`, `windows-latest`, `macos-latest`) and added automated whitespace check gate (`git diff --check`).

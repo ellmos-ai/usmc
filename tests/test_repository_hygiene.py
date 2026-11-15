@@ -53,9 +53,22 @@ class TestRepositoryHygiene(unittest.TestCase):
             "LOCK.dev.audit",
             "LOCK.antigravity.guard",
             "LOCK.bugsearch.scan",
+            "MARKETING-LOG.txt",
+            "SUB_MARKETING-LOG.txt",
+            "LOCK-CACHE.WORKSTATION-LG.md",
         ]:
             with self.subTest(path=path):
                 self.assertTrue(self.check_ignored(path), path)
+
+    def test_marketing_log_is_not_tracked(self):
+        result = subprocess.run(
+            ["git", "ls-files", "--", "MARKETING-LOG.txt"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        self.assertEqual(result.stdout.strip(), "", "MARKETING-LOG.txt must never be tracked in Git")
 
     def test_public_examples_remain_trackable(self):
         for path in [".env.example", ".env.sample"]:

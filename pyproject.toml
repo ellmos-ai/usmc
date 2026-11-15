@@ -88,7 +88,8 @@ minversion = "7.0"
 pythonpath = "."
 testpaths = ["tests"]
 norecursedirs = [".git", ".pytest_cache", ".pytest_temp", ".pytest_tmp*", ".hypothesis", ".turbo", ".nyc_output", ".tox", "__pycache__", "build", "dist"]
-addopts = "-ra -v --basetemp=.pytest_temp"
+addopts = "-ra -v"
+xfail_strict = true
 
 [tool.ruff]
 line-length = 120

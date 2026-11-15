@@ -2,6 +2,7 @@ include README.md
 include README_de.md
 include README_es.md
 include CHANGELOG.md
+include CODE_OF_CONDUCT.md
 include CONTRIBUTING.md
 include SECURITY.md
 include llms.txt
@@ -9,11 +10,17 @@ include THIRD_PARTY_LICENSES.md
 include THIRD_PARTY_LICENSES.txt
 include LICENSE
 include NOTICE
+include ellmos-module.v2.json
 include pyproject.toml
 include assets/banner.png
 include docs/archive/README.full.en.md
 include docs/archive/README.full.de.md
 include docs/archive/README.full.es.md
+include .github/FUNDING.yml
+include .github/dependabot.yml
+include .github/labels.yml
+include .github/ISSUE_TEMPLATE/bug_report.md
+include .github/ISSUE_TEMPLATE/feature_request.md
 include .github/workflows/auto-assign.yml
 include .github/workflows/ci.yml
 include .github/workflows/label-sync.yml

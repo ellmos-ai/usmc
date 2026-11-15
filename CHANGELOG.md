@@ -4,6 +4,15 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+### 2026-11-15 — Pfad A: Pytest basetemp-Hygiene (T-20261114-932985855), MARKETING-LOG-Untracking, Workflow-Härtung & Vertragstests
+
+- **Pytest CWD Hygiene (`pyproject.toml`, Rule `T-20261114-932985855`):** Removed relative `--basetemp=.pytest_temp` from `[tool.pytest.ini_options].addopts` so pytest never resolves relative temp paths against an arbitrary calling directory; added `xfail_strict = true` while keeping `.pytest_temp` and `.pytest_tmp*` in `norecursedirs` and `.gitignore`.
+- **Untracked `MARKETING-LOG.txt` & `.gitignore` Hardening:** Removed `MARKETING-LOG.txt` from Git tracking (`git rm --cached`) while preserving local files and added `MARKETING-LOG.txt`, `*MARKETING-LOG.txt`, and `LOCK-CACHE.*` to `.gitignore`.
+- **CI & Packaging Manifest Hardening:** Added `python -m pip check` verification step to `.github/workflows/ci.yml`, guarded `.github/workflows/auto-assign.yml` so `addAssignees` only triggers when `repoData.owner?.type === 'User'` (avoiding failures on organization-owned repos), and added `CODE_OF_CONDUCT.md`, `ellmos-module.v2.json`, `.github/FUNDING.yml`, `.github/dependabot.yml`, `.github/labels.yml`, and `.github/ISSUE_TEMPLATE/*.md` to `MANIFEST.in`.
+- **Docs & Encoding Parity:** Fixed Spanish anchor text (`Secci?n archivada` -> `Sección archivada`) in `README_es.md` and synchronized test-status badges across `README.md`, `README_de.md`, and `README_es.md` (`188 passed`).
+- **Contract Tests (`tests/test_metadata.py`, `tests/test_repository_hygiene.py`):** Added automated checks verifying no relative `--basetemp` in `addopts`, `MARKETING-LOG.txt` untracked and ignored, `pip check` in CI, and owner-type guard in `auto-assign.yml` (188 passed, 123 subtests).
+- **Version Freeze Policy:** Version `0.3.0` preserved unchanged per T-20260920-167562623.
+
 ### 2026-11-07 — Pfad B: Multi-agent sequence diagram, architecture overview, community health & discoverability
 
 - **Visual Architecture & Sequence Diagrams:** Added trilingual Mermaid sequence diagrams to Section 7 of `docs/archive/README.full.en.md`, `README.full.de.md`, and `README.full.es.md` detailing cross-agent fact logging, lesson recording, and prompt context generation. Added clean Architecture Overview flowcharts to `README.md`, `README_de.md`, and `README_es.md`.

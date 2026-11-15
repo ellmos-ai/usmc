@@ -127,3 +127,8 @@ state/
 .hypothesis/
 .nyc_output/
 node_modules/
+
+# Multi-host caches and bot runtime logs (never tracked)
+MARKETING-LOG.txt
+*MARKETING-LOG.txt
+LOCK-CACHE.*

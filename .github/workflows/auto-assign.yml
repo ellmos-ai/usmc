@@ -24,13 +24,17 @@ jobs:
             const repo = context.repo.repo;
             const pr_number = context.payload.pull_request.number;
 
-            // Get repo owner (first admin)
+            // Get repo owner (assign only when owner is a User, not an Organization)
             const { data: repoData } = await github.rest.repos.get({ owner, repo });
-            const repoOwner = repoData.owner.login;
+            const repoOwner = repoData.owner?.login;
 
-            await github.rest.issues.addAssignees({
-              owner,
-              repo,
-              issue_number: pr_number,
-              assignees: [repoOwner]
-            });
+            if (repoData.owner?.type === 'User' && repoOwner) {
+              await github.rest.issues.addAssignees({
+                owner,
+                repo,
+                issue_number: pr_number,
+                assignees: [repoOwner]
+              });
+            } else {
+              core.info(`Skipping auto-assign: repository owner '${repoOwner}' is type '${repoData.owner?.type}'.`);
+            }

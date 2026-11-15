@@ -3,7 +3,7 @@
 # USMC — United Shared Memory Client
 
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
-[![Pruebas](https://img.shields.io/badge/Pruebas-181%20aprobadas%20%7C%20100%25-brightgreen.svg)](#instalar-y-probar)
+[![Pruebas](https://img.shields.io/badge/Pruebas-188%20aprobadas%20%7C%20100%25-brightgreen.svg)](#instalar-y-probar)
 [![Dependabot](https://img.shields.io/badge/Dependabot-activo-brightgreen.svg)](.github/dependabot.yml)
 [![Licencia MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
@@ -87,103 +87,103 @@ El proyecto se ofrece bajo la [licencia MIT](LICENSE); los detalles de atribuci�
 <a id="características-principales"></a>
 <a id="key-features"></a>
 <a id="hauptmerkmale"></a>
-1. [Secci?n archivada](docs/archive/README.full.es.md#sec-01)
+1. [Sección archivada](docs/archive/README.full.es.md#sec-01)
 
 <a id="sec-02"></a>
 <a id="capacidades-clave--primitivas"></a>
 <a id="core-capabilities--primitives"></a>
 <a id="kernkonzepte--primitive"></a>
-2. [Secci?n archivada](docs/archive/README.full.es.md#sec-02)
+2. [Sección archivada](docs/archive/README.full.es.md#sec-02)
 
 <a id="sec-03"></a>
 <a id="arquetipos-de-usuario--visibilidad"></a>
 <a id="target-personas--discoverability"></a>
 <a id="zielgruppen--auffindbarkeit"></a>
-3. [Secci?n archivada](docs/archive/README.full.es.md#sec-03)
+3. [Sección archivada](docs/archive/README.full.es.md#sec-03)
 
 <a id="sec-04"></a>
 <a id="matriz-comparativa-frente-a-alternativas"></a>
 <a id="comparative-matrix-vs-alternatives"></a>
 <a id="vergleichsmatrix-gegenueber-alternativen"></a>
-4. [Secci?n archivada](docs/archive/README.full.es.md#sec-04)
+4. [Sección archivada](docs/archive/README.full.es.md#sec-04)
 
 <a id="sec-05"></a>
 <a id="arquitectura-y-flujo-de-datos"></a>
 <a id="architecture--data-flow"></a>
 <a id="architektur--datenfluss"></a>
-5. [Secci?n archivada](docs/archive/README.full.es.md#sec-05)
+5. [Sección archivada](docs/archive/README.full.es.md#sec-05)
 
 <a id="sec-06"></a>
 <a id="topologia-ascii"></a>
 <a id="ascii-topology"></a>
 <a id="ascii-topologie"></a>
-6. [Secci?n archivada](docs/archive/README.full.es.md#sec-06)
+6. [Sección archivada](docs/archive/README.full.es.md#sec-06)
 
 <a id="sec-07"></a>
 <a id="secuencia-de-interacción-multi-agente"></a>
 <a id="multi-agent-interaction-sequence"></a>
 <a id="multi-agenten-interaktionssequenz"></a>
-7. [Secci?n archivada](docs/archive/README.full.es.md#sec-07)
+7. [Sección archivada](docs/archive/README.full.es.md#sec-07)
 
 <a id="sec-08"></a>
 <a id="invariantes-de-gobernanza-y-ejecución"></a>
 <a id="governance--runtime-invariants"></a>
 <a id="governance--laufzeit-invarianten"></a>
-8. [Secci?n archivada](docs/archive/README.full.es.md#sec-08)
+8. [Sección archivada](docs/archive/README.full.es.md#sec-08)
 
 <a id="sec-09"></a>
 <a id="inicio-rápido"></a>
 <a id="quick-start"></a>
 <a id="schnellstart"></a>
-9. [Secci?n archivada](docs/archive/README.full.es.md#sec-09)
+9. [Sección archivada](docs/archive/README.full.es.md#sec-09)
 
 <a id="sec-10"></a>
 <a id="conceptos-clave-y-primitivas"></a>
 <a id="core-concepts--primitives"></a>
 <a id="kernkonzepte--detaillierte-primitive"></a>
-10. [Secci?n archivada](docs/archive/README.full.es.md#sec-10)
+10. [Sección archivada](docs/archive/README.full.es.md#sec-10)
 
 <a id="sec-11"></a>
 <a id="búsqueda-precisa-y-filtros"></a>
 <a id="finding-things--advanced-filtering"></a>
 <a id="gezieltes-suchen--filterung"></a>
-11. [Secci?n archivada](docs/archive/README.full.es.md#sec-11)
+11. [Sección archivada](docs/archive/README.full.es.md#sec-11)
 
 <a id="sec-12"></a>
 <a id="coordinación-de-sesiones-multi-agente"></a>
 <a id="multi-agent-session-coordination"></a>
 <a id="multi-agenten-sitzungskoordination"></a>
-12. [Secci?n archivada](docs/archive/README.full.es.md#sec-12)
+12. [Sección archivada](docs/archive/README.full.es.md#sec-12)
 
 <a id="sec-13"></a>
 <a id="contrato-de-idioma-en-ejecución"></a>
 <a id="runtime-language-contract"></a>
 <a id="laufzeit-sprachvertrag"></a>
-13. [Secci?n archivada](docs/archive/README.full.es.md#sec-13)
+13. [Sección archivada](docs/archive/README.full.es.md#sec-13)
 
 <a id="sec-14"></a>
 <a id="esquema-de-base-de-datos-y-aislamiento"></a>
 <a id="database-schema--state-isolation"></a>
 <a id="datenbankschema--status-isolation"></a>
-14. [Secci?n archivada](docs/archive/README.full.es.md#sec-14)
+14. [Sección archivada](docs/archive/README.full.es.md#sec-14)
 
 <a id="sec-15"></a>
 <a id="ecosistema-hermano-y-posicionamiento"></a>
 <a id="sibling-ecosystem--positioning"></a>
 <a id="geschwister-oekosystem--positionierung"></a>
-15. [Secci?n archivada](docs/archive/README.full.es.md#sec-15)
+15. [Sección archivada](docs/archive/README.full.es.md#sec-15)
 
 <a id="sec-16"></a>
 <a id="pruebas-y-verificacion"></a>
 <a id="testing--quality-gates"></a>
 <a id="testen--qualitaetstore"></a>
-16. [Secci?n archivada](docs/archive/README.full.es.md#sec-16)
+16. [Sección archivada](docs/archive/README.full.es.md#sec-16)
 
 <a id="sec-17"></a>
 <a id="licencias-de-terceros-y-transparencia"></a>
 <a id="third-party-licenses--transparency"></a>
 <a id="drittanbieter-lizenzen--transparenz"></a>
-17. [Secci?n archivada](docs/archive/README.full.es.md#sec-17)
+17. [Sección archivada](docs/archive/README.full.es.md#sec-17)
 
 <a id="sec-18"></a>
 <a id="politica-de-seguridad-y-responsabilidad"></a>
@@ -195,4 +195,4 @@ El proyecto se ofrece bajo la [licencia MIT](LICENSE); los detalles de atribuci�
 <a id="política-de-seguridad-y-reporte-de-vulnerabilidades"></a>
 <a id="security-policy--vulnerability-reporting"></a>
 <a id="sicherheitsrichtlinie--meldewege"></a>
-18. [Secci?n archivada](docs/archive/README.full.es.md#sec-18)
+18. [Sección archivada](docs/archive/README.full.es.md#sec-18)

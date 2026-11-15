@@ -39,6 +39,9 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e ".[test]"
 
+      - name: Verify dependency consistency
+        run: python -m pip check
+
       - name: Git diff & whitespace check
         run: |
           git diff --check

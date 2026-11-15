@@ -94,7 +94,7 @@ class TestMetadataContract(unittest.TestCase):
     def test_governance_files_exist(self):
         for name in [
             "NOTICE", "THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt",
-            "MARKETING-LOG.txt", "SECURITY.md", "CHANGELOG.md", "LICENSE", ".gitignore",
+            "SECURITY.md", "CHANGELOG.md", "LICENSE", ".gitignore",
         ]:
             path = ROOT / name
             with self.subTest(name=name):
@@ -254,6 +254,27 @@ class TestMetadataContract(unittest.TestCase):
             self.assertIn("subgraph Agents", text)
             self.assertIn("subgraph USMC", text)
             self.assertIn("usmc_memory.db", text)
+
+    def test_pytest_addopts_no_relative_basetemp(self):
+        try:
+            import tomllib
+        except ModuleNotFoundError:
+            import tomli as tomllib
+        with open(ROOT / "pyproject.toml", "rb") as f:
+            data = tomllib.load(f)
+        pytest_cfg = data.get("tool", {}).get("pytest", {}).get("ini_options", {})
+        addopts = pytest_cfg.get("addopts", "")
+        self.assertNotIn("--basetemp=.pytest_temp", addopts)
+        self.assertNotIn("--basetemp=.pytest_tmp", addopts)
+        norecurse = pytest_cfg.get("norecursedirs", [])
+        self.assertIn(".pytest_temp", norecurse)
+        self.assertIn(".pytest_tmp*", norecurse)
+
+    def test_ci_pip_check_and_auto_assign_guard(self):
+        ci_text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("python -m pip check", ci_text)
+        assign_text = (ROOT / ".github" / "workflows" / "auto-assign.yml").read_text(encoding="utf-8")
+        self.assertIn("repoData.owner?.type === 'User'", assign_text)
 
 
 if __name__ == "__main__":

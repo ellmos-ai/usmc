@@ -14,6 +14,19 @@ ENTRY_GUIDES = {
     "README_de.md": "docs/archive/README.full.de.md",
     "README_es.md": "docs/archive/README.full.es.md",
 }
+WORLD_SET_READMES = (
+    "README.md",
+    "README_de.md",
+    "README_es.md",
+    "README_fr.md",
+    "README_pt.md",
+    "README_ru.md",
+    "README_zh.md",
+    "README_ja.md",
+    "README_ar.md",
+    "README_hi.md",
+    "README_bn.md",
+)
 
 
 def _markdown_ids_and_headings(text):
@@ -27,23 +40,34 @@ def _markdown_ids_and_headings(text):
 
 class TestMetadataContract(unittest.TestCase):
     def test_readmes_and_archived_guides_exist(self):
-        for entry, archive in ENTRY_GUIDES.items():
-            for name in (entry, archive):
-                path = ROOT / name
-                with self.subTest(name=name):
-                    self.assertTrue(path.is_file())
-                    self.assertGreater(path.stat().st_size, 1000)
+        for name in list(WORLD_SET_READMES) + list(ENTRY_GUIDES.values()):
+            path = ROOT / name
+            with self.subTest(name=name):
+                self.assertTrue(path.is_file())
+                self.assertGreater(path.stat().st_size, 1000)
 
     def test_language_switchers_linked(self):
-        expected = ["[English](README.md)", "[Deutsch](README_de.md)", "[Español](README_es.md)"]
-        for name in ENTRY_GUIDES:
+        expected = [
+            "[English](README.md)",
+            "[Deutsch](README_de.md)",
+            "[Español](README_es.md)",
+            "[Français](README_fr.md)",
+            "[Português](README_pt.md)",
+            "[Русский](README_ru.md)",
+            "[简体中文](README_zh.md)",
+            "[日本語](README_ja.md)",
+            "[العربية](README_ar.md)",
+            "[हिन्दी](README_hi.md)",
+            "[বাংলা](README_bn.md)",
+        ]
+        for name in WORLD_SET_READMES:
             text = (ROOT / name).read_text(encoding="utf-8")
             with self.subTest(name=name):
                 for link in expected:
                     self.assertIn(link, text)
 
     def test_readme_internal_links_and_fragments_resolve(self):
-        documents = list(ENTRY_GUIDES) + list(ENTRY_GUIDES.values())
+        documents = list(WORLD_SET_READMES) + list(ENTRY_GUIDES.values())
         issues = []
         for name in documents:
             path = ROOT / name
@@ -69,7 +93,8 @@ class TestMetadataContract(unittest.TestCase):
         self.assertEqual(issues, [])
 
     def test_legacy_section_links_reach_archived_guides(self):
-        for entry_name, archive_name in ENTRY_GUIDES.items():
+        guide_pairs = {name: ENTRY_GUIDES.get(name, "docs/archive/README.full.en.md") for name in WORLD_SET_READMES}
+        for entry_name, archive_name in guide_pairs.items():
             entry = (ROOT / entry_name).read_text(encoding="utf-8")
             archive = (ROOT / archive_name).read_text(encoding="utf-8")
             entry_ids = set(re.findall(r'<a id="([^"]+)"', entry))
@@ -85,8 +110,8 @@ class TestMetadataContract(unittest.TestCase):
     def test_machine_readable_guide_has_current_source_references(self):
         text = (ROOT / "llms.txt").read_text(encoding="utf-8")
         self.assertIn("https://github.com/ellmos-ai/usmc", text)
-        self.assertIn("README_de.md", text)
-        self.assertIn("README_es.md", text)
+        for name in WORLD_SET_READMES:
+            self.assertIn(name, text)
         self.assertIn("SECURITY.md", text)
         self.assertIn("THIRD_PARTY_LICENSES.md", text)
         self.assertIn("0.3.0", text)
@@ -163,7 +188,7 @@ class TestMetadataContract(unittest.TestCase):
     def test_optional_bach_schema_contract_is_present(self):
         contract = ROOT / "usmc" / "memory_union.contract.json"
         self.assertTrue(contract.is_file())
-        for name in ENTRY_GUIDES:
+        for name in WORLD_SET_READMES:
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertIn("https://github.com/ellmos-ai/bach", text)
             self.assertIn("memory_union.contract.json", text)
@@ -228,7 +253,7 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("## English", coc_text)
         self.assertIn("## Deutsch", coc_text)
         self.assertIn("security@ellmos.ai", coc_text)
-        for name in ENTRY_GUIDES:
+        for name in WORLD_SET_READMES:
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertIn("CODE_OF_CONDUCT.md", text, f"{name} must link CODE_OF_CONDUCT.md")
 
@@ -248,7 +273,7 @@ class TestMetadataContract(unittest.TestCase):
             self.assertIn("generate_context", text)
 
     def test_readme_overview_diagrams_and_badges(self):
-        for entry_name in ENTRY_GUIDES:
+        for entry_name in WORLD_SET_READMES:
             text = (ROOT / entry_name).read_text(encoding="utf-8")
             self.assertIn("graph LR", text, f"{entry_name} must contain graph LR overview diagram")
             self.assertIn("subgraph Agents", text)

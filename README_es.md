@@ -10,9 +10,11 @@
 [![Cero dependencias](https://img.shields.io/badge/Dependencias-0%20en%20ejecuci%C3%B3n-blue.svg)](#datos-y-alcance-de-ejecución)
 [![Almacenamiento](https://img.shields.io/badge/Almacenamiento-SQLite%20(WAL)-informational.svg)](#datos-y-alcance-de-ejecución)
 
-**Idiomas:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
+**Idiomas:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md) · [Français](README_fr.md) · [Português](README_pt.md) · [Русский](README_ru.md) · [简体中文](README_zh.md) · [日本語](README_ja.md) · [العربية](README_ar.md) · [हिन्दी](README_hi.md) · [বাংলা](README_bn.md)
 
+<!-- lang-only: es -->
 > Esta página breve sustituye el antiguo `README_es.md` extenso del [commit fuente `bf281f1`](https://github.com/ellmos-ai/usmc/blob/bf281f1d68e9e6af44db9d12588a000fac531a61/README_es.md). La edición archivada corregida, ahora en [docs/archive/README.full.es.md](docs/archive/README.full.es.md), conserva la guía detallada; el commit enlazado mantiene la revisión fuente original.
+<!-- /lang-only -->
 
 USMC es un paquete de Python y una CLI que guarda hechos, lecciones, notas de trabajo y traspasos de sesión en SQLite. La lista declarada de dependencias directas en ejecución está vacía; requiere Python 3.10 o posterior.
 

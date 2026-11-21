@@ -10,9 +10,11 @@
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-0%20runtime-blue.svg)](#data-and-runtime-scope)
 [![Storage](https://img.shields.io/badge/Storage-SQLite%20(WAL)-informational.svg)](#data-and-runtime-scope)
 
-**Languages:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
+**Languages:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md) · [Français](README_fr.md) · [Português](README_pt.md) · [Русский](README_ru.md) · [简体中文](README_zh.md) · [日本語](README_ja.md) · [العربية](README_ar.md) · [हिन्दी](README_hi.md) · [বাংলা](README_bn.md)
 
+<!-- lang-only: en,fr,pt,ru,zh,ja,ar,hi,bn -->
 > This concise entry point replaces the former long `README.md` from [source commit `bf281f1`](https://github.com/ellmos-ai/usmc/blob/bf281f1d68e9e6af44db9d12588a000fac531a61/README.md). Its corrected archival edition is now [docs/archive/README.full.en.md](docs/archive/README.full.en.md); the linked commit preserves the original source revision.
+<!-- /lang-only -->
 
 USMC is a Python package and CLI that stores facts, lessons, working notes, and session handoffs in SQLite. The declared direct runtime dependency list is empty; Python 3.10 or newer is required.
 

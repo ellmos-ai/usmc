@@ -4,6 +4,12 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+### 2026-11-18 — World-Set 11-language entry-guide localization
+
+- Added concise root entry guides for French (`README_fr.md`), Portuguese (`README_pt.md`), Russian (`README_ru.md`), Simplified Chinese (`README_zh.md`), Japanese (`README_ja.md`), Arabic (`README_ar.md`), Hindi (`README_hi.md`), and Bengali (`README_bn.md`) with 11-language reciprocal navigation, localized Mermaid overview diagrams, Code of Conduct links, and preserved legacy section anchors (`#sec-01`..`#sec-18`).
+- Synchronized the 11-language switcher and `lang-only` source-commit link annotations across `README.md`, `README_de.md`, and `README_es.md`.
+- Updated `MANIFEST.in`, `llms.txt`, and `tests/test_metadata.py` contract checks to cover all 11 World-Set entry guides while keeping package version `0.3.0` and runtime code unchanged.
+
 ### 2026-11-15 — Pfad A: Pytest basetemp-Hygiene (T-20261114-932985855), MARKETING-LOG-Untracking, Workflow-Härtung & Vertragstests
 
 - **Pytest CWD Hygiene (`pyproject.toml`, Rule `T-20261114-932985855`):** Removed relative `--basetemp=.pytest_temp` from `[tool.pytest.ini_options].addopts` so pytest never resolves relative temp paths against an arbitrary calling directory; added `xfail_strict = true` while keeping `.pytest_temp` and `.pytest_tmp*` in `norecursedirs` and `.gitignore`.

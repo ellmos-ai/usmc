@@ -10,9 +10,11 @@
 [![Null Abhängigkeiten](https://img.shields.io/badge/Abh%C3%A4ngigkeiten-0%20Laufzeit-blue.svg)](#daten-und-laufzeitumfang)
 [![Speicher](https://img.shields.io/badge/Speicher-SQLite%20(WAL)-informational.svg)](#daten-und-laufzeitumfang)
 
-**Sprachen:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md)
+**Sprachen:** [English](README.md) · [Deutsch](README_de.md) · [Español](README_es.md) · [Français](README_fr.md) · [Português](README_pt.md) · [Русский](README_ru.md) · [简体中文](README_zh.md) · [日本語](README_ja.md) · [العربية](README_ar.md) · [हिन्दी](README_hi.md) · [বাংলা](README_bn.md)
 
+<!-- lang-only: de -->
 > Dieser kompakte Einstieg ersetzt die frühere lange `README_de.md` aus [Quellcommit `bf281f1`](https://github.com/ellmos-ai/usmc/blob/bf281f1d68e9e6af44db9d12588a000fac531a61/README_de.md). Die korrigierte Archivfassung unter [docs/archive/README.full.de.md](docs/archive/README.full.de.md) bewahrt den ausführlichen Leitfaden; der verlinkte Commit enthält die ursprüngliche Quellfassung.
+<!-- /lang-only -->
 
 USMC ist ein Python-Paket mit CLI. Es speichert Fakten, Lessons Learned, Arbeitsnotizen und Sitzungsübergaben in SQLite. Die direkte Laufzeit-Abhängigkeitsliste ist leer; erforderlich ist Python 3.10 oder neuer.
 

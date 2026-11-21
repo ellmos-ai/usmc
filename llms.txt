@@ -44,6 +44,14 @@ Installing from Git requires network access. For development in a source checkou
 - English guide: https://github.com/ellmos-ai/usmc/blob/main/README.md
 - German guide: https://github.com/ellmos-ai/usmc/blob/main/README_de.md
 - Spanish guide: https://github.com/ellmos-ai/usmc/blob/main/README_es.md
+- French guide: https://github.com/ellmos-ai/usmc/blob/main/README_fr.md
+- Portuguese guide: https://github.com/ellmos-ai/usmc/blob/main/README_pt.md
+- Russian guide: https://github.com/ellmos-ai/usmc/blob/main/README_ru.md
+- Simplified Chinese guide: https://github.com/ellmos-ai/usmc/blob/main/README_zh.md
+- Japanese guide: https://github.com/ellmos-ai/usmc/blob/main/README_ja.md
+- Arabic guide: https://github.com/ellmos-ai/usmc/blob/main/README_ar.md
+- Hindi guide: https://github.com/ellmos-ai/usmc/blob/main/README_hi.md
+- Bengali guide: https://github.com/ellmos-ai/usmc/blob/main/README_bn.md
 - Corrected detailed guides: https://github.com/ellmos-ai/usmc/tree/main/docs/archive
 - Code of Conduct: https://github.com/ellmos-ai/usmc/blob/main/CODE_OF_CONDUCT.md
 - Security and data handling: https://github.com/ellmos-ai/usmc/blob/main/SECURITY.md

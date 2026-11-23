@@ -51,6 +51,7 @@ Instalación desde el repositorio Git (requiere Git, herramientas de empaquetado
 python -m pip install "git+https://github.com/ellmos-ai/usmc.git"
 usmc --help
 usmc status
+usmc setup --dry-run
 ```
 
 Para una copia local: `python -m pip install -e ".[test]"`. El extra `[test]` es para desarrollo y pruebas.

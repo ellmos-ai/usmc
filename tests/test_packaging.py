@@ -62,6 +62,7 @@ class TestPackagingContract(unittest.TestCase):
             "api.py",
             "cli.py",
             "schema.py",
+            "setup.py",
             "memory_union.contract.json",
         ]:
             file_path = pkg_dir / expected

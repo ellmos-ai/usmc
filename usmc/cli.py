@@ -37,6 +37,7 @@ from typing import Optional
 
 from . import __version__
 from .client import USMCClient, default_db_path  # noqa: F401 (Re-Export)
+from .setup import SUPPORTED_AGENTS, format_setup_report, run_setup
 
 
 def get_client(args) -> USMCClient:
@@ -348,6 +349,24 @@ def cmd_changes(args) -> int:
     return 0
 
 
+def cmd_setup(args) -> int:
+    """Inspects, dry-runs, or applies USMC agent memory redirection."""
+    agents = [a.strip() for a in args.agents.split(",") if a.strip()] if args.agents else None
+    report = run_setup(
+        home_dir=args.home,
+        db_path=args.db,
+        agent_id=args.agent or "setup",
+        agents=agents,
+        apply=args.apply,
+        check=args.check,
+    )
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    else:
+        print(format_setup_report(report))
+    return 0
+
+
 def main(argv: Optional[list] = None) -> int:
     """CLI Entry Point."""
     parser = argparse.ArgumentParser(
@@ -527,6 +546,24 @@ def main(argv: Optional[list] = None) -> int:
     p_changes.add_argument('since', help='ISO-Zeitstempel (z.B. 2026-02-28T00:00:00)')
     p_changes.add_argument('--json', '-j', action='store_true', help='JSON-Ausgabe')
     p_changes.set_defaults(func=cmd_changes)
+
+    # setup
+    p_setup = subparsers.add_parser(
+        'setup',
+        help='Importiert und leitet Agenten-Memory-Ablagen nicht-destruktiv auf USMC um',
+    )
+    mode_group = p_setup.add_mutually_exclusive_group()
+    mode_group.add_argument('--dry-run', action='store_true', help='Probelauf ohne Änderungen (Standard)')
+    mode_group.add_argument('--apply', action='store_true', help='Import und Umleitung mit Backups anwenden')
+    mode_group.add_argument('--check', action='store_true', help='Status der Umleitung schreibfrei prüfen')
+    p_setup.add_argument(
+        '--agents',
+        metavar='LISTE',
+        help=f"Komma-separierte Agenten ({','.join(SUPPORTED_AGENTS)})",
+    )
+    p_setup.add_argument('--home', help='Home-Verzeichnis für Agenten-Erkennung (Standard: ~)')
+    p_setup.add_argument('--json', '-j', action='store_true', help='JSON-Ausgabe')
+    p_setup.set_defaults(func=cmd_setup)
 
     args = parser.parse_args(argv)
 

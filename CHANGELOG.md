@@ -4,6 +4,14 @@ All notable changes to USMC are documented here.
 
 ## Unreleased
 
+### 2026-11-24 — Pfad A: Privacy-Gate-Härtung, erreichbare Sicherheits-/Verhaltenskontakte, CI-Dry-Run & Doku-Parität
+
+- **Privacy-Gate-Bereinigung (`repo_privacy_gate.py` -> PASS):** Host-gebundene Gerätenamen und lokale Pfad-Slugs in `CHANGELOG.md`, `docs/MEMORY-REDIRECT-KONZEPT.de.md`, `tests/test_metadata.py` und `tests/test_repository_hygiene.py` auf generische Platzhalter/Muster umgestellt.
+- **Erreichbare Meldewege ohne defektes PVR (`SECURITY.md`, `CODE_OF_CONDUCT.md`):** Da GitHub Private Vulnerability Reporting (`/security/advisories/new`) auf diesem Repository deaktiviert ist (`enabled: false`), wurden nicht erreichbare Advisory-/E-Mail-Verweise durch den verifizierten Maintainer-Kontaktweg über `@lukisch` (minimales nicht-sensibles Issue zur Eröffnung eines privaten Kanals ohne Secrets/Payloads) ersetzt.
+- **Pytest-, Packaging- & CI-Härtung (`pyproject.toml`, `.github/workflows/ci.yml`):** `addopts` um `--strict-markers` ergänzt (weiterhin ohne relatives `--basetemp` gemäß `T-20261114-932985855`), `norecursedirs` um `.*`, `*.egg`, `venv`, `.venv` und `node_modules` erweitert sowie `python -m pip install --no-deps --no-build-isolation --dry-run .` als Packaging-Gate in `ci.yml` ergänzt.
+- **11-Sprachen-Doku- & Kontext-Parität (`README*.md`, `llms.txt`, `THIRD_PARTY_LICENSES.*`):** Test-Badges in allen 11 Sprachfassungen auf den gemessenen Stand (`194 passed`) sowie `usmc setup --dry-run` in allen 8 World-Set-Einstiegen nachgezogen; `llms.txt` und `THIRD_PARTY_LICENSES.*` auf Stand `2026-11-24` aktualisiert.
+- **Vertragstests (`tests/test_metadata.py`):** 4 neue Vertragstests für erreichbare Sicherheits-/Conduct-Kanäle, `--strict-markers`/`norecursedirs`, CI-Packaging-Dry-Run/11-Sprachen-Parität und `llms.txt`/`CHANGELOG.md`-Aktualität ergänzt (`194 passed`, Version `0.3.0` unverändert gemäß `T-20260920-167562623`).
+
 ### 2026-11-18 — World-Set 11-language entry-guide localization
 
 - Added concise root entry guides for French (`README_fr.md`), Portuguese (`README_pt.md`), Russian (`README_ru.md`), Simplified Chinese (`README_zh.md`), Japanese (`README_ja.md`), Arabic (`README_ar.md`), Hindi (`README_hi.md`), and Bengali (`README_bn.md`) with 11-language reciprocal navigation, localized Mermaid overview diagrams, Code of Conduct links, and preserved legacy section anchors (`#sec-01`..`#sec-18`).
@@ -32,7 +40,7 @@ All notable changes to USMC are documented here.
 
 - **CI Matrix & Lifecycle Hardening:** Expanded `.github/workflows/ci.yml` matrix with multi-platform runners (`ubuntu-latest`, `windows-latest`, `macos-latest`) and added automated whitespace check gate (`git diff --check`).
 - **Dependabot Security Automation:** Provisioned `.github/dependabot.yml` with security-only pip policy (`open-pull-requests-limit: 0`, grouped security updates) and weekly github-actions updates (`open-pull-requests-limit: 3`, Monday 06:00 Europe/Berlin).
-- **Multi-Host Ignore Hardening (`.gitignore`):** Protected against lowercase `thumbs.db`, wildcard `TASKPLAN*` / `*-TASKPLAN*`, and host-specific artifacts (`*-ASUS-GEI.*`, `*-IDEAPAD-GEI.*`, `*-WORKSTATION-LG.*`).
+- **Multi-Host Ignore Hardening (`.gitignore`):** Protected against lowercase `thumbs.db`, wildcard `TASKPLAN*` / `*-TASKPLAN*`, and host-scoped copy patterns (`*-<HOST>.*` generalized from prior host-specific examples).
 - **PEP 621 Metadata & Policy Parity (`pyproject.toml`):** Maintained strict version freeze at `0.3.0` per T-20260920-167562623; declared Security and Contributing references in `[project.urls]`.
 - **Level 1 SBOM Inventory (`THIRD_PARTY_LICENSES.md`, `THIRD_PARTY_LICENSES.txt`):** Updated review date to 2026-10-31, reaffirming zero runtime dependencies (`dependencies = []`), local-only SQLite storage, and 48h security response target.
 - **Contract Tests (`tests/test_metadata.py`):** Added 4 new automated contract tests verifying Dependabot configuration, CI tri-platform & whitespace gates, PEP 621 metadata freeze, and hardened `.gitignore` rules (181 passed).

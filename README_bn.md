@@ -3,7 +3,7 @@
 # USMC — United Shared Memory Client
 
 [![CI](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml/badge.svg)](https://github.com/ellmos-ai/usmc/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/Tests-188%20passed%20%7C%20100%25-brightgreen.svg)](#install-and-try)
+[![Tests](https://img.shields.io/badge/Tests-194%20passed%20%7C%20100%25-brightgreen.svg)](#install-and-try)
 [![Dependabot](https://img.shields.io/badge/Dependabot-active-brightgreen.svg)](.github/dependabot.yml)
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](pyproject.toml)
@@ -53,6 +53,7 @@ Git উৎস থেকে ইনস্টল করুন (এর জন্য 
 python -m pip install "git+https://github.com/ellmos-ai/usmc.git"
 usmc --help
 usmc status
+usmc setup --dry-run
 ```
 
 স্থানীয় চেকআউটের জন্য `python -m pip install -e ".[test]"` ব্যবহার করুন। `[test]` এক্সট্রাটি ডেভেলপমেন্ট এবং টেস্টিংয়ের জন্য।

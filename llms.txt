@@ -2,15 +2,17 @@
 
 ## Reviewed source
 
-- Review date: 2026-10-12
-- Source revision reviewed: `bf281f1d68e9e6af44db9d12588a000fac531a61`
+- Last-checked: 2026-11-24
+- Review date: 2026-11-24
+- Source revision reviewed: `ccadef8ae14d2c24e25c99cc7aec48a21e84e040`
 - Repository: https://github.com/ellmos-ai/usmc
 - Package version declared by this source: `0.3.0`
 - Python requirement: `>=3.10`
+- Verified test baseline: `194 passed` (`pytest -ra -v --strict-markers`)
 
 ## What it does
 
-USMC is a Python package and CLI that stores facts, lessons, working notes, and session handoffs in SQLite and can format records as prompt context. `pyproject.toml` declares no direct runtime dependencies. The console command is `usmc` after installation; `python -m usmc` is not an entry point.
+USMC is a Python package and CLI that stores facts, lessons, working notes, and session handoffs in SQLite and can format records as prompt context. `pyproject.toml` declares no direct runtime dependencies. The console command is `usmc` after installation (including `usmc setup --dry-run` / `--apply` / `--check` for non-destructive agent memory import and redirection); `python -m usmc` is not an entry point.
 
 ## Data path and boundaries
 

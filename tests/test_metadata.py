@@ -147,8 +147,11 @@ class TestMetadataContract(unittest.TestCase):
         text = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
         self.assertIn("## Deutsch", text)
         self.assertIn("## English", text)
-        self.assertIn("https://github.com/ellmos-ai/usmc/security/advisories/new", text)
-        self.assertIn("security@ellmos.ai", text)
+        self.assertIn("@lukisch", text)
+        self.assertIn("deaktiviert", text)
+        self.assertIn("disabled", text)
+        self.assertNotIn("https://github.com/ellmos-ai/usmc/security/advisories/new", text)
+        self.assertNotIn("security@ellmos.ai", text)
 
     def test_project_version_and_changelog_release_history(self):
         self.assertEqual(usmc.__version__, "0.3.0")
@@ -243,8 +246,9 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("thumbs.db", text)
         self.assertIn("*-TASKPLAN*", text)
         self.assertIn("TASKPLAN*", text)
-        self.assertIn("*-ASUS-GEI.*", text)
-        self.assertIn("*-WORKSTATION-LG.*", text)
+        self.assertIn("*-ASUS*", text)
+        self.assertIn("*-WORKSTATION*", text)
+        self.assertIn("*-IDEAPAD*", text)
 
     def test_code_of_conduct_presence_and_links(self):
         coc_path = ROOT / "CODE_OF_CONDUCT.md"
@@ -252,7 +256,10 @@ class TestMetadataContract(unittest.TestCase):
         coc_text = coc_path.read_text(encoding="utf-8")
         self.assertIn("## English", coc_text)
         self.assertIn("## Deutsch", coc_text)
-        self.assertIn("security@ellmos.ai", coc_text)
+        self.assertIn("@lukisch", coc_text)
+        self.assertIn("SECURITY.md", coc_text)
+        self.assertNotIn("security@ellmos.ai", coc_text)
+        self.assertNotIn("https://github.com/ellmos-ai/usmc/security/advisories/new", coc_text)
         for name in WORLD_SET_READMES:
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertIn("CODE_OF_CONDUCT.md", text, f"{name} must link CODE_OF_CONDUCT.md")
@@ -300,6 +307,50 @@ class TestMetadataContract(unittest.TestCase):
         self.assertIn("python -m pip check", ci_text)
         assign_text = (ROOT / ".github" / "workflows" / "auto-assign.yml").read_text(encoding="utf-8")
         self.assertIn("repoData.owner?.type === 'User'", assign_text)
+
+    def test_pvr_disabled_reachable_channels_no_dead_advisory_or_email(self):
+        for name in ["SECURITY.md", "CODE_OF_CONDUCT.md"]:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            with self.subTest(file=name):
+                self.assertIn("@lukisch", text)
+                self.assertNotIn("https://github.com/ellmos-ai/usmc/security/advisories/new", text)
+                self.assertNotIn("security@ellmos.ai", text)
+
+    def test_pytest_norecursedirs_and_strict_markers(self):
+        try:
+            import tomllib
+        except ModuleNotFoundError:
+            import tomli as tomllib
+        with open(ROOT / "pyproject.toml", "rb") as f:
+            data = tomllib.load(f)
+        pytest_cfg = data.get("tool", {}).get("pytest", {}).get("ini_options", {})
+        addopts = pytest_cfg.get("addopts", "")
+        self.assertIn("--strict-markers", addopts)
+        self.assertNotIn("--basetemp=", addopts)
+        norecurse = set(pytest_cfg.get("norecursedirs", []))
+        for entry in [".*", "*.egg", ".pytest_temp", ".pytest_tmp*", "venv", ".venv", "node_modules"]:
+            self.assertIn(entry, norecurse)
+
+    def test_ci_packaging_dry_run_and_worldset_setup_parity(self):
+        ci_text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("python -m pip install --no-deps --no-build-isolation --dry-run .", ci_text)
+        for name in WORLD_SET_READMES:
+            text = (ROOT / name).read_text(encoding="utf-8")
+            with self.subTest(readme=name):
+                self.assertIn("usmc setup --dry-run", text)
+                self.assertIn("194", text)
+
+    def test_llms_txt_and_changelog_20261124_unreleased(self):
+        self.assertEqual(usmc.__version__, "0.3.0")
+        llms_text = (ROOT / "llms.txt").read_text(encoding="utf-8")
+        self.assertIn("Last-checked: 2026-11-24", llms_text)
+        self.assertIn("usmc setup", llms_text)
+        self.assertIn("194 passed", llms_text)
+        for sbom in ["THIRD_PARTY_LICENSES.md", "THIRD_PARTY_LICENSES.txt"]:
+            self.assertIn("2026-11-24", (ROOT / sbom).read_text(encoding="utf-8"))
+        changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+        self.assertIn("## Unreleased", changelog)
+        self.assertIn("### 2026-11-24", changelog)
 
 
 if __name__ == "__main__":

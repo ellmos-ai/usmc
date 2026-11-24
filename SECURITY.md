@@ -8,7 +8,7 @@ Die Paketmetadaten nennen derzeit Version 0.3.0. Diese Richtlinie verspricht kei
 
 ### Sicherheitslücken melden
 
-Bitte melde Schwachstellen nicht öffentlich. Verwende [GitHub Private Vulnerability Reporting](https://github.com/ellmos-ai/usmc/security/advisories/new). Falls dieser Weg nicht verfügbar ist, nutze `security@ellmos.ai`. Füge, soweit möglich, betroffene Version, Reproduktionsschritte und beobachtete Auswirkungen bei. Teile keine echten Nutzerdaten oder Zugangsdaten in einem Bericht.
+Bitte melde Schwachstellen nicht öffentlich. GitHub Private Vulnerability Reporting (`/security/advisories/new`) ist in diesem Repository derzeit deaktiviert. Öffne stattdessen ein minimales, nicht-sensibles Issue mit der Bitte an Maintainer `@lukisch`, einen privaten Meldeweg zu eröffnen — **teile niemals** Exploit-Code, Reproduktions-Payloads, Secrets oder echte Nutzerdaten in einem öffentlichen Issue. Füge im privaten Austausch, soweit möglich, betroffene Version, Reproduktionsschritte und beobachtete Auswirkungen bei.
 
 ### Reaktionsziele
 
@@ -32,7 +32,7 @@ The package metadata currently declares version 0.3.0. This policy does not prom
 
 ### Reporting a vulnerability
 
-Please do not disclose vulnerabilities in a public issue. Use [GitHub Private Vulnerability Reporting](https://github.com/ellmos-ai/usmc/security/advisories/new). If that route is unavailable, contact `security@ellmos.ai`. Include the affected version, reproduction steps, and observed impact where possible. Do not include real user data or credentials in a report.
+Please do not disclose vulnerabilities in a public issue. GitHub Private Vulnerability Reporting (`/security/advisories/new`) is currently disabled on this repository. Instead, open a minimal, non-sensitive issue asking maintainer `@lukisch` to initiate a private disclosure channel — **never** include exploit code, reproduction payloads, secrets, or real user data in a public issue. Once a private channel is open, include the affected version, reproduction steps, and observed impact where possible.
 
 ### Response targets
 

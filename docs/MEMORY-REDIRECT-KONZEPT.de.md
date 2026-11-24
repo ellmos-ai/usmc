@@ -2,7 +2,7 @@
 
 > Status: Entwurf zur Entscheidung, nichts davon ist umgesetzt. Es wurden keine Memory-Dateien verschoben oder importiert.
 > Auslöser: Nutzerwunsch vom 2026-11-13, Ticket T-20261113-611040941 („USMC soll bei der Installation die Memory-Ablagen der Agenten auf USMC umleiten, zumindest bei anderen Nutzern“).
-> Herkunft der Belege: **Ist-Stand ASUS-GEI 2026-11-13** (aus dem Ticket übernommen, hier nicht nachgemessen) und **WS-Messung 2026-11-14** (WORKSTATION-LG, eigene Messung, nur lesend). Was nicht gemessen wurde, steht ausdrücklich als „nicht gemessen“.
+> Herkunft der Belege: **Ist-Stand Host A (Laptop) 2026-11-13** (aus dem Ticket übernommen, hier nicht nachgemessen) und **Messung Host B (Workstation) 2026-11-14** (lokale Messung, nur lesend). Was nicht gemessen wurde, steht ausdrücklich als „nicht gemessen“.
 
 ## 1. Ausgangslage im USMC-Modul (WS-Messung, Stand `origin/main` 7fc26e8)
 
@@ -17,15 +17,15 @@
 
 ## 2. Heutige Ablage je Agent
 
-| Agent | Ablage (WS-Messung 2026-11-14) | Ist-Stand ASUS-GEI 2026-11-13 (Ticket) |
+| Agent | Ablage (Messung Host B 2026-11-14) | Ist-Stand Host A 2026-11-13 (Ticket) |
 |---|---|---|
-| Claude Code | `~/.claude/projects/<projekt-slug>/memory/` je Projekt-Silo. WS: 56 Dateien im Home-Silo `C--Users-lukas`, 16 in `C--Users-lukas-OneDrive`, dazu mehrere kleine Silos (0 bis 7 Dateien). `autoMemoryEnabled: true`, **kein** `autoMemoryDirectory` gesetzt. | MEMORY.md plus gut 130 Dateien unter `~/.claude/projects/C--Users-User/memory`; MEMORY.md vollständig nur in Home-Sitzungen. |
+| Claude Code | `~/.claude/projects/<projekt-slug>/memory/` je Projekt-Silo. Host B: 56 Dateien im Home-Silo `<home-slug>`, 16 im Workspace-Silo, dazu mehrere kleine Silos (0 bis 7 Dateien). `autoMemoryEnabled: true`, **kein** `autoMemoryDirectory` gesetzt. | MEMORY.md plus gut 130 Dateien unter `~/.claude/projects/<home-slug>/memory`; MEMORY.md vollständig nur in Home-Sitzungen. |
 | Codex | `~/.codex/memories/` (8 Einträge: `MEMORY.md`, `memory_summary.md`, `automation_memory_proxy_…md`, Unterordner `automations/`, `extensions/`). Hooks: `~/.codex/hooks.json` mit MemoryHooker (SessionStart, UserPromptSubmit). MemoryHooker-Config `~/.codex/memoryhooker.toml`: `backend.order = ["gardener", "files"]`, **USMC steht dort nicht in der Kette**. | `~/.codex/memories/`; Treffer vom MemoryHooker nur bei SessionStart. |
 | Gemini/agy | `~/.gemini/memory.md` (29 Zeilen), `memory.txt` (31), `MEMORY.md` (29), `memory.json`, `memory/` (1 Datei), `AUTOMATIONS-MEMORY.md`, `automations_memory.json`, `antigravity_automation_memory.json`, `githubbot_automation_memory.json`. **Keine MemoryHooker-Hooks**: `~/.gemini/settings.json` enthält keinen `hooks`-Abschnitt. | Dieselben Dateinamen; im Hook-Register `.SYNC/hooks/adoption/laptop.json` keine MemoryHooker-Hooks. Die Annahme des Nutzers, Gemini habe solche Hooks, ist auf beiden Hosts nicht belegt; neuere Antigravity-Versionen nicht geprüft. |
 | Kimi | Keine eigene Memory-Datei gefunden (`~/.kimi-code/` enthält `config.toml`, `hooks/`, `sessions/`, `session_index.jsonl`, `hook-state/`, kein `memory*`). `config.toml` verdrahtet MemoryHooker als `[[hooks]]`. | MemoryHooker-Backend `files` als drittes Kettenglied nach `usmc` und `gardener`. |
 | USMC selbst | `~/.usmc/usmc_memory.db` (kanonische DB). | Cross-Host-Abgleich über `sqlite-transit-sync` laut Recheck 2026-08-26 `CARRIER_GREEN / APPLICATION_CONTRACT_BLOCKED` (active=false; Ticket T-20260727-04). |
 
-Nicht gemessen: Inhalte und Duplikatquote der Bestände, Verhalten von Claude Code bei geändertem `autoMemoryDirectory` (nur aus Ticket als Option bekannt), tatsächliche USMC-Backend-Konfiguration von MemoryHooker auf Kimi/Claude auf WS.
+Nicht gemessen: Inhalte und Duplikatquote der Bestände, Verhalten von Claude Code bei geändertem `autoMemoryDirectory` (nur aus Ticket als Option bekannt), tatsächliche USMC-Backend-Konfiguration von MemoryHooker auf Kimi/Claude auf Host B.
 
 ## 3. Grundprinzipien des Konzepts
 
@@ -51,14 +51,14 @@ Nicht gemessen: Inhalte und Duplikatquote der Bestände, Verhalten von Claude Co
 - **Risiken:** App-eigene Konsolidierung (`memory-writing-agent`) kann Dateien umschreiben, der Hash ändert sich, es entstehen Folgeversionen statt Duplikate (Gewichtung und `review`-Status fangen das ab, kostet Pflege); Änderung von `hooks.json`/`config.toml` verlangt erneutes Vertrauen über `/hooks`.
 
 ### 4.3 Gemini/agy
-- **Schreibweg:** Es gibt auf WS und laut Ticket auf ASUS-GEI keine Hooks. Ohne Hook bleibt nur der Regeldatei-Zeiger (`GEMINI.md`: „Allgemeines Wissen per `usmc …` ablegen“) und der Datei-Weg (agy schreibt in seinen Workspace; ein Wächter importiert).
+- **Schreibweg:** Es gibt auf Host B und laut Ticket auf Host A keine Hooks. Ohne Hook bleibt nur der Regeldatei-Zeiger (`GEMINI.md`: „Allgemeines Wissen per `usmc …` ablegen“) und der Datei-Weg (agy schreibt in seinen Workspace; ein Wächter importiert).
 - **Leseweg:** Kein Hook-Weg belegt; Ersatz: statisch erzeugter USMC-Kontext (`usmc context`) in eine von Gemini ohnehin gelesene Datei, oder Hook, sobald Antigravity ihn unterstützt (nicht geprüft).
 - **Import:** `memory.md`/`memory.txt`/`MEMORY.md` (inhaltsähnlich, Dublettengefahr), `memory.json`, `memory/`. `AUTOMATIONS-MEMORY.md` und die `*_automation_memory.json` sind Automationsprotokolle und gehören laut `CLAUDE.md` nicht in Boot-Dateien; sie bleiben agentenspezifisch.
 - **Risiken:** schwächster Kandidat, weil der Leseweg fehlt; die drei ähnlichen Memory-Dateien erzeugen Dubletten, wenn man sie getrennt importiert; Annahme „Gemini hat Hooks“ ungeprüft.
 
 ### 4.4 Kimi
-- **Schreibweg:** Kimi besitzt keine eigene Memory-Datei (WS gemessen). Hooks sind vorhanden (`[[hooks]]` in `config.toml`), ein Schreibhook nach USMC ist technisch möglich (Details nicht geprüft).
-- **Leseweg:** MemoryHooker ist bereits verdrahtet; laut Ticket-Ist-Stand ASUS-GEI ist `usmc` dort bereits erstes Backend. Auf WS nicht gemessen.
+- **Schreibweg:** Kimi besitzt keine eigene Memory-Datei (Host B gemessen). Hooks sind vorhanden (`[[hooks]]` in `config.toml`), ein Schreibhook nach USMC ist technisch möglich (Details nicht geprüft).
+- **Leseweg:** MemoryHooker ist bereits verdrahtet; laut Ticket-Ist-Stand Host A ist `usmc` dort bereits erstes Backend. Auf Host B nicht gemessen.
 - **Import:** nichts zu importieren.
 - **Risiken:** gering; Kimi ist der Agent, der den USMC-Weg am weitesten schon geht.
 
@@ -87,7 +87,7 @@ Nicht gemessen: Inhalte und Duplikatquote der Bestände, Verhalten von Claude Co
 
 ## 8. Nutzerfragen
 
-1. Sollen die **eigenen Claude-Einträge des Nutzers** (Home-Silo, 56 Dateien auf WS) nach USMC migriert werden, oder nur bei anderen Nutzern installiert werden? (Offen aus der Sitzung vom 2026-11-13.)
+1. Sollen die **eigenen Claude-Einträge des Nutzers** (Home-Silo, 56 Dateien auf Host B) nach USMC migriert werden, oder nur bei anderen Nutzern installiert werden? (Offen aus der Sitzung vom 2026-11-13.)
 2. Soll für Claude Code der **Regeldatei-/Hook-Weg (4.1 b)** oder `autoMemoryDirectory` (4.1 a) getestet werden?
 3. Wer **führt** bei MEMORY.md und USMC: soll MEMORY.md nur noch Index und Zeiger sein?
 4. Darf der Import Claude-Silos, die als `private` markiert werden sollen, nach USMC ziehen, oder nur das Home-Silo?

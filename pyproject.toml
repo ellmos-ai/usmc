@@ -87,8 +87,8 @@ version = { attr = "usmc.__version__" }
 minversion = "7.0"
 pythonpath = "."
 testpaths = ["tests"]
-norecursedirs = [".git", ".pytest_cache", ".pytest_temp", ".pytest_tmp*", ".hypothesis", ".turbo", ".nyc_output", ".tox", "__pycache__", "build", "dist"]
-addopts = "-ra -v"
+norecursedirs = [".*", "*.egg", ".git", ".pytest_cache", ".pytest_temp", ".pytest_tmp*", ".hypothesis", ".turbo", ".nyc_output", ".tox", "__pycache__", "build", "dist", "node_modules", "venv", ".venv"]
+addopts = "-ra -v --strict-markers"
 xfail_strict = true
 
 [tool.ruff]

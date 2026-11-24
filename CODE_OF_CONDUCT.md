@@ -66,9 +66,10 @@ representative at an online or offline event.
 ### Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-[security@ellmos.ai](mailto:security@ellmos.ai) or privately via
-[GitHub Security Advisories](https://github.com/ellmos-ai/usmc/security/advisories/new).
+reported to the maintainer `@lukisch` via GitHub contact channels (or by opening
+a minimal, non-sensitive issue asking `@lukisch` to initiate a private contact
+channel — never post private third-party information or sensitive details in a
+public issue). For security vulnerabilities, follow [SECURITY.md](SECURITY.md).
 All complaints will be reviewed and investigated promptly and fairly.
 
 ---
@@ -106,6 +107,8 @@ Beispiele für inakzeptables Verhalten:
 ### Durchsetzung und Meldewege
 
 Fälle von missbräuchlichem, belästigendem oder anderweitig inakzeptablem Verhalten
-können vertraulich an [security@ellmos.ai](mailto:security@ellmos.ai) gemeldet werden
-oder über [GitHub Security Advisories](https://github.com/ellmos-ai/usmc/security/advisories/new).
+können dem Maintainer `@lukisch` über die GitHub-Kontaktwege gemeldet werden
+(oder über ein minimales, nicht-sensibles Issue mit der Bitte um einen privaten
+Kontaktweg — veröffentliche niemals private Daten Dritter oder sensible Details
+in einem öffentlichen Issue). Für Sicherheitslücken gilt [SECURITY.md](SECURITY.md).
 Alle Beschwerden werden umgehend und fair geprüft und untersucht.

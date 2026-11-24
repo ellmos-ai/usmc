@@ -32,8 +32,8 @@ class TestRepositoryHygiene(unittest.TestCase):
             "client.p12",
             "memory.sqlite",
             "README-Mac Studio.md",
-            "README-WORKSTATION-DEVICE.md",
-            "README-ASUS-DEVICE.md",
+            "README-WORKSTATION.md",
+            "README-ASUS.md",
             "README-LAPTOP.md",
             "notes conflicted copy.txt",
             "data (Kopie).json",
@@ -55,7 +55,7 @@ class TestRepositoryHygiene(unittest.TestCase):
             "LOCK.bugsearch.scan",
             "MARKETING-LOG.txt",
             "SUB_MARKETING-LOG.txt",
-            "LOCK-CACHE.WORKSTATION-LG.md",
+            "LOCK-CACHE.HOST.md",
         ]:
             with self.subTest(path=path):
                 self.assertTrue(self.check_ignored(path), path)

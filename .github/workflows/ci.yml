@@ -43,7 +43,9 @@ jobs:
         run: python -m pip check
 
       - name: Verify package metadata build dry-run
-        run: python -m pip install --no-deps --no-build-isolation --dry-run .
+        run: |
+          python -m pip install "setuptools>=77"
+          python -m pip install --no-deps --no-build-isolation --dry-run .
 
       - name: Git diff & whitespace check
         run: |
